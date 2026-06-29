@@ -24,7 +24,7 @@
 </head>
 <body>
     <h1>📍 ポーズマネキン (AI動画用・関節曲がり)</h1>
-    <p class="info">各関節をドラッグ → 肘膝が自然に曲がる</p>
+    <p class="info">各関節をドラッグ → 肘膝手足が自然に曲がる</p>
     
     <canvas id="canvas" width="320" height="480"></canvas>
     
@@ -46,10 +46,14 @@
             rElbow: {x: 220, y: 200},
             lWrist: {x: 60, y: 260},
             rWrist: {x: 260, y: 260},
+            lHand: {x: 40, y: 280},
+            rHand: {x: 280, y: 280},
             lKnee: {x: 130, y: 340},
             rKnee: {x: 190, y: 340},
             lAnkle: {x: 120, y: 420},
-            rAnkle: {x: 200, y: 420}
+            rAnkle: {x: 200, y: 420},
+            lFoot: {x: 110, y: 450},
+            rFoot: {x: 210, y: 450}
         };
 
         function draw() {
@@ -73,16 +77,20 @@
             // 左腕
             drawSegment(points.chest, points.lElbow);
             drawSegment(points.lElbow, points.lWrist);
+            drawSegment(points.lWrist, points.lHand);
             // 右腕
             drawSegment(points.chest, points.rElbow);
             drawSegment(points.rElbow, points.rWrist);
+            drawSegment(points.rWrist, points.rHand);
             
             // 左脚
             drawSegment(points.waist, points.lKnee);
             drawSegment(points.lKnee, points.lAnkle);
+            drawSegment(points.lAnkle, points.lFoot);
             // 右脚
             drawSegment(points.waist, points.rKnee);
             drawSegment(points.rKnee, points.rAnkle);
+            drawSegment(points.rAnkle, points.rFoot);
             
             // 関節
             ctx.fillStyle = '#e74c3c';
@@ -109,23 +117,27 @@
                 rElbow: {x: 220, y: 200},
                 lWrist: {x: 60, y: 260},
                 rWrist: {x: 260, y: 260},
+                lHand: {x: 40, y: 280},
+                rHand: {x: 280, y: 280},
                 lKnee: {x: 130, y: 340},
                 rKnee: {x: 190, y: 340},
                 lAnkle: {x: 120, y: 420},
-                rAnkle: {x: 200, y: 420}
+                rAnkle: {x: 200, y: 420},
+                lFoot: {x: 110, y: 450},
+                rFoot: {x: 210, y: 450}
             };
             draw();
         }
 
         function randomPose() {
-            points.lElbow.x = 80 + Math.random()*60; points.lElbow.y = 180 + Math.random()*60;
-            points.rElbow.x = 200 + Math.random()*60; points.rElbow.y = 180 + Math.random()*60;
-            points.lWrist.x = 50 + Math.random()*80; points.lWrist.y = 220 + Math.random()*80;
-            points.rWrist.x = 210 + Math.random()*80; points.rWrist.y = 220 + Math.random()*80;
-            points.lKnee.x = 120 + Math.random()*40; points.lKnee.y = 320 + Math.random()*50;
-            points.rKnee.x = 170 + Math.random()*40; points.rKnee.y = 320 + Math.random()*50;
-            points.lAnkle.x = 110 + Math.random()*50; points.lAnkle.y = 400 + Math.random()*50;
-            points.rAnkle.x = 180 + Math.random()*50; points.rAnkle.y = 400 + Math.random()*50;
+            // ランダム調整（簡易）
+            resetPose();
+            Object.keys(points).forEach(key => {
+                if (!['head','chest','waist'].includes(key)) {
+                    points[key].x += (Math.random() - 0.5) * 60;
+                    points[key].y += (Math.random() - 0.5) * 60;
+                }
+            });
             draw();
         }
 
@@ -143,7 +155,7 @@
             const rect = canvas.getBoundingClientRect();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            return { x: clientX - rect.left, y: clientY - rect.top };
+            return { x: Math.max(20, Math.min(300, clientX - rect.left)), y: Math.max(20, Math.min(460, clientY - rect.top)) };
         }
 
         function startDrag(e) {
@@ -162,15 +174,22 @@
             if (!dragging) return;
             e.preventDefault();
             const pos = getTouchPos(e);
-            points[dragging].x = Math.max(20, Math.min(300, pos.x));
-            points[dragging].y = Math.max(20, Math.min(460, pos.y));
+            points[dragging].x = pos.x;
+            points[dragging].y = pos.y;
             draw();
         }
 
         function endDrag() {
             dragging = null;
+            draw(); // 最終描画
         }
 
+        // ボタン用グローバル関数
+        window.resetPose = resetPose;
+        window.randomPose = randomPose;
+        window.exportPNG = exportPNG;
+
+        // イベント
         canvas.addEventListener('mousedown', startDrag);
         canvas.addEventListener('mousemove', moveDrag);
         canvas.addEventListener('mouseup', endDrag);
@@ -179,7 +198,7 @@
         canvas.addEventListener('touchmove', moveDrag);
         canvas.addEventListener('touchend', endDrag);
 
-        draw();
+        resetPose();
     </script>
 </body>
 </html>
