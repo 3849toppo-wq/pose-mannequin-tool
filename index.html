@@ -23,8 +23,8 @@
     </style>
 </head>
 <body>
-    <h1>📍 ポーズマネキン (AI動画用)</h1>
-    <p class="info">点をドラッグしてポーズ調整 → PNG保存</p>
+    <h1>📍 ポーズマネキン (AI動画用・関節曲がり)</h1>
+    <p class="info">各関節をドラッグ → 肘膝が自然に曲がる</p>
     
     <canvas id="canvas" width="320" height="480"></canvas>
     
@@ -37,23 +37,23 @@
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
+        
         let points = {
             head: {x: 160, y: 80},
             chest: {x: 160, y: 160},
             waist: {x: 160, y: 240},
-            lWrist: {x: 80, y: 200},
-            rWrist: {x: 240, y: 200},
-            lAnkle: {x: 120, y: 400},
-            rAnkle: {x: 200, y: 400}
+            lElbow: {x: 100, y: 200},
+            rElbow: {x: 220, y: 200},
+            lWrist: {x: 60, y: 260},
+            rWrist: {x: 260, y: 260},
+            lKnee: {x: 130, y: 340},
+            rKnee: {x: 190, y: 340},
+            lAnkle: {x: 120, y: 420},
+            rAnkle: {x: 200, y: 420}
         };
-
-        const armLen = 80;  // 上腕+前腕
-        const legLen = 160; // 太もも+すね
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // 太めの線
             ctx.lineWidth = 12;
             ctx.strokeStyle = '#333';
             
@@ -70,33 +70,30 @@
             ctx.stroke();
             ctx.lineWidth = 12;
             
-            // 腕 (簡易 肘自動)
-            drawLimb(points.chest, points.lWrist, armLen);
-            drawLimb(points.chest, points.rWrist, armLen);
+            // 左腕
+            drawSegment(points.chest, points.lElbow);
+            drawSegment(points.lElbow, points.lWrist);
+            // 右腕
+            drawSegment(points.chest, points.rElbow);
+            drawSegment(points.rElbow, points.rWrist);
             
-            // 脚
-            drawLimb(points.waist, points.lAnkle, legLen);
-            drawLimb(points.waist, points.rAnkle, legLen);
+            // 左脚
+            drawSegment(points.waist, points.lKnee);
+            drawSegment(points.lKnee, points.lAnkle);
+            // 右脚
+            drawSegment(points.waist, points.rKnee);
+            drawSegment(points.rKnee, points.rAnkle);
             
-            // 関節点
+            // 関節
             ctx.fillStyle = '#e74c3c';
             Object.values(points).forEach(p => {
                 ctx.beginPath();
-                ctx.arc(p.x, p.y, 10, 0, Math.PI * 2);
+                ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
                 ctx.fill();
             });
         }
 
-        function drawLimb(start, end, maxLen) {
-            // 距離制限 & 方向補正
-            let dx = end.x - start.x;
-            let dy = end.y - start.y;
-            const dist = Math.sqrt(dx*dx + dy*dy);
-            if (dist > maxLen) {
-                const ratio = maxLen / dist;
-                end.x = start.x + dx * ratio;
-                end.y = start.y + dy * ratio;
-            }
+        function drawSegment(start, end) {
             ctx.beginPath();
             ctx.moveTo(start.x, start.y);
             ctx.lineTo(end.x, end.y);
@@ -108,20 +105,27 @@
                 head: {x: 160, y: 80},
                 chest: {x: 160, y: 160},
                 waist: {x: 160, y: 240},
-                lWrist: {x: 80, y: 200},
-                rWrist: {x: 240, y: 200},
-                lAnkle: {x: 120, y: 400},
-                rAnkle: {x: 200, y: 400}
+                lElbow: {x: 100, y: 200},
+                rElbow: {x: 220, y: 200},
+                lWrist: {x: 60, y: 260},
+                rWrist: {x: 260, y: 260},
+                lKnee: {x: 130, y: 340},
+                rKnee: {x: 190, y: 340},
+                lAnkle: {x: 120, y: 420},
+                rAnkle: {x: 200, y: 420}
             };
             draw();
         }
 
         function randomPose() {
-            points.head.y = 60 + Math.random() * 40;
-            points.lWrist.x = 60 + Math.random() * 80; points.lWrist.y = 140 + Math.random() * 100;
-            points.rWrist.x = 200 + Math.random() * 80; points.rWrist.y = 140 + Math.random() * 100;
-            points.lAnkle.x = 100 + Math.random() * 60; points.lAnkle.y = 340 + Math.random() * 80;
-            points.rAnkle.x = 180 + Math.random() * 60; points.rAnkle.y = 340 + Math.random() * 80;
+            points.lElbow.x = 80 + Math.random()*60; points.lElbow.y = 180 + Math.random()*60;
+            points.rElbow.x = 200 + Math.random()*60; points.rElbow.y = 180 + Math.random()*60;
+            points.lWrist.x = 50 + Math.random()*80; points.lWrist.y = 220 + Math.random()*80;
+            points.rWrist.x = 210 + Math.random()*80; points.rWrist.y = 220 + Math.random()*80;
+            points.lKnee.x = 120 + Math.random()*40; points.lKnee.y = 320 + Math.random()*50;
+            points.rKnee.x = 170 + Math.random()*40; points.rKnee.y = 320 + Math.random()*50;
+            points.lAnkle.x = 110 + Math.random()*50; points.lAnkle.y = 400 + Math.random()*50;
+            points.rAnkle.x = 180 + Math.random()*50; points.rAnkle.y = 400 + Math.random()*50;
             draw();
         }
 
@@ -132,18 +136,14 @@
             link.click();
         }
 
-        // ドラッグ処理 (touch + mouse)
         let dragging = null;
-        const dragPoints = ['head','chest','waist','lWrist','rWrist','lAnkle','rAnkle'];
+        const dragPoints = Object.keys(points);
 
         function getTouchPos(e) {
             const rect = canvas.getBoundingClientRect();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            return {
-                x: clientX - rect.left,
-                y: clientY - rect.top
-            };
+            return { x: clientX - rect.left, y: clientY - rect.top };
         }
 
         function startDrag(e) {
@@ -175,7 +175,6 @@
         canvas.addEventListener('mousemove', moveDrag);
         canvas.addEventListener('mouseup', endDrag);
         canvas.addEventListener('mouseleave', endDrag);
-
         canvas.addEventListener('touchstart', startDrag);
         canvas.addEventListener('touchmove', moveDrag);
         canvas.addEventListener('touchend', endDrag);
