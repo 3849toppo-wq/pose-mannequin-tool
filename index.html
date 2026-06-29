@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ポーズマネキン ツール</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; padding: 10px; background: #f0f0f0; }
+        .canvas { border: 1px solid #ccc; background: white; max-width: 100%; }
+        button { margin: 5px; padding: 8px; }
+    </style>
+</head>
+<body>
+    <h1>📍 ポーズ参考ツール (AI動画用)</h1>
+    <p>スマホでタップしてポーズを調整。参考にどうぞ。</p>
+    
+    <canvas id="canvas" class="canvas" width="300" height="400"></canvas>
+    <br>
+    <button onclick="resetPose()">リセット</button>
+    <button onclick="randomPose()">ランダムポーズ</button>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let headX = 150, headY = 80;
+        let bodyX = 150, bodyY = 150;
+        let armLX = 100, armLY = 180;
+        let armRX = 200, armRY = 180;
+        let legLX = 120, legLY = 300;
+        let legRX = 180, legRY = 300;
+        
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // 頭
+            ctx.beginPath(); ctx.arc(headX, headY, 30, 0, Math.PI*2); ctx.stroke();
+            // 体
+            ctx.beginPath(); ctx.moveTo(bodyX, bodyY-40); ctx.lineTo(bodyX, bodyY+40); ctx.stroke();
+            // 腕
+            ctx.beginPath(); ctx.moveTo(bodyX, bodyY); ctx.lineTo(armLX, armLY); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(bodyX, bodyY); ctx.lineTo(armRX, armRY); ctx.stroke();
+            // 脚
+            ctx.beginPath(); ctx.moveTo(bodyX, bodyY+40); ctx.lineTo(legLX, legLY); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(bodyX, bodyY+40); ctx.lineTo(legRX, legRY); ctx.stroke();
+        }
+        
+        function resetPose() {
+            headX=150; headY=80; bodyX=150; bodyY=150;
+            armLX=100; armLY=180; armRX=200; armRY=180;
+            legLX=120; legLY=300; legRX=180; legRY=300;
+            draw();
+        }
+        
+        function randomPose() {
+            headY = 60 + Math.random()*40;
+            armLX = 80 + Math.random()*60; armLY = 140 + Math.random()*80;
+            armRX = 180 + Math.random()*60; armRY = 140 + Math.random()*80;
+            legLX = 100 + Math.random()*50; legLY = 280 + Math.random()*60;
+            legRX = 160 + Math.random()*50; legRY = 280 + Math.random()*60;
+            draw();
+        }
+        
+        canvas.addEventListener('touchmove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.touches[0].clientX - rect.left;
+            const y = e.touches[0].clientY - rect.top;
+            if (Math.abs(x - headX) < 40 && Math.abs(y - headY) < 40) {
+                headX = x; headY = y;
+            }
+            draw();
+        });
+        
+        draw();
+    </script>
+</body>
+</html>
