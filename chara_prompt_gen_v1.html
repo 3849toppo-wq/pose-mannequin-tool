@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>キャラプロンプト工房</title>
+<style>
+  :root{
+    --bg:#FDF6F8;
+    --surface:#FFFFFF;
+    --ink:#3B3036;
+    --ink-soft:#8A7B82;
+    --pink:#E0679B;
+    --pink-soft:#F7D5E2;
+    --blue:#79C4DE;
+    --blue-soft:#DDF0F7;
+    --navy:#3E4A6B;
+    --gold:#C9A96A;
+    --line:#F0E2E8;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{
+    font-family:"Hiragino Maru Gothic ProN","Hiragino Kaku Gothic ProN","BIZ UDPGothic",system-ui,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    font-size:15px;
+    line-height:1.7;
+    padding-bottom:120px;
+  }
+  .wrap{max-width:480px;margin:0 auto;padding:0 16px;}
+
+  /* ===== header ===== */
+  header{
+    padding:28px 0 18px;
+    text-align:center;
+  }
+  header h1{
+    font-size:22px;
+    font-weight:800;
+    letter-spacing:.06em;
+  }
+  header h1 .usagi{color:var(--pink);}
+  header p{
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-top:4px;
+    letter-spacing:.04em;
+  }
+
+  /* ===== layer sections ===== */
+  section{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px;
+    margin-bottom:14px;
+    border-left:5px solid var(--line);
+  }
+  section.layer-core{border-left-color:var(--pink);}
+  section.layer-style{border-left-color:var(--gold);}
+  section.layer-drama{border-left-color:var(--navy);}
+  section.layer-scene{border-left-color:var(--blue);}
+  section.layer-out{border-left-color:var(--ink);}
+
+  .sec-head{
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+    margin-bottom:12px;
+  }
+  .sec-head .tag{
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:.12em;
+    color:#fff;
+    border-radius:999px;
+    padding:2px 10px;
+  }
+  .layer-core .tag{background:var(--pink);}
+  .layer-style .tag{background:var(--gold);}
+  .layer-drama .tag{background:var(--navy);}
+  .layer-scene .tag{background:var(--blue);}
+  .layer-out .tag{background:var(--ink);}
+  .sec-head h2{font-size:15px;font-weight:800;}
+  .sec-head .hint{font-size:11px;color:var(--ink-soft);margin-left:auto;}
+
+  /* ===== character cards ===== */
+  .chara-row{display:flex;gap:8px;}
+  .chara-card{
+    flex:1;
+    border:2px solid var(--line);
+    border-radius:14px;
+    padding:12px 4px 10px;
+    text-align:center;
+    background:#fff;
+    cursor:pointer;
+    transition:border-color .15s, background .15s, transform .1s;
+    user-select:none;
+  }
+  .chara-card:active{transform:scale(.96);}
+  .chara-card .icon{font-size:26px;display:block;line-height:1.2;}
+  .chara-card .name{font-size:13px;font-weight:800;margin-top:4px;display:block;}
+  .chara-card .sub{font-size:10px;color:var(--ink-soft);display:block;}
+  .chara-card[data-c="mai"].on{border-color:var(--pink);background:var(--pink-soft);}
+  .chara-card[data-c="gro"].on{border-color:var(--blue);background:var(--blue-soft);}
+  .chara-card[data-c="oni"].on{border-color:var(--navy);background:#E7EBF5;}
+
+  /* ===== per-chara options ===== */
+  .chara-opts{margin-top:12px;display:none;}
+  .chara-opts.show{display:block;}
+  .opt-box{
+    border:1px dashed var(--line);
+    border-radius:12px;
+    padding:10px 12px;
+    margin-top:8px;
+    background:#FFFDFE;
+  }
+  .opt-box .opt-title{font-size:12px;font-weight:800;margin-bottom:6px;}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;}
+  .toggle-row .lbl{font-size:13px;}
+  .toggle-row .lbl small{color:var(--ink-soft);font-size:11px;display:block;}
+  .switch{
+    position:relative;width:46px;height:26px;flex-shrink:0;
+  }
+  .switch input{opacity:0;width:0;height:0;}
+  .slider{
+    position:absolute;inset:0;
+    background:#E4DCE0;border-radius:999px;
+    transition:.2s;cursor:pointer;
+  }
+  .slider::before{
+    content:"";position:absolute;
+    width:20px;height:20px;border-radius:50%;
+    left:3px;top:3px;background:#fff;
+    transition:.2s;
+    box-shadow:0 1px 3px rgba(0,0,0,.2);
+  }
+  .switch input:checked + .slider{background:var(--pink);}
+  .switch input:checked + .slider::before{transform:translateX(20px);}
+  /* mode switch (grocchi) */
+  .mode-seg{display:flex;border:1.5px solid var(--blue);border-radius:999px;overflow:hidden;margin-top:4px;}
+  .mode-seg button{
+    flex:1;border:none;background:#fff;color:var(--ink);
+    font-family:inherit;font-size:12px;font-weight:700;
+    padding:7px 0;cursor:pointer;
+  }
+  .mode-seg button.on{background:var(--blue);color:#fff;}
+  .mode-seg button.power.on{background:var(--navy);}
+  #modeVideo.on, #modeMaster.on{background:var(--ink);}
+
+  /* ===== style chips ===== */
+  .chip-row{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{
+    border:1.5px solid var(--line);
+    background:#fff;
+    border-radius:999px;
+    padding:7px 14px;
+    font-size:13px;
+    font-weight:700;
+    font-family:inherit;
+    cursor:pointer;
+    color:var(--ink);
+  }
+  .chip.on{border-color:var(--gold);background:#FBF3E4;}
+  .layer-scene .chip.on{border-color:var(--blue);background:var(--blue-soft);}
+  .layer-out .chip.on{border-color:var(--ink);background:#EFEAEC;}
+
+  /* ===== inputs ===== */
+  label.f-label{font-size:12px;font-weight:800;display:block;margin:10px 0 4px;}
+  label.f-label small{font-weight:400;color:var(--ink-soft);}
+  input[type=text], textarea, select{
+    width:100%;
+    border:1.5px solid var(--line);
+    border-radius:10px;
+    padding:9px 12px;
+    font-size:14px;
+    font-family:inherit;
+    background:#fff;
+    color:var(--ink);
+  }
+  input:focus, textarea:focus, select:focus{outline:2px solid var(--pink-soft);border-color:var(--pink);}
+  textarea{resize:vertical;min-height:64px;}
+
+  /* ===== preset bar ===== */
+  .preset-bar{display:flex;gap:6px;margin-bottom:10px;}
+  .preset-bar select{flex:1;}
+  .btn-mini{
+    border:1.5px solid var(--line);
+    background:#fff;border-radius:10px;
+    font-family:inherit;font-size:12px;font-weight:700;
+    padding:0 12px;cursor:pointer;color:var(--ink);
+    white-space:nowrap;
+  }
+  .btn-mini:active{background:var(--pink-soft);}
+  .storage-note{font-size:10px;color:var(--ink-soft);margin-top:6px;}
+
+  /* ===== generate ===== */
+  .gen-bar{
+    position:fixed;left:0;right:0;bottom:0;
+    background:rgba(253,246,248,.92);
+    backdrop-filter:blur(8px);
+    border-top:1px solid var(--line);
+    padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+    z-index:10;
+  }
+  .gen-bar .inner{max-width:480px;margin:0 auto;}
+  .btn-gen{
+    width:100%;
+    border:none;border-radius:14px;
+    background:var(--pink);color:#fff;
+    font-family:inherit;font-size:16px;font-weight:800;
+    letter-spacing:.08em;
+    padding:14px 0;cursor:pointer;
+    box-shadow:0 4px 14px rgba(224,103,155,.35);
+  }
+  .btn-gen:active{transform:scale(.98);}
+
+  /* ===== output ===== */
+  #outArea{display:none;}
+  .out-prompt{
+    border:1.5px solid var(--line);
+    border-radius:12px;
+    background:#FBFAFB;
+    padding:12px;
+    font-size:13px;
+    line-height:1.65;
+    white-space:pre-wrap;
+    word-break:break-word;
+    font-family:ui-monospace,'SF Mono',Menlo,monospace;
+  }
+  .out-note{font-size:11px;color:var(--ink-soft);margin-top:8px;}
+  .btn-copy{
+    width:100%;margin-top:10px;
+    border:1.5px solid var(--ink);
+    background:var(--ink);color:#fff;
+    border-radius:12px;
+    font-family:inherit;font-size:14px;font-weight:800;
+    padding:11px 0;cursor:pointer;
+  }
+  .btn-copy.copied{background:var(--pink);border-color:var(--pink);}
+  footer{
+    text-align:center;font-size:10px;color:var(--ink-soft);
+    padding:10px 0 20px;letter-spacing:.06em;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>キャラプロンプト<span class="usagi">工房</span></h1>
+    <p>核 × 画風 × ドラマ × シーン ─ 4層でつくる動画プロンプト</p>
+  </header>
+
+  <!-- ===== 1. 核（キャラ選択） ===== -->
+  <section class="layer-core">
+    <div class="sec-head">
+      <span class="tag">核</span><h2>キャラクター</h2>
+      <span class="hint">複数選択OK</span>
+    </div>
+    <div class="chara-row">
+      <div class="chara-card" data-c="mai" onclick="toggleChara('mai')">
+        <span class="icon">🐰</span>
+        <span class="name">まいちゃん</span>
+        <span class="sub">うさ耳・黒ロング</span>
+      </div>
+      <div class="chara-card" data-c="gro" onclick="toggleChara('gro')">
+        <span class="icon">🤖</span>
+        <span class="name">グロッチ</span>
+        <span class="sub">首の布・幼児体型</span>
+      </div>
+      <div class="chara-card" data-c="oni" onclick="toggleChara('oni')">
+        <span class="icon">👓</span>
+        <span class="name">お兄ちゃん</span>
+        <span class="sub">黒髪マッシュ</span>
+      </div>
+    </div>
+
+    <!-- グロッチ options -->
+    <div class="chara-opts" id="opts-gro">
+      <div class="opt-box">
+        <div class="opt-title">🤖 グロッチのモード</div>
+        <div class="mode-seg">
+          <button type="button" id="groNormal" class="on" onclick="setGroMode('normal')">通常</button>
+          <button type="button" id="groPower" class="power" onclick="setGroMode('power')">⚡ パワーグロッチ</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- お兄ちゃん options -->
+    <div class="chara-opts" id="opts-oni">
+      <div class="opt-box">
+        <div class="opt-title">👓 お兄ちゃんの装備</div>
+        <div class="toggle-row">
+          <span class="lbl">眼鏡<small>時代劇などはOFF</small></span>
+          <label class="switch"><input type="checkbox" id="oniGlasses" checked><span class="slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <span class="lbl">シルバーピアス<small>時代劇などはOFF</small></span>
+          <label class="switch"><input type="checkbox" id="oniPierce" checked><span class="slider"></span></label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 2. 画風 ===== -->
+  <section class="layer-style">
+    <div class="sec-head">
+      <span class="tag">画風</span><h2>スタイル</h2>
+    </div>
+    <div class="chip-row" id="styleRow">
+      <button type="button" class="chip on" data-v="soft3d">ソフト3D</button>
+      <button type="button" class="chip" data-v="anime">アニメ調</button>
+      <button type="button" class="chip" data-v="chibi">チビ（デフォルメ）</button>
+      <button type="button" class="chip" data-v="none">指定なし（AIまかせ）</button>
+    </div>
+  </section>
+
+  <!-- ===== 3. ドラマ設定 ===== -->
+  <section class="layer-drama">
+    <div class="sec-head">
+      <span class="tag">ドラマ</span><h2>今回の物語設定</h2>
+    </div>
+
+    <div class="preset-bar">
+      <select id="presetSelect" onchange="loadPreset()">
+        <option value="">— プリセットを選ぶ —</option>
+      </select>
+      <button type="button" class="btn-mini" onclick="savePreset()">保存</button>
+      <button type="button" class="btn-mini" onclick="deletePreset()">削除</button>
+    </div>
+
+    <label class="f-label">時代・舞台・世界観 <small>（例：昭和30年代の商店街／近未来の横浜）</small></label>
+    <input type="text" id="dramaEra" placeholder="例：桜舞う江戸の城下町">
+
+    <label class="f-label" data-for="mai">🐰 まいちゃんの年齢・衣装 <small>（例：17歳、桜柄の着物）</small></label>
+    <input type="text" id="dramaMai" data-for="mai" placeholder="例：17歳、ピンクの振袖">
+
+    <label class="f-label" data-for="gro">🤖 グロッチの見た目アレンジ <small>（例：からくり人形風）</small></label>
+    <input type="text" id="dramaGro" data-for="gro" placeholder="例：木製からくり人形風の外装">
+
+    <label class="f-label" data-for="oni">👓 お兄ちゃんの年齢・衣装 <small>（例：20歳、藍色の着流し）</small></label>
+    <input type="text" id="dramaOni" data-for="oni" placeholder="例：20歳、剣道着">
+
+    <div class="storage-note" id="storageNote">※ プリセットはホーム画面版（raw.githack経由）でのみ端末に保存されます</div>
+  </section>
+
+  <!-- ===== 4. シーン ===== -->
+  <section class="layer-scene">
+    <div class="sec-head">
+      <span class="tag">シーン</span><h2>動き・カメラ</h2>
+    </div>
+
+    <label class="f-label">動き・アクション <small>（日本語でOK、そのまま英訳の素材になります→英語で書くとより正確）</small></label>
+    <textarea id="sceneMotion" placeholder="例：まいちゃんが振り返って微笑み、グロッチが跳ねながら駆け寄る"></textarea>
+    <button type="button" class="btn-mini" id="transBtn" style="margin-top:8px;padding:8px 14px;" onclick="copyTransRequest()">🌐 翻訳依頼文をコピー（ChatGPT等に貼る用）</button>
+
+    <label class="f-label">カメラワーク</label>
+    <div class="chip-row" id="cameraRow">
+      <button type="button" class="chip on" data-v="auto">おまかせ</button>
+      <button type="button" class="chip" data-v="fixed">固定</button>
+      <button type="button" class="chip" data-v="zoomin">ズームイン</button>
+      <button type="button" class="chip" data-v="zoomout">ズームアウト</button>
+      <button type="button" class="chip" data-v="pan">パン</button>
+      <button type="button" class="chip" data-v="tracking">追従</button>
+      <button type="button" class="chip" data-v="low">ローアングル</button>
+      <button type="button" class="chip" data-v="closeup">クローズアップ</button>
+    </div>
+  </section>
+
+  <!-- ===== 5. 出力先 ===== -->
+  <section class="layer-out">
+    <div class="sec-head">
+      <span class="tag">出力</span><h2>つくるもの</h2>
+    </div>
+    <div class="mode-seg" style="border-color:var(--ink);margin-bottom:12px;">
+      <button type="button" id="modeVideo" class="on" style="--seg:var(--ink)" onclick="setOutMode('video')">🎬 動画シーン用</button>
+      <button type="button" id="modeMaster" onclick="setOutMode('master')">🖼 マスター画像用</button>
+    </div>
+    <div id="modelBlock">
+      <label class="f-label" style="margin-top:0;">動画AIを選ぶ</label>
+      <div class="chip-row" id="modelRow">
+        <button type="button" class="chip on" data-v="grok">Grok</button>
+        <button type="button" class="chip" data-v="seedance">Seedance</button>
+        <button type="button" class="chip" data-v="hailuo">Hailuo</button>
+      </div>
+    </div>
+    <div id="masterSub" style="display:none;">
+      <label class="f-label" style="margin-top:0;">マスターの種類</label>
+      <div class="mode-seg" style="border-color:var(--ink);">
+        <button type="button" id="mkPlain" class="on" onclick="setMasterKind('plain')">素体（白シャツ）</button>
+        <button type="button" id="mkDrama" onclick="setMasterKind('drama')">ドラマ設定を反映</button>
+      </div>
+    </div>
+    <div class="storage-note" id="masterNote" style="display:none;">素体づくり用：ドラマ・シーン層を外し、核＋画風＋無地背景ポートレートだけを出力します。ChatGPT等の画像AIに貼ってください。</div>
+  </section>
+
+  <!-- ===== output ===== -->
+  <section class="layer-out" id="outArea">
+    <div class="sec-head">
+      <span class="tag">完成</span><h2 id="outTitle">プロンプト</h2>
+    </div>
+    <div class="out-prompt" id="outPrompt"></div>
+    <div class="out-note" id="outNote"></div>
+    <button type="button" class="btn-copy" id="copyBtn" onclick="copyPrompt()">📋 全文コピー</button>
+  </section>
+
+  <footer>chara prompt kobo v1</footer>
+</div>
+
+<div class="gen-bar">
+  <div class="inner">
+    <button type="button" class="btn-gen" onclick="generate()">✨ プロンプト生成</button>
+  </div>
+</div>
+
+<script>
+/* ================= state ================= */
+const state = {
+  charas: new Set(),
+  groMode: 'normal',
+  style: 'soft3d',
+  camera: 'auto',
+  model: 'grok',
+  outMode: 'video',
+  masterKind: 'plain'
+};
+
+function setOutMode(m){
+  state.outMode = m;
+  document.getElementById('modeVideo').classList.toggle('on', m==='video');
+  document.getElementById('modeMaster').classList.toggle('on', m==='master');
+  document.getElementById('modelBlock').style.display = m==='video' ? '' : 'none';
+  document.getElementById('masterSub').style.display = m==='master' ? '' : 'none';
+  document.getElementById('masterNote').style.display = m==='master' ? '' : 'none';
+}
+
+function setMasterKind(k){
+  state.masterKind = k;
+  document.getElementById('mkPlain').classList.toggle('on', k==='plain');
+  document.getElementById('mkDrama').classList.toggle('on', k==='drama');
+  document.getElementById('masterNote').textContent = k==='plain'
+    ? '素体づくり用：ドラマ・シーン層を外し、核＋画風＋無地背景ポートレートだけを出力します。ChatGPT等の画像AIに貼ってください。'
+    : 'ドラマ・マスター用：核＋ドラマ設定（年齢・衣装・変身）＋無地背景ポートレートを出力します。シーンの動きは入りません。';
+}
+
+/* ================= character cores (fixed, never mention the author) ================= */
+const CORE = {
+  mai: 'Mai-chan, a fictional animated girl character (not a real person): long straight black hair, a fluffy pink bunny-ear accessory on her head, large brown eyes, and a doll-like delicate face',
+  groNormal: 'Grocchi, a small toddler-like companion robot: round head, chibi proportions, short limbs, a soft pink scarf tied around its neck, with a gentle and protective personality, always staying close beside Mai-chan',
+  groPower: 'Power Grocchi, the emergency form of the small robot Grocchi: transformed into a massive armored guardian mech with glowing blue accents, fiercely shielding Mai-chan from danger',
+  oni: (glasses, pierce) => {
+    let s = 'Onii-chan, a slim, intelligent-looking 20-year-old Japanese young man with a black mushroom-wolf hybrid haircut: full rounded crown, heavy straight fringe falling between his eyes, layered strands flaring out at the nape, with slightly damp-looking, softly separated hair strands';
+    const acc = [];
+    if (glasses) acc.push('thin round glasses');
+    if (pierce) acc.push('a small silver hoop earring');
+    if (acc.length) s += ', wearing ' + acc.join(' and ');
+    s += '; a gentle, hardworking older brother who deeply cares for his younger sister Mai-chan';
+    return s;
+  }
+};
+
+const STYLE_TEXT = {
+  soft3d: 'soft 3D CGI animation style, smooth rounded forms, gentle warm lighting',
+  anime: 'Japanese anime illustration style, clean line art, expressive eyes',
+  chibi: 'chibi cartoon style, exaggerated cute proportions, playful motion',
+  none: ''
+};
+
+const CAMERA_TEXT = {
+  auto: {en:'', hailuo:''},
+  fixed: {en:'static fixed camera', hailuo:'[Fixed shot]'},
+  zoomin: {en:'slow zoom in', hailuo:'[Push in]'},
+  zoomout: {en:'slow zoom out', hailuo:'[Pull out]'},
+  pan: {en:'smooth panning shot', hailuo:'[Pan right]'},
+  tracking: {en:'tracking shot following the characters', hailuo:'[Tracking shot]'},
+  low: {en:'dramatic low-angle shot', hailuo:'[Low angle]'},
+  closeup: {en:'close-up shot', hailuo:'[Close-up]'}
+};
+
+const MODEL_NOTE = {
+  grok: 'Grok Imagine：自然文が得意。生成後に動きが弱ければ動詞を増やして再生成が効きます。',
+  seedance: 'Seedance：構造化プロンプトに強い。秒数・解像度はアプリ側で設定してください。',
+  hailuo: 'Hailuo：[ ]内はHailuo専用カメラ指示です。秒数はアプリ側で設定してください。'
+};
+
+/* ================= UI handlers ================= */
+function toggleChara(c){
+  const card = document.querySelector(`.chara-card[data-c="${c}"]`);
+  if (state.charas.has(c)) { state.charas.delete(c); card.classList.remove('on'); }
+  else { state.charas.add(c); card.classList.add('on'); }
+  document.getElementById('opts-gro').classList.toggle('show', state.charas.has('gro'));
+  document.getElementById('opts-oni').classList.toggle('show', state.charas.has('oni'));
+  // ドラマ欄の該当フィールドの表示切替
+  document.querySelectorAll('[data-for]').forEach(el=>{
+    el.style.display = state.charas.has(el.dataset.for) ? '' : 'none';
+  });
+}
+
+function setGroMode(m){
+  state.groMode = m;
+  document.getElementById('groNormal').classList.toggle('on', m==='normal');
+  document.getElementById('groPower').classList.toggle('on', m==='power');
+}
+
+function bindChips(rowId, key){
+  document.getElementById(rowId).addEventListener('click', e=>{
+    const b = e.target.closest('.chip'); if(!b) return;
+    document.querySelectorAll(`#${rowId} .chip`).forEach(c=>c.classList.remove('on'));
+    b.classList.add('on');
+    state[key] = b.dataset.v;
+  });
+}
+bindChips('styleRow','style');
+bindChips('cameraRow','camera');
+bindChips('modelRow','model');
+
+// 初期状態：キャラ未選択なのでドラマ欄の個別フィールドは隠す
+document.querySelectorAll('[data-for]').forEach(el=>el.style.display='none');
+
+/* ================= prompt build ================= */
+function buildParts(){
+  const subjects = [];
+  if (state.charas.has('mai')) subjects.push(CORE.mai);
+  if (state.charas.has('gro')) subjects.push(state.groMode==='power' ? CORE.groPower : CORE.groNormal);
+  if (state.charas.has('oni')) subjects.push(CORE.oni(
+    document.getElementById('oniGlasses').checked,
+    document.getElementById('oniPierce').checked
+  ));
+
+  const era = document.getElementById('dramaEra').value.trim();
+  const outfits = [];
+  if (state.charas.has('mai')){
+    const v = document.getElementById('dramaMai').value.trim();
+    if (v) outfits.push(`Mai-chan in this story: ${v}`);
+  }
+  if (state.charas.has('gro')){
+    const v = document.getElementById('dramaGro').value.trim();
+    if (v) outfits.push(`Grocchi's appearance arranged as: ${v}`);
+  }
+  if (state.charas.has('oni')){
+    const v = document.getElementById('dramaOni').value.trim();
+    if (v) outfits.push(`Onii-chan in this story: ${v}`);
+  }
+
+  const motion = document.getElementById('sceneMotion').value.trim();
+  const cam = CAMERA_TEXT[state.camera];
+  const style = STYLE_TEXT[state.style];
+  const guard = "Keep each character's face and appearance exactly consistent throughout the video.";
+
+  return {subjects, era, outfits, motion, cam, style, guard};
+}
+
+function generate(){
+  if (state.charas.size===0){ alert('キャラクターを1人以上選んでね'); return; }
+  const p = buildParts();
+  let out = '';
+  let title = '';
+  let note = '';
+
+  if (state.outMode==='master'){
+    const seg = [];
+    seg.push('Character reference portrait.');
+    if (p.style) seg.push('Style: ' + p.style + '.');
+    seg.push(p.subjects.join('. ') + '.');
+    if (state.masterKind==='drama'){
+      if (!p.era && !p.outfits.length){ alert('ドラマ設定（時代・年齢・衣装）が空です。反映する内容を書いてね'); return; }
+      if (p.era) seg.push('Story setting: ' + p.era + '.');
+      if (p.outfits.length) seg.push(p.outfits.join('. ') + '.');
+      seg.push('Neutral plain light-gray background, soft even studio lighting, front-facing upper-body portrait, calm natural expression, no scene context, no background scenery.');
+    } else {
+      seg.push('Neutral plain light-gray background, soft even studio lighting, front-facing upper-body portrait, calm natural expression, no scene context, no props.');
+      seg.push('Wardrobe: a plain simple white shirt only. No jacket, no necklace, no additional accessories beyond those specified above.');
+    }
+    seg.push("Render the character's face and features with maximum clarity for use as a master reference image.");
+    out = seg.join(' ');
+    title = state.masterKind==='drama' ? 'プロンプト（ドラマ・マスター用）' : 'プロンプト（素体マスター用）';
+    note = 'ChatGPT等の画像AIへ。素体が決まったら、その画像を動画AIの参照画像に使ってください。';
+  } else {
+    out = buildVideoPrompt(p);
+    title = 'プロンプト（' + state.model.charAt(0).toUpperCase()+state.model.slice(1) + '向け）';
+    note = MODEL_NOTE[state.model];
+  }
+
+  document.getElementById('outPrompt').textContent = out;
+  document.getElementById('outNote').textContent = note;
+  document.getElementById('outTitle').textContent = title;
+  const area = document.getElementById('outArea');
+  area.style.display = 'block';
+  area.scrollIntoView({behavior:'smooth', block:'start'});
+  const btn = document.getElementById('copyBtn');
+  btn.classList.remove('copied'); btn.textContent = '📋 全文コピー';
+}
+
+function buildVideoPrompt(p){
+  let out = '';
+
+  if (state.model==='grok'){
+    const seg = [];
+    if (p.style) seg.push(p.style.charAt(0).toUpperCase()+p.style.slice(1)+'.');
+    seg.push('Characters: ' + p.subjects.join('. ') + '.');
+    if (p.era) seg.push('Setting: ' + p.era + '.');
+    if (p.outfits.length) seg.push(p.outfits.join('. ') + '.');
+    if (p.motion) seg.push('Action: ' + p.motion + '.');
+    if (p.cam.en) seg.push('Camera: ' + p.cam.en + '.');
+    seg.push(p.guard);
+    out = seg.join(' ');
+  }
+
+  if (state.model==='seedance'){
+    const lines = [];
+    lines.push('[Subject] ' + p.subjects.join('; '));
+    if (p.era) lines.push('[Setting] ' + p.era);
+    if (p.outfits.length) lines.push('[Costume] ' + p.outfits.join('; '));
+    if (p.motion) lines.push('[Action] ' + p.motion);
+    if (p.cam.en) lines.push('[Camera] ' + p.cam.en);
+    if (p.style) lines.push('[Style] ' + p.style);
+    lines.push('[Consistency] ' + p.guard);
+    out = lines.join('\n');
+  }
+
+  if (state.model==='hailuo'){
+    const seg = [];
+    seg.push(p.subjects.join('. ') + '.');
+    if (p.era) seg.push('Setting: ' + p.era + '.');
+    if (p.outfits.length) seg.push(p.outfits.join('. ') + '.');
+    if (p.motion) seg.push(p.motion + '.');
+    if (p.cam.hailuo) seg.push(p.cam.hailuo);
+    if (p.style) seg.push('Style: ' + p.style + '.');
+    seg.push(p.guard);
+    out = seg.join(' ');
+  }
+
+  return out;
+}
+
+function copyTransRequest(){
+  const motion = document.getElementById('sceneMotion').value.trim();
+  if (!motion){ alert('先に「動き・アクション」欄に日本語で書いてね'); return; }
+  const req = '以下の日本語を、動画生成AI（Seedance/Hailuo/Grok）用のプロンプトとして英訳してください。直訳ではなく、カメラワークと動きのニュアンスが伝わる映像的・映画的な英語表現（動詞の選び方、動きの速度感、視線や仕草の描写）を使ってください。英文のみを返してください。\n\n---\n' + motion;
+  const btn = document.getElementById('transBtn');
+  const done = ()=>{ btn.textContent='✅ コピー！ChatGPTに貼って、返ってきた英文をこの欄に戻してね'; setTimeout(()=>{ btn.textContent='🌐 翻訳依頼文をコピー（ChatGPT等に貼る用）'; }, 4000); };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(req).then(done).catch(()=>fallbackCopy(req, done));
+  } else { fallbackCopy(req, done); }
+}
+
+function copyPrompt(){
+  const text = document.getElementById('outPrompt').textContent;
+  const btn = document.getElementById('copyBtn');
+  const done = ()=>{ btn.classList.add('copied'); btn.textContent='✅ コピーしました'; };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text, done));
+  } else { fallbackCopy(text, done); }
+}
+function fallbackCopy(text, done){
+  const ta = document.createElement('textarea');
+  ta.value = text; document.body.appendChild(ta);
+  ta.select(); try{ document.execCommand('copy'); done(); }catch(e){ alert('コピーできませんでした。長押しで選択してください'); }
+  document.body.removeChild(ta);
+}
+
+/* ================= presets (localStorage / メモリフォールバック) ================= */
+const PRESET_KEY = 'charaPromptPresets_v1';
+let memPresets = {};
+let storageOK = false;
+try {
+  localStorage.setItem('__t','1'); localStorage.removeItem('__t');
+  storageOK = true;
+} catch(e){ storageOK = false; }
+
+function getPresets(){
+  if (!storageOK) return memPresets;
+  try { return JSON.parse(localStorage.getItem(PRESET_KEY) || '{}'); }
+  catch(e){ return {}; }
+}
+function setPresets(p){
+  memPresets = p;
+  if (storageOK){ try{ localStorage.setItem(PRESET_KEY, JSON.stringify(p)); }catch(e){} }
+}
+function refreshPresetSelect(){
+  const sel = document.getElementById('presetSelect');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— プリセットを選ぶ —</option>';
+  Object.keys(getPresets()).forEach(name=>{
+    const o = document.createElement('option');
+    o.value = name; o.textContent = name;
+    sel.appendChild(o);
+  });
+  sel.value = cur;
+}
+function savePreset(){
+  const name = prompt('プリセット名（例：江戸桜編）');
+  if (!name) return;
+  const p = getPresets();
+  p[name] = {
+    era: document.getElementById('dramaEra').value,
+    mai: document.getElementById('dramaMai').value,
+    gro: document.getElementById('dramaGro').value,
+    oni: document.getElementById('dramaOni').value
+  };
+  setPresets(p);
+  refreshPresetSelect();
+  document.getElementById('presetSelect').value = name;
+  if (!storageOK) alert('この環境では一時保存のみです。ホーム画面版では端末に保存されます。');
+}
+function loadPreset(){
+  const name = document.getElementById('presetSelect').value;
+  if (!name) return;
+  const d = getPresets()[name]; if (!d) return;
+  document.getElementById('dramaEra').value = d.era || '';
+  document.getElementById('dramaMai').value = d.mai || '';
+  document.getElementById('dramaGro').value = d.gro || '';
+  document.getElementById('dramaOni').value = d.oni || '';
+}
+function deletePreset(){
+  const name = document.getElementById('presetSelect').value;
+  if (!name){ alert('削除するプリセットを選んでください'); return; }
+  if (!confirm(`「${name}」を削除しますか？`)) return;
+  const p = getPresets(); delete p[name]; setPresets(p);
+  refreshPresetSelect();
+}
+if (storageOK){
+  document.getElementById('storageNote').textContent = '※ プリセットはこの端末のブラウザに保存されます';
+}
+refreshPresetSelect();
+</script>
+</body>
+</html>
