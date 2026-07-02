@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>ポーズ人形</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#1a1a2e; display:flex; flex-direction:column; height:100vh; font-family:sans-serif; overflow:hidden; }
+
+#view { flex:0 0 52vh; position:relative; }
+#view canvas { width:100%!important; height:100%!important; display:block; }
+
+/* ── 移動ジョイスティック(追加) ── */
+#joy {
+  position:absolute; left:12px; bottom:12px;
+  width:104px; height:104px; border-radius:50%;
+  background:rgba(20,30,50,0.45); border:1px solid #2a3a4a;
+  touch-action:none; z-index:5;
+}
+#knob {
+  position:absolute; left:50%; top:50%;
+  width:44px; height:44px; margin:-22px 0 0 -22px;
+  border-radius:50%; background:#0e1e3a; border:1px solid #4488cc;
+  pointer-events:none;
+}
+#joyLbl {
+  position:absolute; left:12px; bottom:120px;
+  color:#445566; font-size:10px; z-index:5;
+}
+
+#btns {
+  display:flex; gap:6px; padding:6px 8px;
+  background:#0d0d1a; border-bottom:1px solid #1a2a3a;
+}
+.btn {
+  flex:1; padding:8px 4px; border:1px solid #2a3a4a;
+  background:#111122; color:#8899aa; border-radius:6px;
+  cursor:pointer; font-size:11px; text-align:center;
+}
+.btn.go { border-color:#4488cc; color:#aaccff; background:#0e1e3a; }
+
+#controls { flex:1; overflow-y:auto; padding:6px 8px 16px; background:#0d0d1a; }
+
+.sec-title {
+  color:#445566; font-size:10px; letter-spacing:.1em; text-transform:uppercase;
+  padding:6px 0 3px; border-bottom:1px solid #1a2a3a; margin-bottom:4px;
+}
+.row { display:flex; align-items:center; gap:6px; margin:5px 0; }
+.row label { color:#778899; font-size:11px; width:76px; flex-shrink:0; }
+input[type=range] { flex:1; height:30px; accent-color:#4488cc; cursor:pointer; }
+.val { color:#445566; font-size:10px; width:30px; text-align:right; flex-shrink:0; }
+
+/* ── モーション(追加) ── */
+.mrow { display:flex; gap:6px; margin:4px 0 6px; }
+#poseChips { display:flex; flex-wrap:wrap; gap:6px; margin:2px 0; }
+.chip {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:5px 8px; border:1px solid #2a3a4a; border-radius:12px;
+  background:#111122; color:#aaccff; font-size:11px; cursor:pointer;
+}
+.chip b { color:#556677; font-weight:normal; padding:0 2px; }
+.minfo { color:#445566; font-size:10px; margin:2px 0 8px; }
+</style>
+</head>
+<body>
+<div id="view">
+  <div id="joyLbl">移動(向きは自動)</div>
+  <div id="joy"><div id="knob"></div></div>
+</div>
+<div id="btns">
+  <div class="btn" onclick="resetPose()">リセット</div>
+  <div class="btn" onclick="cam('front')">正面</div>
+  <div class="btn" onclick="cam('side')">側面</div>
+  <div class="btn" onclick="cam('back')">背面</div>
+  <div class="btn go" onclick="savePNG()">PNG保存</div>
+</div>
+<div id="controls"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+// ── シーン ──
+const view = document.getElementById('view');
+const renderer = new THREE.WebGLRenderer({ antialias:true, preserveDrawingBuffer:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+view.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x111826);
+
+const camera = new THREE.PerspectiveCamera(45, 1, 0.01, 100);
+camera.position.set(0, 1.5, 4.0);
+
+const orbitCtrl = new THREE.OrbitControls(camera, renderer.domElement);
+orbitCtrl.target.set(0, 1.1, 0);
+orbitCtrl.enableDamping = true; orbitCtrl.dampingFactor = 0.1;
+orbitCtrl.update();
+
+scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+const sun = new THREE.DirectionalLight(0xffffff, 0.9);
+sun.position.set(3,6,4); sun.castShadow=true; scene.add(sun);
+const rimLight = new THREE.DirectionalLight(0x3355ff,0.3);
+rimLight.position.set(-3,3,-3);
+scene.add(rimLight);
+
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(10,10), new THREE.ShadowMaterial({opacity:0.2}));
+floor.rotation.x=-Math.PI/2; floor.receiveShadow=true; scene.add(floor);
+
+const grid = new THREE.GridHelper(6,20,0x1a2a3a,0x111820);
+scene.add(grid);
+
+// ── 体型 ──
+const P = {
+  headR:0.115, neckLen:0.08, torsoLen:0.38,
+  shoulderW:0.215, hipW:0.105,
+  upperArmLen:0.23, foreArmLen:0.20,
+  thighLen:0.30, shinLen:0.27,
+  footLen:0.14, footH:0.055, bR:0.033,
+};
+const HIP_Y0 = P.thighLen + P.shinLen + P.footH + 0.02;
+const CHEST_Y = P.torsoLen * 0.80;
+
+const MAT = {
+  head: new THREE.MeshPhongMaterial({color:0xFFCC00, shininess:70}),
+  body: new THREE.MeshPhongMaterial({color:0xBBCCEE, shininess:30}),
+  arm:  new THREE.MeshPhongMaterial({color:0x2299EE, shininess:50}),
+  leg:  new THREE.MeshPhongMaterial({color:0xFF8800, shininess:50}),
+};
+
+function bone(len,r,mat){
+  const g=new THREE.Group();
+  const m=new THREE.Mesh(new THREE.CylinderGeometry(r*0.82,r,len,10),mat);
+  m.position.y=-len/2; m.castShadow=true; g.add(m);
+  return g;
+}
+
+// ── 骨格 ──
+const J={};
+J.root = new THREE.Group();
+scene.add(J.root);
+J.hips=new THREE.Group(); J.hips.position.y=HIP_Y0; J.root.add(J.hips);
+
+// 胴
+const torso=new THREE.Mesh(new THREE.BoxGeometry(P.shoulderW*1.05,P.torsoLen,P.bR*2),MAT.body);
+torso.position.y=P.torsoLen/2; torso.castShadow=true; J.hips.add(torso);
+const neck=new THREE.Mesh(new THREE.CylinderGeometry(P.bR,P.bR,P.neckLen,8),MAT.body);
+neck.position.y=P.torsoLen+P.neckLen/2; J.hips.add(neck);
+const head=new THREE.Mesh(new THREE.SphereGeometry(P.headR,16,16),MAT.head);
+head.position.y=P.torsoLen+P.neckLen+P.headR; head.castShadow=true; J.hips.add(head);
+
+// 左腕
+J.lShoulder=new THREE.Group(); J.lShoulder.position.set(-P.shoulderW,CHEST_Y,0); J.hips.add(J.lShoulder);
+const lUA=bone(P.upperArmLen,P.bR,MAT.arm); J.lShoulder.add(lUA);
+J.lElbow=new THREE.Group(); J.lElbow.position.y=-P.upperArmLen; lUA.add(J.lElbow);
+const lFA=bone(P.foreArmLen,P.bR*.85,MAT.arm); J.lElbow.add(lFA);
+const lH=new THREE.Mesh(new THREE.SphereGeometry(0.042,8,8),MAT.arm); lH.position.y=-P.foreArmLen; J.lElbow.add(lH);
+
+// 右腕
+J.rShoulder=new THREE.Group(); J.rShoulder.position.set(P.shoulderW,CHEST_Y,0); J.hips.add(J.rShoulder);
+const rUA=bone(P.upperArmLen,P.bR,MAT.arm); J.rShoulder.add(rUA);
+J.rElbow=new THREE.Group(); J.rElbow.position.y=-P.upperArmLen; rUA.add(J.rElbow);
+const rFA=bone(P.foreArmLen,P.bR*.85,MAT.arm); J.rElbow.add(rFA);
+const rH=new THREE.Mesh(new THREE.SphereGeometry(0.042,8,8),MAT.arm); rH.position.y=-P.foreArmLen; J.rElbow.add(rH);
+
+// 左脚
+J.lHip=new THREE.Group(); J.lHip.position.set(-P.hipW,0,0); J.hips.add(J.lHip);
+const lTh=bone(P.thighLen,P.bR*1.15,MAT.leg); J.lHip.add(lTh);
+J.lKnee=new THREE.Group(); J.lKnee.position.y=-P.thighLen; lTh.add(J.lKnee);
+const lSh=bone(P.shinLen,P.bR*.95,MAT.leg); J.lKnee.add(lSh);
+J.lAnkle=new THREE.Group(); J.lAnkle.position.y=-P.shinLen; lSh.add(J.lAnkle);
+const lFt=new THREE.Mesh(new THREE.BoxGeometry(P.bR*1.9,P.footH,P.footLen),MAT.leg);
+lFt.position.set(0,-P.footH/2,P.footLen*.22); J.lAnkle.add(lFt);
+
+// 右脚
+J.rHip=new THREE.Group(); J.rHip.position.set(P.hipW,0,0); J.hips.add(J.rHip);
+const rTh=bone(P.thighLen,P.bR*1.15,MAT.leg); J.rHip.add(rTh);
+J.rKnee=new THREE.Group(); J.rKnee.position.y=-P.thighLen; rTh.add(J.rKnee);
+const rSh=bone(P.shinLen,P.bR*.95,MAT.leg); J.rKnee.add(rSh);
+J.rAnkle=new THREE.Group(); J.rAnkle.position.y=-P.shinLen; rSh.add(J.rAnkle);
+const rFt=new THREE.Mesh(new THREE.BoxGeometry(P.bR*1.9,P.footH,P.footLen),MAT.leg);
+rFt.position.set(0,-P.footH/2,P.footLen*.22); J.rAnkle.add(rFt);
+
+// ── スライダー定義 ──
+// [id, ラベル, joint, axis, min, max, default]
+const DEFS = [
+  // 位置・向き
+  ['pX', '左右移動',  'root','px',-2.4,2.4,0],
+  ['pZ', '前後移動',  'root','pz',-2.4,2.4,0],
+  ['pRy','向き回転', 'root','ry',-3.14,3.14,0],
+  // 腰
+  ['hRx','前後傾き','hips','rx',-0.6,0.6,0],
+  ['hRz','左右傾き','hips','rz',-0.5,0.5,0],
+  ['hY', '高さ',   'hips','y', 0.45,HIP_Y0,HIP_Y0],
+  // 左腕
+  ['lSx','左腕 前後','lShoulder','rx',-2.6,0.6,0],
+  ['lSz','左腕 上下','lShoulder','rz',-1.6,0.5,0],
+  ['lEx','左ひじ',  'lElbow',   'rx',-1.6,1.6,0],
+  // 右腕
+  ['rSx','右腕 前後','rShoulder','rx',-2.6,0.6,0],
+  ['rSz','右腕 上下','rShoulder','rz',-0.5,1.6,0],
+  ['rEx','右ひじ',  'rElbow',   'rx',-1.6,1.6,0],
+  // 左脚
+  ['lHx','左脚 前後','lHip',  'rx',-1.4,0.9,0],
+  ['lHz','左脚 横開','lHip',  'rz',-0.6,0.1,0],
+  ['lKx','左ひざ',  'lKnee', 'rx',-0.1,1.9,0],
+  ['lAx','左足首',  'lAnkle','rx',-0.6,0.6,0],
+  // 右脚
+  ['rHx','右脚 前後','rHip',  'rx',-1.4,0.9,0],
+  ['rHz','右脚 横開','rHip',  'rz',-0.1,0.6,0],
+  ['rKx','右ひざ',  'rKnee', 'rx',-0.1,1.9,0],
+  ['rAx','右足首',  'rAnkle','rx',-0.6,0.6,0],
+];
+
+const SECTIONS=[
+  {title:'位置・向き',ids:['pX','pZ','pRy']},
+  {title:'腰',ids:['hRx','hRz','hY']},
+  {title:'左腕',ids:['lSx','lSz','lEx']},
+  {title:'右腕',ids:['rSx','rSz','rEx']},
+  {title:'左脚',ids:['lHx','lHz','lKx','lAx']},
+  {title:'右脚',ids:['rHx','rHz','rKx','rAx']},
+];
+
+// スライダーHTML生成
+const ctrl_el = document.getElementById('controls');
+SECTIONS.forEach(sec=>{
+  const d=document.createElement('div');
+  let h=`<div class="sec-title">${sec.title}</div>`;
+  sec.ids.forEach(id=>{
+    const [,lbl,joint,axis,mn,mx,def]=DEFS.find(x=>x[0]===id);
+    h+=`<div class="row">
+      <label>${lbl}</label>
+      <input type="range" id="${id}" min="${mn}" max="${mx}" step="0.01" value="${def}">
+      <span class="val" id="v${id}">0</span>
+    </div>`;
+  });
+  d.innerHTML=h;
+  ctrl_el.appendChild(d);
+});
+
+// addEventListenerで登録（oninput属性のスコープ問題を回避）
+DEFS.forEach(([id,lbl,joint,axis,mn,mx,def])=>{
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.addEventListener('input', function(){
+    const val = +this.value;
+    document.getElementById('v'+id).textContent = Math.round(val*10)/10;
+    const obj = J[joint];
+    if(!obj) return;
+    if(axis==='px'){ obj.position.x=val; return; }
+    if(axis==='pz'){ obj.position.z=val; return; }
+    if(axis==='y') { obj.position.y=val; return; }
+    if(axis==='rx'){ obj.rotation.x=val; }
+    if(axis==='ry'){ obj.rotation.y=val; }
+    if(axis==='rz'){ obj.rotation.z=val; }
+  });
+});
+
+function applySlider(id,joint,axis,val){
+  document.getElementById('v'+id).textContent = Math.round(val*10)/10;
+  const obj = J[joint];
+  if(!obj) return;
+  if(axis==='px') { obj.position.x = val; return; }
+  if(axis==='pz') { obj.position.z = val; return; }
+  if(axis==='y')  { obj.position.y = val; return; }
+  if(axis==='rx') { obj.rotation.x = val; }
+  if(axis==='ry') { obj.rotation.y = val; }
+  if(axis==='rz') { obj.rotation.z = val; }
+}
+
+function resetPose(){
+  DEFS.forEach(([id,lbl,joint,axis,mn,mx,def])=>{
+    document.getElementById(id).value=def;
+    applySlider(id,joint,axis,def);
+  });
+}
+
+function cam(v){
+  if(v==='front') camera.position.set(0,1.5,4.0);
+  if(v==='side')  camera.position.set(4.0,1.5,0);
+  if(v==='back')  camera.position.set(0,1.5,-4.0);
+  orbitCtrl.target.set(0,1.1,0); orbitCtrl.update();
+}
+
+function savePNG(){
+  renderer.render(scene,camera);
+  const a=document.createElement('a');
+  a.download='pose.png';
+  a.href=renderer.domElement.toDataURL('image/png');
+  a.click();
+}
+
+// ── 蛇行移動ジョイスティック（追加） ──
+// スティックを倒した方向（画面基準）に人形が移動し、
+// 体の向きは進行方向へ自動で追従する。
+const joy=document.getElementById('joy'), knob=document.getElementById('knob');
+const JR=42;                  // スティック可動半径(px)
+const MOVE_SPD=0.9;           // 最大移動速度(m/s)
+const TURN_SPD=6;             // 向き追従の速さ
+const POS_LIM=2.4;            // 移動範囲（床から出ない）
+let joyVec={x:0,y:0};
+
+function joyUpdate(cx,cy){
+  const r=joy.getBoundingClientRect();
+  let dx=cx-(r.left+r.width/2), dy=cy-(r.top+r.height/2);
+  const d=Math.hypot(dx,dy);
+  if(d>JR){ dx*=JR/d; dy*=JR/d; }
+  knob.style.transform=`translate(${dx}px,${dy}px)`;
+  joyVec.x=dx/JR; joyVec.y=dy/JR;
+}
+function joyEnd(){
+  joyVec.x=0; joyVec.y=0;
+  knob.style.transform='translate(0,0)';
+}
+joy.addEventListener('pointerdown',e=>{
+  joy.setPointerCapture(e.pointerId);
+  joyUpdate(e.clientX,e.clientY);
+});
+joy.addEventListener('pointermove',e=>{
+  if(joyVec.x||joyVec.y||e.buttons) joyUpdate(e.clientX,e.clientY);
+});
+joy.addEventListener('pointerup',joyEnd);
+joy.addEventListener('pointercancel',joyEnd);
+
+function syncSlider(id,v){
+  const el=document.getElementById(id);
+  if(!el) return;
+  el.value=v;
+  document.getElementById('v'+id).textContent=Math.round(v*10)/10;
+}
+
+let lastT=performance.now();
+function moveStep(now){
+  const dt=Math.min((now-lastT)/1000,0.05);
+  lastT=now;
+  if(playing) return;               // 再生中は手動移動を止める
+  if(!joyVec.x&&!joyVec.y) return;
+
+  // カメラの向きを基準に「画面の上＝奥」へ変換
+  const fwd=new THREE.Vector3();
+  camera.getWorldDirection(fwd); fwd.y=0; fwd.normalize();
+  const right=new THREE.Vector3().crossVectors(fwd,new THREE.Vector3(0,1,0));
+  const mv=right.multiplyScalar(joyVec.x).add(fwd.multiplyScalar(-joyVec.y));
+  if(mv.lengthSq()<1e-6) return;
+
+  // 位置を更新（床の範囲内にクランプ）
+  J.root.position.x=Math.max(-POS_LIM,Math.min(POS_LIM,J.root.position.x+mv.x*MOVE_SPD*dt));
+  J.root.position.z=Math.max(-POS_LIM,Math.min(POS_LIM,J.root.position.z+mv.z*MOVE_SPD*dt));
+
+  // 体の向きを進行方向へ滑らかに追従（モデルは+Z向きが正面）
+  const target=Math.atan2(mv.x,mv.z);
+  let diff=target-J.root.rotation.y;
+  diff=Math.atan2(Math.sin(diff),Math.cos(diff));
+  J.root.rotation.y+=diff*Math.min(1,dt*TURN_SPD);
+
+  // スライダー表示も同期
+  syncSlider('pX',J.root.position.x);
+  syncSlider('pZ',J.root.position.z);
+  syncSlider('pRy',J.root.rotation.y);
+}
+
+// ── モーション（追加：ポーズ登録＋経路記録） ──
+// ポーズ＝関節のみ保存（位置・向きは経路が担当）
+const POSE_IDS = DEFS.map(d=>d[0]).filter(id=>!['pX','pZ','pRy'].includes(id));
+let poses=[];                       // 登録ポーズの配列
+let path=[];                        // 記録経路 {t,x,z,ry}
+let recording=false, recT0=0;
+let playing=false, playT0=0, playDur=0;
+
+const mo=document.createElement('div');
+mo.innerHTML=`<div class="sec-title">モーション</div>
+<div class="mrow">
+  <div class="btn" id="mPose">ポーズ登録</div>
+  <div class="btn" id="mRec">経路 記録</div>
+</div>
+<div class="mrow">
+  <div class="btn go" id="mPlay">再生</div>
+  <div class="btn" id="mStop">停止</div>
+</div>
+<div id="poseChips"></div>
+<div class="minfo" id="mInfo">ポーズ0個・経路なし</div>`;
+ctrl_el.insertBefore(mo, ctrl_el.firstChild);
+
+function mInfo(){
+  const sec=path.length?Math.round(path[path.length-1].t*10)/10+'秒':'なし';
+  document.getElementById('mInfo').textContent=`ポーズ${poses.length}個・経路${sec}`;
+}
+function renderChips(){
+  document.getElementById('poseChips').innerHTML=
+    poses.map((p,i)=>`<span class="chip" data-i="${i}">P${i+1}<b data-del="${i}">×</b></span>`).join('');
+  mInfo();
+}
+document.getElementById('poseChips').addEventListener('click',e=>{
+  if(e.target.dataset.del!==undefined){
+    poses.splice(+e.target.dataset.del,1); renderChips(); return;
+  }
+  const ch=e.target.closest('.chip');
+  if(ch) applyPose(poses[+ch.dataset.i]);   // タップで内容を確認
+});
+
+function capturePose(){
+  const p={};
+  POSE_IDS.forEach(id=>p[id]=+document.getElementById(id).value);
+  return p;
+}
+function applyPose(p){
+  POSE_IDS.forEach(id=>{
+    const [,,joint,axis]=DEFS.find(x=>x[0]===id);
+    document.getElementById(id).value=p[id];
+    applySlider(id,joint,axis,p[id]);
+  });
+}
+
+document.getElementById('mPose').onclick=()=>{
+  poses.push(capturePose()); renderChips();
+};
+document.getElementById('mRec').onclick=function(){
+  if(recording){
+    recording=false;
+    this.textContent='経路 記録'; this.classList.remove('go');
+    mInfo();
+  }else{
+    path=[]; recording=true; recT0=performance.now();
+    this.textContent='記録中…停止'; this.classList.add('go');
+  }
+};
+document.getElementById('mPlay').onclick=()=>{
+  if(!path.length && poses.length<2) return;   // 材料がなければ何もしない
+  playDur=path.length ? path[path.length-1].t : (poses.length-1)*0.8;
+  if(playDur<0.1) playDur=0.1;
+  playing=true; playT0=performance.now();
+};
+document.getElementById('mStop').onclick=()=>{ playing=false; };
+
+function motionStep(now){
+  // 記録：約30fpsでサンプリング
+  if(recording){
+    const t=(now-recT0)/1000;
+    if(!path.length || t-path[path.length-1].t>0.033)
+      path.push({t, x:J.root.position.x, z:J.root.position.z, ry:J.root.rotation.y});
+  }
+  if(!playing) return;
+  const t=((now-playT0)/1000)%playDur;   // ループ再生
+
+  // 経路の再生（位置＋向き）
+  if(path.length){
+    let i=1; while(i<path.length && path[i].t<t) i++;
+    const a=path[Math.max(0,i-1)], b=path[Math.min(i,path.length-1)];
+    const f=(b.t>a.t)?(t-a.t)/(b.t-a.t):0;
+    J.root.position.x=a.x+(b.x-a.x)*f;
+    J.root.position.z=a.z+(b.z-a.z)*f;
+    let d=b.ry-a.ry; d=Math.atan2(Math.sin(d),Math.cos(d));
+    J.root.rotation.y=a.ry+d*f;
+    syncSlider('pX',J.root.position.x);
+    syncSlider('pZ',J.root.position.z);
+    syncSlider('pRy',J.root.rotation.y);
+  }
+  // ポーズの再生（登録順に均等配分して補間）
+  if(poses.length>=2){
+    const seg=(poses.length-1)*(t/playDur);
+    const i=Math.min(Math.floor(seg),poses.length-2), f=seg-i;
+    const pa=poses[i], pb=poses[i+1];
+    POSE_IDS.forEach(id=>{
+      const v=pa[id]+(pb[id]-pa[id])*f;
+      const [,,joint,axis]=DEFS.find(x=>x[0]===id);
+      document.getElementById(id).value=v;
+      applySlider(id,joint,axis,v);
+    });
+  }
+}
+
+// リサイズ
+function resize(){
+  const w=view.clientWidth, h=view.clientHeight;
+  renderer.setSize(w,h);
+  camera.aspect=w/h; camera.updateProjectionMatrix();
+}
+window.addEventListener('resize',resize);
+resize();
+
+// ループ
+(function loop(now){
+  requestAnimationFrame(loop);
+  const t=now||performance.now();
+  moveStep(t);
+  motionStep(t);
+  orbitCtrl.update();
+  renderer.render(scene,camera);
+})(performance.now());
+</script>
+</body>
+</html>
