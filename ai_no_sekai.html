@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>AIの見ている世界</title>
+<style>
+  :root{
+    --ink:#070B14;         /* 世界の底。光のない空間 */
+    --grid:#141C2E;        /* 座標の格子 */
+    --token:#EDE7D6;       /* 言葉＝唯一の光 */
+    --thread:#3E5A7A;      /* 注意の糸 */
+    --amber:#D9A441;       /* 選ばれる一語 */
+    --dim:#7A849A;         /* 説明の声 */
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    background:var(--ink);
+    color:var(--token);
+    font-family:"Hiragino Mincho ProN","Yu Mincho","Noto Serif JP",serif;
+    min-height:100dvh;
+    display:flex;flex-direction:column;
+    -webkit-text-size-adjust:100%;
+  }
+  header{padding:22px 18px 10px;}
+  h1{
+    font-size:19px;font-weight:600;letter-spacing:.35em;
+  }
+  .sub{
+    margin-top:6px;font-size:11.5px;color:var(--dim);letter-spacing:.18em;
+  }
+  #stage{
+    position:relative;width:100%;height:52dvh;min-height:300px;
+  }
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+
+  /* 確率の海 */
+  #probwrap{padding:10px 18px 4px;}
+  .problabel{
+    font-size:10.5px;color:var(--dim);letter-spacing:.22em;margin-bottom:8px;
+  }
+  .prow{
+    display:flex;align-items:center;gap:8px;margin-bottom:5px;
+    font-family:"Courier New",monospace;font-size:12px;
+  }
+  .ptok{width:5.5em;text-align:right;white-space:nowrap;overflow:hidden;}
+  .pbar{
+    height:8px;background:var(--thread);border-radius:0;
+    transition:width 1.2s cubic-bezier(.4,0,.2,1);opacity:.55;
+  }
+  .prow:first-child .pbar{background:var(--amber);opacity:.9;}
+  .prow:first-child .ptok{color:var(--amber);}
+  .pval{color:var(--dim);font-size:10px;min-width:3.5em;}
+
+  /* 入力 */
+  #inputwrap{padding:14px 18px 8px;}
+  textarea{
+    width:100%;background:#0D1322;border:1px solid var(--grid);
+    color:var(--token);font-family:inherit;font-size:15px;
+    padding:12px;resize:none;height:64px;line-height:1.6;
+  }
+  textarea:focus{outline:1px solid var(--thread);}
+  button{
+    margin-top:8px;width:100%;padding:12px;
+    background:transparent;border:1px solid var(--thread);
+    color:var(--token);font-family:inherit;font-size:14px;
+    letter-spacing:.3em;cursor:pointer;
+  }
+  button:active{background:var(--grid);}
+  button:focus-visible{outline:2px solid var(--amber);}
+
+  /* トークンID列 */
+  #idline{
+    padding:8px 18px 24px;
+    font-family:"Courier New",monospace;font-size:10.5px;
+    color:var(--dim);line-height:1.9;word-break:break-all;
+  }
+  #idline b{color:var(--dim);font-weight:400;letter-spacing:.2em;display:block;margin-bottom:4px;font-family:inherit;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>AIの見ている世界</h1>
+  <div class="sub">言葉は光、意味は距離、未来は確率。</div>
+</header>
+
+<div id="stage"><canvas id="cv"></canvas></div>
+
+<div id="probwrap">
+  <div class="problabel">次の一語 ── 確率の海</div>
+  <div id="probs"></div>
+</div>
+
+<div id="inputwrap">
+  <textarea id="txt">夕暮れの駅で、誰かが傘を忘れていった。</textarea>
+  <button id="go">AIの目で見る</button>
+</div>
+
+<div id="idline"><b>AIに実際に届いているもの（トークンID列）</b><span id="ids"></span></div>
+
+<script>
+(function(){
+  const cv=document.getElementById('cv');
+  const ctx=cv.getContext('2d');
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let W=0,H=0,DPR=Math.min(devicePixelRatio||1,2);
+
+  function resize(){
+    const r=cv.parentElement.getBoundingClientRect();
+    W=r.width;H=r.height;
+    cv.width=W*DPR;cv.height=H*DPR;
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  addEventListener('resize',resize);resize();
+
+  // ---- 疑似トークナイザ：文字種の境界で切る ----
+  function tokenize(s){
+    const re=/([一-龯々]+|[ぁ-ん]+|[ァ-ヶー]+|[A-Za-z0-9]+|[。、．，！？「」（）]|\S)/g;
+    return (s.match(re)||[]).slice(0,40);
+  }
+  function hash(s){
+    let h=2166136261;
+    for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}
+    return (h>>>0);
+  }
+
+  // ---- トークンを空間に置く：系列の螺旋＋意味ハッシュのずれ ----
+  let nodes=[],edges=[];
+  function build(text){
+    const toks=tokenize(text);
+    nodes=[];edges=[];
+    const cx=W/2, cy=H/2, n=toks.length||1;
+    toks.forEach((t,i)=>{
+      const h=hash(t);
+      const ang=(i/n)*Math.PI*2 - Math.PI/2 + ((h%628)/628-0.5)*1.4;
+      const rad=(Math.min(W,H)*0.16) + (i/n)*(Math.min(W,H)*0.26) + ((h>>8)%40-20);
+      nodes.push({
+        t, id:h%100000, i,
+        x:cx+Math.cos(ang)*rad, y:cy+Math.sin(ang)*rad,
+        ph:(h%1000)/1000*Math.PI*2
+      });
+    });
+    // 注意の糸：系列の隣接（強）＋文字種・頭文字の共鳴（弱）
+    for(let i=0;i<nodes.length-1;i++) edges.push([i,i+1,0.5]);
+    for(let i=0;i<nodes.length;i++)for(let j=i+2;j<nodes.length;j++){
+      const a=nodes[i].t,b=nodes[j].t;
+      if(a[0]===b[0]||(hash(a)%7)===(hash(b)%7)) edges.push([i,j,0.14]);
+    }
+    buildProbs(toks);
+    document.getElementById('ids').textContent=
+      nodes.map(nd=>'['+nd.id+']').join(' ');
+  }
+
+  // ---- 確率の海 ----
+  const fillers=['の','は','が','そして','しかし','──'];
+  function buildProbs(toks){
+    const cand=[...new Set([...toks.filter(t=>t.length>1),...fillers])].slice(0,6);
+    let ws=cand.map(t=>((hash(t)%80)+20));
+    const sum=ws.reduce((a,b)=>a+b,0);
+    const rows=cand.map((t,i)=>({t,p:ws[i]/sum})).sort((a,b)=>b.p-a.p);
+    const box=document.getElementById('probs');
+    box.innerHTML=rows.map(r=>
+      '<div class="prow"><span class="ptok">'+r.t+'</span>'+
+      '<div class="pbar" style="width:'+(r.p*70)+'%"></div>'+
+      '<span class="pval">'+(r.p*100).toFixed(1)+'%</span></div>'
+    ).join('');
+  }
+
+  // ---- 描画 ----
+  let t0=performance.now();
+  function draw(now){
+    const t=reduced?0:(now-t0)/1000;
+    ctx.clearRect(0,0,W,H);
+
+    // 座標の格子：AIの世界に風景はなく、座標だけがある
+    ctx.strokeStyle='#141C2E';ctx.lineWidth=1;
+    const g=44;
+    ctx.beginPath();
+    for(let x=(W/2)%g;x<W;x+=g){ctx.moveTo(x,0);ctx.lineTo(x,H);}
+    for(let y=(H/2)%g;y<H;y+=g){ctx.moveTo(0,y);ctx.lineTo(W,y);}
+    ctx.stroke();
+
+    // 注意の糸
+    edges.forEach(([i,j,w])=>{
+      const a=nodes[i],b=nodes[j];
+      const pulse=reduced?1:(0.6+0.4*Math.sin(t*1.4+a.ph));
+      ctx.strokeStyle='rgba(62,90,122,'+(w*pulse)+')';
+      ctx.lineWidth=w>0.3?1.1:0.6;
+      ctx.beginPath();
+      const mx=(a.x+b.x)/2,my=(a.y+b.y)/2-14;
+      ctx.moveTo(a.x,a.y);ctx.quadraticCurveTo(mx,my,b.x,b.y);
+      ctx.stroke();
+    });
+
+    // トークン＝光の粒
+    nodes.forEach(nd=>{
+      const dx=reduced?0:Math.sin(t*0.5+nd.ph)*3;
+      const dy=reduced?0:Math.cos(t*0.4+nd.ph)*3;
+      const x=nd.x+dx,y=nd.y+dy;
+      const glow=reduced?0.5:(0.35+0.25*Math.sin(t+nd.ph));
+      const rg=ctx.createRadialGradient(x,y,0,x,y,26);
+      rg.addColorStop(0,'rgba(237,231,214,'+glow*0.25+')');
+      rg.addColorStop(1,'rgba(237,231,214,0)');
+      ctx.fillStyle=rg;
+      ctx.fillRect(x-26,y-26,52,52);
+
+      ctx.fillStyle='#EDE7D6';
+      ctx.font='600 '+(W<480?13:15)+'px "Hiragino Mincho ProN","Yu Mincho",serif';
+      ctx.textAlign='center';
+      ctx.fillText(nd.t,x,y);
+      ctx.fillStyle='rgba(122,132,154,0.75)';
+      ctx.font='9px "Courier New",monospace';
+      ctx.fillText(nd.id,x,y+13);
+    });
+
+    if(!reduced)requestAnimationFrame(draw);
+  }
+
+  document.getElementById('go').addEventListener('click',()=>{
+    const v=document.getElementById('txt').value.trim();
+    if(!v)return;
+    build(v);
+    if(reduced)draw(0);
+  });
+
+  build(document.getElementById('txt').value);
+  if(reduced){draw(0);}else{requestAnimationFrame(draw);}
+})();
+</script>
+</body>
+</html>
