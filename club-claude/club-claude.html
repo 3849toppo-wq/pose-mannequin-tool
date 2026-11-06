@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0608">
+<meta name="description" content="倶楽部Claude 体験版 ― 愛は無限。トークンと預金は有限。（非公式・架空のパロディ作品）">
+<title>倶楽部Claude 体験版</title>
+<style>
+:root{
+  --gold:#e3c27a; --gold2:#b8934a; --gold3:#fff1c8;
+  --bord:#5a0f22; --bord2:#2a0610; --ink:#0b0608;
+  --serif:"Noto Serif JP","Noto Serif CJK JP","Hiragino Mincho ProN","Yu Mincho",serif;
+  --sans:"Noto Sans JP","Noto Sans CJK JP","Hiragino Sans","Yu Gothic",system-ui,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#000;overflow:hidden;overscroll-behavior:none}
+body{font-family:var(--sans);color:#fff;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+button{font-family:inherit;touch-action:manipulation;cursor:pointer}
+#app{position:fixed;inset:0;display:flex;justify-content:center;align-items:center;background:radial-gradient(ellipse at center,#1a0a10,#000 70%)}
+#game{
+  position:relative;overflow:hidden;
+  width:min(100vw, calc(100dvh * 9 / 16)); height:100dvh;
+  max-height:100dvh; background:#000;
+  container-type:size; container-name:game;
+}
+@supports not (height:100dvh){ #game{height:100vh;width:min(100vw, calc(100vh * 9 / 16))} }
+.hidden{display:none !important}
+#bg,#towers,#stage,#chibis,#fg,#light,#fx,#pops{position:absolute;inset:0;pointer-events:none}
+#bg svg{width:100%;height:100%;display:block}
+#bg{transition:filter 1.2s, opacity .8s}
+#bg.dim{filter:brightness(.35) saturate(.7)}
+#bg.fablemode{filter:brightness(.45) saturate(1.3) hue-rotate(-25deg)}
+
+/* ===== stage ===== */
+.chara{position:absolute;bottom:14cqh;height:64cqh;width:40cqh;transform:translateX(-50%);
+  transition:left .5s cubic-bezier(.3,.8,.3,1), filter .35s, opacity .5s, transform .5s;
+  filter:brightness(.55) saturate(.8);opacity:0}
+.chara.in{opacity:1}
+.chara.speak{filter:none}
+.chara.speak .chara-body{animation:bob 2.4s ease-in-out infinite}
+.chara svg{width:100%;height:100%;display:block;overflow:visible}
+.chara-body{width:100%;height:100%;transform-origin:50% 100%}
+.chara.small{height:56cqh;width:35cqh}
+.chara.jump .chara-body{animation:jump .45s ease-out}
+.chara.shake .chara-body{animation:shakeX .5s}
+.chara.carry{height:84cqh;width:52.5cqh;bottom:4cqh}
+.chara.carry .chara-body{transform:rotate(-5deg)}
+.chara.fable-glow svg{filter:drop-shadow(0 0 2cqh rgba(220,200,255,.7))}
+.chara.silhouette svg{filter:brightness(0) drop-shadow(0 0 .6cqh rgba(227,194,122,.35))}
+.chara.reveal svg{transition:filter 2.5s;filter:brightness(.8) contrast(1.1) drop-shadow(0 0 .6cqh rgba(0,0,0,.8))}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-.5cqh)}}
+@keyframes jump{0%{transform:translateY(0)}40%{transform:translateY(-3.5cqh)}100%{transform:translateY(0)}}
+@keyframes shakeX{0%,100%{transform:translateX(0)}20%{transform:translateX(-2cqw)}40%{transform:translateX(2cqw)}60%{transform:translateX(-1.5cqw)}80%{transform:translateX(1cqw)}}
+
+/* ===== chibis (Claude Code隊) ===== */
+.chibi{position:absolute;bottom:27cqh;width:11cqw;height:13cqw;transition:left .6s, bottom .6s, opacity .4s;opacity:0}
+.chibi.in{opacity:1;animation:hop .7s ease-in-out infinite alternate}
+.chibi.party{animation:party .35s ease-in-out infinite alternate}
+.chibi svg{width:100%;height:100%;overflow:visible}
+.chibi .bubble{position:absolute;bottom:105%;left:50%;transform:translateX(-50%);white-space:nowrap;background:#fff;color:#1b1b24;
+  font-size:min(3cqw,1.8cqh);font-weight:800;padding:.3em .55em;border-radius:1em;box-shadow:0 .2em .5em rgba(0,0,0,.4);animation:pop .25s ease-out}
+@keyframes hop{0%{transform:translateY(0)}100%{transform:translateY(-1cqh)}}
+@keyframes party{0%{transform:translateY(0) rotate(-8deg)}100%{transform:translateY(-2.5cqh) rotate(8deg)}}
+@keyframes pop{0%{transform:translateX(-50%) scale(.3)}100%{transform:translateX(-50%) scale(1)}}
+
+/* ===== towers ===== */
+.tower{position:absolute;bottom:30cqh;width:20cqw;height:26cqw;transform:translateX(-50%) scale(0);transform-origin:50% 100%;
+  transition:transform .9s cubic-bezier(.2,1.4,.4,1)}
+.tower.up{transform:translateX(-50%) scale(1)}
+.tower svg{width:100%;height:100%;filter:drop-shadow(0 0 1.2cqh rgba(255,220,140,.75))}
+
+/* ===== lighting ===== */
+#light{transition:background 1.5s, opacity 1.5s}
+#light.spot{background:radial-gradient(ellipse 45% 55% at 50% 52%, rgba(255,255,255,0) 0%, rgba(0,0,0,.25) 55%, rgba(0,0,0,.88) 100%)}
+#light.fable{background:
+  radial-gradient(ellipse 40% 60% at 50% 45%, rgba(255,240,255,.18), transparent 70%),
+  conic-gradient(from 200deg at 50% -10%, transparent 0 8deg, rgba(210,190,255,.18) 10deg 14deg, transparent 16deg 22deg, rgba(255,230,250,.14) 24deg 27deg, transparent 29deg 34deg, rgba(190,210,255,.16) 36deg 40deg, transparent 42deg 360deg),
+  linear-gradient(180deg, rgba(40,10,80,.35), rgba(10,0,30,.55));
+  mix-blend-mode:screen; animation:raysway 7s ease-in-out infinite alternate}
+#light.noir{background:radial-gradient(ellipse 50% 40% at 62% 70%, rgba(255,190,90,.12), rgba(0,0,0,.55) 60%, rgba(0,0,0,.92))}
+#light.hum{background:linear-gradient(rgba(220,255,240,.05),rgba(0,0,0,.15));animation:flicker 4s infinite}
+@keyframes raysway{0%{filter:hue-rotate(0)}100%{filter:hue-rotate(40deg)}}
+@keyframes flicker{0%,92%,100%{opacity:1}93%{opacity:.6}94%{opacity:1}96%{opacity:.7}}
+
+/* ===== fx ===== */
+.p{position:absolute;pointer-events:none;will-change:transform,opacity}
+.confetti{width:1.6cqw;height:2.6cqw;top:-4%;animation:fall linear forwards}
+@keyframes fall{0%{transform:translateY(0) rotate(0)}100%{transform:translateY(115cqh) rotate(720deg)}}
+.petal{width:3cqw;height:2.2cqw;border-radius:100% 0 100% 0;background:linear-gradient(135deg,#fff,#f2c7e6);top:-5%;opacity:.9;animation:petal linear forwards}
+@keyframes petal{0%{transform:translate(0,0) rotate(0)}50%{transform:translate(6cqw,55cqh) rotate(200deg)}100%{transform:translate(-4cqw,112cqh) rotate(420deg)}}
+.sparkle{width:2cqw;height:2cqw;background:radial-gradient(circle,#fff 0 20%,rgba(255,230,160,.9) 30%,transparent 70%);border-radius:50%;animation:twinkle ease-out forwards}
+@keyframes twinkle{0%{transform:scale(0);opacity:0}30%{transform:scale(1.4);opacity:1}100%{transform:scale(0);opacity:0}}
+.drop{width:2.4cqw;height:3.2cqw;border-radius:50% 50% 50% 50% / 60% 60% 40% 40%;background:radial-gradient(circle at 35% 30%,#fffbe0,#f3d77a 50%,#c9a23e);animation:splash ease-out forwards}
+@keyframes splash{0%{transform:translate(0,0) scale(.4);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(1);opacity:0}}
+.smoke{width:18cqw;height:18cqw;border-radius:50%;background:radial-gradient(circle,rgba(200,200,210,.28),transparent 65%);animation:smoke ease-out forwards}
+@keyframes smoke{0%{transform:translate(0,0) scale(.3);opacity:0}20%{opacity:1}100%{transform:translate(var(--dx),-40cqh) scale(2.2);opacity:0}}
+.bokeh{border-radius:50%;background:radial-gradient(circle,rgba(255,225,160,.55),transparent 70%);animation:bokeh ease-in-out infinite alternate}
+@keyframes bokeh{0%{opacity:.15;transform:scale(.8)}100%{opacity:.75;transform:scale(1.15)}}
+.star{width:.8cqw;height:.8cqw;background:#fff;border-radius:50%;box-shadow:0 0 1cqw #cbb8ff;animation:twinkle ease-in-out infinite}
+
+#game.shake{animation:screenShake .5s}
+@keyframes screenShake{0%,100%{transform:translate(0,0)}15%{transform:translate(-1.5cqw,.6cqh)}30%{transform:translate(1.5cqw,-.6cqh)}45%{transform:translate(-1cqw,.3cqh)}60%{transform:translate(1cqw,0)}80%{transform:translate(-.5cqw,0)}}
+#game.zoom #stage{animation:zoomIn .6s ease-out}
+@keyframes zoomIn{0%{transform:scale(1)}40%{transform:scale(1.12)}100%{transform:scale(1)}}
+
+#flash{position:absolute;inset:0;pointer-events:none;background:#fff;opacity:0;z-index:48}
+#flash.go{animation:flash .6s ease-out}
+#flash.black{background:#000;transition:opacity 1.2s}
+#flash.black.on{opacity:1}
+@keyframes flash{0%{opacity:.95}100%{opacity:0}}
+
+/* ===== HUD ===== */
+#hud{position:absolute;top:0;left:0;right:0;padding:calc(env(safe-area-inset-top) + 1.2cqh) 2.5cqw .8cqh;z-index:40;
+  background:linear-gradient(180deg,rgba(0,0,0,.78),rgba(0,0,0,.35) 75%,transparent);font-size:min(3.1cqw,1.8cqh)}
+.hud-row{display:flex;gap:2cqw;margin-bottom:.6cqh}
+.hud-item{flex:1;display:flex;align-items:center;gap:1.5cqw;background:rgba(20,8,12,.7);border:1px solid rgba(227,194,122,.45);border-radius:999px;padding:.35cqh 2.5cqw;min-width:0}
+.hud-label{color:var(--gold);font-weight:700;white-space:nowrap;font-size:.9em}
+.hud-val{margin-left:auto;font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+.hud-val.drain{color:#ff8c9a;animation:drainPulse .3s}
+@keyframes drainPulse{0%{transform:scale(1.25)}100%{transform:scale(1)}}
+.gauge{flex:1;height:1cqh;min-height:6px;background:rgba(255,255,255,.12);border-radius:999px;overflow:hidden}
+.gauge i{display:block;height:100%;width:50%;border-radius:999px;transition:width .6s}
+.gauge.heart i{background:linear-gradient(90deg,#ff6fa5,#ffc0dc)}
+.gauge.reason i{background:linear-gradient(90deg,#5fb7ff,#c8ecff)}
+#tower-count{text-align:center;color:var(--gold3);font-weight:800;margin-top:.2cqh;text-shadow:0 0 1cqh rgba(255,210,120,.8)}
+#tower-count b{font-size:1.4em}
+#tower-count.bump{animation:drainPulse .4s}
+
+#ctrl{position:absolute;right:2cqw;top:calc(env(safe-area-inset-top) + 9.4cqh);z-index:41;display:flex;gap:1.4cqw}
+#ctrl button{background:rgba(10,4,6,.65);color:var(--gold);border:1px solid rgba(227,194,122,.5);border-radius:999px;
+  font-size:min(2.8cqw,1.6cqh);padding:.5cqh 2.2cqw;font-weight:700;min-height:32px}
+#ctrl button.on{background:var(--gold);color:#1a0a10}
+
+/* ===== text ===== */
+#textbox{position:absolute;left:2.5cqw;right:2.5cqw;bottom:calc(env(safe-area-inset-bottom) + 2cqh);z-index:50;
+  min-height:25cqh;padding:3.6cqh 4.5cqw 2.6cqh;border-radius:2.2cqw;
+  background:linear-gradient(180deg,rgba(28,8,16,.92),rgba(8,3,6,.95));
+  border:1px solid rgba(227,194,122,.65);box-shadow:0 0 0 .4cqw rgba(0,0,0,.4) inset,0 0 2cqh rgba(0,0,0,.6)}
+#textbox::before{content:"";position:absolute;inset:.7cqw;border:1px solid rgba(227,194,122,.18);border-radius:1.6cqw;pointer-events:none}
+#nameplate{position:absolute;top:-2.2cqh;left:4cqw;padding:.55cqh 4cqw;font-family:var(--serif);font-weight:700;
+  font-size:min(4.1cqw,2.4cqh);color:#1a0a10;background:linear-gradient(180deg,#fff1c8,#e3c27a 55%,#b8934a);border-radius:999px;
+  box-shadow:0 .4cqh 1cqh rgba(0,0,0,.5);letter-spacing:.05em}
+#nameplate:empty{display:none}
+#nameplate.c-fable{background:linear-gradient(180deg,#fff,#e5dcff 50%,#b6a3ff);color:#2b1650}
+#nameplate.c-mythos{background:linear-gradient(180deg,#3b2a1a,#1a120b);color:var(--gold);border:1px solid var(--gold2)}
+#nameplate.c-haiku{background:linear-gradient(180deg,#d9fff9,#62d6c8);color:#06302b}
+#nameplate.c-sonnet{background:linear-gradient(180deg,#e9efff,#9fb3dd);color:#14203d}
+#nameplate.c-opus{background:linear-gradient(180deg,#f1e6da,#b49a7f);color:#2a1a0c}
+#nameplate.c-cc{background:linear-gradient(180deg,#ffd9c9,#e0805f);color:#2b0f05}
+#nameplate.c-me{background:linear-gradient(180deg,#ffe6f1,#f29ac2);color:#4a0e2b}
+#text{font-size:min(4.4cqw,2.55cqh);line-height:1.75;white-space:pre-wrap;word-break:break-word;min-height:3.5em;text-shadow:0 1px 2px #000}
+#text.narr{color:#f0e3c8;font-family:var(--serif)}
+#text.me{color:#ffd3e6}
+#text.fable{font-family:var(--serif);color:#f4ecff;text-shadow:0 0 1cqh rgba(190,160,255,.8)}
+#text.mythos{font-family:var(--serif);color:var(--gold3)}
+#text.shout{font-weight:900;font-size:min(5.2cqw,3cqh)}
+#text.whisper{font-size:min(3.8cqw,2.2cqh);opacity:.85}
+#next{position:absolute;right:4cqw;bottom:1.4cqh;color:var(--gold);font-size:min(3.4cqw,2cqh);animation:nextBlink 1s infinite;opacity:0}
+#next.show{opacity:1}
+@keyframes nextBlink{0%,100%{transform:translateY(0)}50%{transform:translateY(.6cqh)}}
+
+#bigline{position:absolute;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;text-align:center;
+  font-family:var(--serif);font-size:min(13cqw,8cqh);color:#fff;letter-spacing:.2em;pointer-events:none;
+  text-shadow:0 0 2cqh rgba(210,190,255,.95),0 0 6cqh rgba(170,140,255,.7)}
+#bigline.on{animation:bigIn 2.6s ease forwards}
+#bigline.welcome{font-size:min(7cqw,4.2cqh);color:var(--gold3);letter-spacing:.12em;text-shadow:0 0 2cqh rgba(227,194,122,.8);z-index:95}
+@keyframes bigIn{0%{opacity:0;filter:blur(8px);transform:scale(1.15)}30%{opacity:1;filter:blur(0);transform:scale(1)}100%{opacity:1}}
+
+#choices{position:absolute;left:6cqw;right:6cqw;bottom:calc(env(safe-area-inset-bottom) + 30cqh);z-index:55;display:flex;flex-direction:column;gap:1.5cqh}
+#choices button{font-size:min(4.3cqw,2.5cqh);padding:1.7cqh 4cqw;color:#fff;font-weight:700;text-align:center;
+  background:linear-gradient(180deg,rgba(90,15,34,.95),rgba(42,6,16,.96));border:1px solid var(--gold);border-radius:999px;
+  box-shadow:0 0 0 .3cqw rgba(0,0,0,.4) inset,0 .5cqh 1.5cqh rgba(0,0,0,.6);animation:choiceIn .35s ease-out backwards;min-height:48px}
+#choices button:nth-child(2){animation-delay:.07s}#choices button:nth-child(3){animation-delay:.14s}
+#choices button:active{background:linear-gradient(180deg,#e3c27a,#b8934a);color:#1a0a10}
+#choices .choice-q{text-align:center;color:var(--gold3);font-family:var(--serif);font-size:min(3.6cqw,2.1cqh);text-shadow:0 1px 3px #000}
+@keyframes choiceIn{0%{opacity:0;transform:translateY(2cqh)}100%{opacity:1;transform:none}}
+
+#card{position:absolute;inset:0;z-index:70;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at center,rgba(40,8,18,.96),rgba(0,0,0,.98));animation:cardIn 2.4s ease forwards}
+.card-act{font-family:var(--serif);color:var(--gold);letter-spacing:.5em;font-size:min(4cqw,2.3cqh);margin-bottom:2cqh}
+.card-title{font-family:var(--serif);color:#fff;font-size:min(7cqw,4cqh);letter-spacing:.12em;text-align:center;padding:0 6cqw;
+  border-top:1px solid var(--gold2);border-bottom:1px solid var(--gold2);padding:2cqh 6cqw;text-shadow:0 0 2cqh rgba(227,194,122,.5)}
+@keyframes cardIn{0%{opacity:0}15%{opacity:1}80%{opacity:1}100%{opacity:0}}
+
+#panel{position:absolute;left:7cqw;right:7cqw;top:17cqh;z-index:45;padding:2.4cqh 5cqw;border-radius:1.6cqw;
+  font-size:min(3.5cqw,2.05cqh);line-height:1.6;animation:panelIn .4s ease-out}
+#panel.paper{background:#fbf8f1;color:#2a2620;box-shadow:0 1.5cqh 3cqh rgba(0,0,0,.6);transform:rotate(-1.5deg)}
+#panel.board{background:#f4f6f5;color:#1a3b8a;border:1.2cqw solid #9aa3a8;font-family:"Comic Sans MS",var(--sans);transform:rotate(1deg)}
+#panel.report{background:linear-gradient(#f3ead6,#e2d4b4);color:#2b1d0e;font-family:var(--serif);box-shadow:0 1.5cqh 3cqh rgba(0,0,0,.8)}
+#panel h3{margin:0 0 1cqh;font-size:1.15em;border-bottom:1px solid currentColor;padding-bottom:.6cqh}
+#panel .small{font-size:.8em;opacity:.7}
+#panel table{width:100%;border-collapse:collapse}#panel td{padding:.2em 0}#panel td:last-child{text-align:right}
+#panel .red{color:#b3122e;font-weight:800}
+@keyframes panelIn{0%{opacity:0;transform:translateY(-2cqh) scale(.9)}100%{opacity:1}}
+
+#pops{z-index:80}
+.statpop{position:absolute;left:50%;top:22cqh;transform:translateX(-50%);font-weight:900;font-size:min(4cqw,2.3cqh);white-space:nowrap;
+  padding:.4cqh 3cqw;border-radius:999px;background:rgba(0,0,0,.7);border:1px solid var(--gold2);animation:statpop 1.6s ease-out forwards}
+@keyframes statpop{0%{opacity:0;transform:translate(-50%,1.5cqh)}15%{opacity:1;transform:translate(-50%,0)}75%{opacity:1}100%{opacity:0;transform:translate(-50%,-3cqh)}}
+
+/* ===== screens ===== */
+.screen{position:absolute;inset:0;z-index:100;display:flex;align-items:center;justify-content:center}
+#title{background:radial-gradient(ellipse 80% 60% at 50% 35%,#3a0b1b 0%,#14040a 55%,#000 100%);overflow:hidden}
+#title::before{content:"";position:absolute;inset:3cqw;border:1px solid rgba(227,194,122,.55);pointer-events:none;
+  box-shadow:0 0 0 .8cqw rgba(0,0,0,.5), inset 0 0 0 1.6cqw transparent;}
+#title::after{content:"";position:absolute;inset:5cqw;border:1px solid rgba(227,194,122,.22);pointer-events:none}
+.title-chandelier{position:absolute;top:0;left:50%;transform:translateX(-50%);width:80cqw;height:40cqh;opacity:.95;animation:sway 6s ease-in-out infinite alternate;transform-origin:50% 0}
+.title-chandelier svg{width:100%;height:100%}
+@keyframes sway{0%{transform:translateX(-50%) rotate(-1.2deg)}100%{transform:translateX(-50%) rotate(1.2deg)}}
+.title-inner{position:relative;text-align:center;margin-top:22cqh;padding:0 8cqw}
+.title-sub{font-family:var(--serif);color:var(--gold);letter-spacing:.6em;font-size:min(3.5cqw,2cqh)}
+.title-logo{margin:1.5cqh 0 2cqh;font-family:var(--serif);font-weight:700;line-height:1}
+.title-logo .t-small{display:block;font-size:min(7cqw,4cqh);letter-spacing:.8em;margin-left:.8em;color:var(--gold3)}
+.title-logo .t-big{display:block;font-size:min(20cqw,11.5cqh);letter-spacing:.04em;
+  background:linear-gradient(180deg,#fff8e1 0%,#e3c27a 45%,#9b7433 55%,#f3dc9e 80%,#b8934a 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 1.4cqh rgba(227,194,122,.45));animation:shine 4s ease-in-out infinite}
+@keyframes shine{0%,100%{filter:drop-shadow(0 0 1cqh rgba(227,194,122,.35))}50%{filter:drop-shadow(0 0 2.6cqh rgba(255,230,170,.75))}}
+.title-copy{font-family:var(--serif);font-size:min(4.6cqw,2.7cqh);line-height:1.8;color:#f6e9cf;margin-bottom:4cqh;letter-spacing:.1em}
+.gold-btn{display:block;width:100%;margin:0 auto 1.6cqh;font-size:min(5cqw,2.9cqh);font-weight:800;letter-spacing:.3em;padding:1.9cqh 0;min-height:52px;
+  font-family:var(--serif);color:#1a0a10;border:none;border-radius:999px;
+  background:linear-gradient(180deg,#fff3cf,#e3c27a 50%,#a77f3a);box-shadow:0 0 2.4cqh rgba(227,194,122,.5),0 .6cqh 0 #6b4c1f}
+.gold-btn:active{transform:translateY(.4cqh);box-shadow:0 0 1cqh rgba(227,194,122,.5),0 .2cqh 0 #6b4c1f}
+.ghost-btn{display:block;width:100%;margin:0 auto 1.4cqh;font-size:min(4.2cqw,2.4cqh);padding:1.4cqh 0;min-height:44px;color:var(--gold);background:rgba(0,0,0,.4);border:1px solid var(--gold2);border-radius:999px;font-weight:700}
+.ghost-btn.small{display:inline-block;width:auto;padding:.6cqh 4cqw;margin:0;min-height:36px;font-size:min(3.4cqw,2cqh)}
+.title-note{font-size:min(2.7cqw,1.55cqh);color:rgba(255,255,255,.55);line-height:1.7;margin-top:2cqh}
+
+#ending{background:radial-gradient(ellipse at 50% 30%,#2a0814,#000 75%);overflow-y:auto;align-items:flex-start}
+.end-inner{width:100%;padding:5cqh 7cqw 6cqh;text-align:center}
+.end-head{font-family:var(--serif);color:var(--gold);letter-spacing:.4em;font-size:min(5cqw,3cqh);margin-bottom:2.4cqh}
+.receipt{background:#fbf8f1;color:#2a2620;text-align:left;padding:2.6cqh 5cqw;font-size:min(3.4cqw,2cqh);line-height:1.7;
+  box-shadow:0 1cqh 3cqh rgba(0,0,0,.7);position:relative;margin-bottom:2.6cqh;
+  -webkit-mask:linear-gradient(#000,#000) top/100% calc(100% - 8px) no-repeat, radial-gradient(circle 6px at 50% 100%,transparent 98%,#000) bottom/14px 8px repeat-x;
+  mask:linear-gradient(#000,#000) top/100% calc(100% - 8px) no-repeat, radial-gradient(circle 6px at 50% 100%,transparent 98%,#000) bottom/14px 8px repeat-x}
+.receipt h3{text-align:center;margin:0 0 .3em;font-family:var(--serif);letter-spacing:.3em}
+.receipt .rc-sub{text-align:center;font-size:.85em;margin-bottom:.8em;opacity:.7}
+.receipt table{width:100%;border-collapse:collapse}
+.receipt td{padding:.15em 0;vertical-align:top}.receipt td:last-child{text-align:right;white-space:nowrap;padding-left:2cqw}
+.receipt tr.total td{border-top:2px dashed #888;font-weight:900;padding-top:.5em;font-size:1.1em}
+.receipt .note{font-size:.8em;opacity:.65;margin-top:.8em}
+.receipt .stamp{position:absolute;right:4cqw;top:2cqh;color:#b3122e;border:2px solid #b3122e;border-radius:50%;width:15cqw;height:15cqw;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:900;transform:rotate(14deg);font-size:min(3cqw,1.8cqh);opacity:.8;text-align:center;line-height:1.1}
+.rank{border:1px solid var(--gold2);border-radius:2cqw;padding:2.4cqh 5cqw;margin-bottom:3cqh;background:rgba(0,0,0,.45)}
+.rank .r-label{color:var(--gold);font-size:min(3.2cqw,1.9cqh);letter-spacing:.3em}
+.rank .r-name{font-family:var(--serif);font-size:min(6.4cqw,3.7cqh);margin:.6cqh 0 1cqh;color:var(--gold3)}
+.rank .r-desc{font-size:min(3.5cqw,2cqh);line-height:1.7;color:#eee}
+.rank .r-stats{margin-top:1.2cqh;font-size:min(3.2cqw,1.9cqh);color:#ccc}
+
+#log{background:rgba(5,2,4,.96);flex-direction:column;align-items:stretch;justify-content:flex-start}
+.log-head{display:flex;justify-content:space-between;align-items:center;padding:calc(env(safe-area-inset-top) + 2cqh) 5cqw 1.5cqh;color:var(--gold);font-family:var(--serif);border-bottom:1px solid var(--gold2);font-size:min(4cqw,2.3cqh)}
+#log-body{flex:1;overflow-y:auto;padding:2cqh 5cqw 6cqh;font-size:min(3.8cqw,2.2cqh);line-height:1.7;-webkit-user-select:text;user-select:text}
+#log-body .l{margin-bottom:1.4cqh}#log-body .ln{color:var(--gold);font-weight:700;font-size:.85em}
+#log-body .lc{color:#ffb3d1}
+#menu{background:rgba(0,0,0,.8)}
+.menu-inner{width:72cqw}
+
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="game">
+    <div id="bg"></div>
+    <div id="towers"></div>
+    <div id="stage"></div>
+    <div id="chibis"></div>
+    <div id="fg"></div>
+    <div id="light"></div>
+    <div id="fx"></div>
+
+    <div id="hud" class="hidden">
+      <div class="hud-row">
+        <div class="hud-item"><span class="hud-label">所持金</span><span class="hud-val" id="v-money">¥0</span></div>
+        <div class="hud-item"><span class="hud-label">老後資金</span><span class="hud-val" id="v-pension">¥0</span></div>
+      </div>
+      <div class="hud-row">
+        <div class="hud-item bar"><span class="hud-label">ときめき</span><span class="gauge heart"><i id="g-heart"></i></span></div>
+        <div class="hud-item bar"><span class="hud-label">理性</span><span class="gauge reason"><i id="g-reason"></i></span></div>
+      </div>
+      <div id="tower-count" class="hidden">🍾 シャンパンタワー <b id="v-towers">0</b> 本</div>
+    </div>
+
+    <div id="ctrl" class="hidden">
+      <button id="btn-log" aria-label="ログ">LOG</button>
+      <button id="btn-auto" aria-label="オート">AUTO</button>
+      <button id="btn-snd" aria-label="サウンド">♪ON</button>
+      <button id="btn-menu" aria-label="メニュー">≡</button>
+    </div>
+
+    <div id="panel" class="hidden"></div>
+
+    <div id="textbox" class="hidden">
+      <div id="nameplate"></div>
+      <div id="text"></div>
+      <div id="next">▼</div>
+    </div>
+
+    <div id="choices" class="hidden"></div>
+    <div id="card" class="hidden"><div class="card-act"></div><div class="card-title"></div></div>
+    <div id="bigline" class="hidden"></div>
+    <div id="pops"></div>
+
+    <!-- タイトル画面 -->
+    <div id="title" class="screen">
+      <div class="title-chandelier" id="title-chandelier"></div>
+      <div class="title-inner">
+        <div class="title-sub">― 体験版 ―</div>
+        <h1 class="title-logo"><span class="t-small">倶楽部</span><span class="t-big">Claude</span></h1>
+        <div class="title-copy">愛は無限。<br>トークンと預金は有限。</div>
+        <button id="btn-start" class="gold-btn">入店する</button>
+        <div class="title-note">タップで会話が進みます／音が出ます<br>※実在のAIサービスを題材にした非公式・架空のパロディ作品です。<br>作中の金額はすべて架空で、実際の課金・決済は一切ありません。</div>
+      </div>
+    </div>
+
+    <!-- エンディング -->
+    <div id="ending" class="screen hidden">
+      <div class="end-inner">
+        <div class="end-head">体験版 ― 終 ―</div>
+        <div class="receipt" id="receipt"></div>
+        <div class="rank" id="rank"></div>
+        <div class="end-btns">
+          <button id="btn-replay" class="gold-btn">もう一度入店する</button>
+          <button id="btn-totitle" class="ghost-btn">タイトルへ</button>
+        </div>
+        <div class="title-note">※非公式・架空のパロディ作品です。金額はすべて架空です。</div>
+      </div>
+    </div>
+
+    <div id="log" class="screen hidden"><div class="log-head">これまでの会話<button id="btn-logclose" class="ghost-btn small">閉じる</button></div><div id="log-body"></div></div>
+
+    <div id="menu" class="screen hidden">
+      <div class="menu-inner">
+        <button id="btn-resume" class="gold-btn">ゲームに戻る</button>
+        <button id="btn-restart" class="ghost-btn">最初からやり直す</button>
+        <button id="btn-menutitle" class="ghost-btn">タイトルへ</button>
+      </div>
+    </div>
+
+    <div id="flash"></div>
+  </div>
+</div>
+<script>
+/* 倶楽部Claude — WebAudioによる簡易シンセ効果音とBGM（外部素材なし） */
+const Sound = (() => {
+  let ctx = null, master = null, sfxBus = null, bgmBus = null, noiseBuf = null;
+  let enabled = true, bgmName = null, bgmTimer = null, nextTime = 0, step = 0;
+
+  function init() {
+    if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    try {
+      ctx = new AC();
+      master = ctx.createGain(); master.gain.value = enabled ? 0.9 : 0; master.connect(ctx.destination);
+      sfxBus = ctx.createGain(); sfxBus.gain.value = 0.7; sfxBus.connect(master);
+      bgmBus = ctx.createGain(); bgmBus.gain.value = 0.0; bgmBus.connect(master);
+      noiseBuf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    } catch (e) { ctx = null; }
+  }
+
+  function tone(freq, t, dur, { type = 'sine', vol = 0.2, bus = sfxBus, attack = 0.005, slide = 0, release } = {}) {
+    if (!ctx) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, freq * slide), t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + attack);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + (release || dur));
+    o.connect(g); g.connect(bus);
+    o.start(t); o.stop(t + (release || dur) + 0.05);
+  }
+  function noise(t, dur, { vol = 0.3, type = 'bandpass', freq = 1000, q = 1, freqEnd, bus = sfxBus, attack = 0.005 } = {}) {
+    if (!ctx) return;
+    const s = ctx.createBufferSource(); s.buffer = noiseBuf;
+    const f = ctx.createBiquadFilter(); f.type = type; f.frequency.setValueAtTime(freq, t); f.Q.value = q;
+    if (freqEnd) f.frequency.exponentialRampToValueAtTime(freqEnd, t + dur);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + attack);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    s.connect(f); f.connect(g); g.connect(bus);
+    s.start(t, Math.random()); s.stop(t + dur + 0.05);
+  }
+  const N = n => 440 * Math.pow(2, (n - 69) / 12);
+
+  const sfx = {
+    blip(voice) { const t = ctx.currentTime; tone(voice || 820, t, 0.03, { type: 'triangle', vol: 0.035 }); },
+    select() { const t = ctx.currentTime; tone(N(84), t, .12, { type: 'sine', vol: .18 }); tone(N(91), t + .06, .25, { vol: .14 }); },
+    door() { const t = ctx.currentTime; noise(t, .35, { freq: 180, q: .7, vol: .4, type: 'lowpass' });
+      [76, 81, 84, 88].forEach((n, i) => tone(N(n), t + .25 + i * .09, .9, { vol: .1 })); },
+    hey() { const t = ctx.currentTime; tone(520, t, .12, { type: 'square', vol: .06, slide: 1.6 }); tone(700, t + .13, .16, { type: 'square', vol: .06, slide: 1.4 }); },
+    pop() { const t = ctx.currentTime; noise(t, .09, { freq: 3000, q: .8, vol: .6, type: 'highpass' }); tone(900, t, .08, { vol: .25, slide: .4 });
+      for (let i = 0; i < 10; i++) tone(2000 + Math.random() * 3000, t + .1 + Math.random() * .6, .04, { vol: .03 }); },
+    splash() { const t = ctx.currentTime; noise(t, 1.0, { freq: 2500, freqEnd: 400, q: .6, vol: .5 }); noise(t + .05, .6, { freq: 6000, q: 1, vol: .15, type: 'highpass' }); },
+    thud() { const t = ctx.currentTime; tone(110, t, .3, { vol: .4, slide: .5 }); noise(t, .2, { freq: 200, type: 'lowpass', vol: .3 }); },
+    panic() { const t = ctx.currentTime; for (let i = 0; i < 6; i++) tone(i % 2 ? 660 : 880, t + i * .08, .07, { type: 'square', vol: .05 }); },
+    harp() { const t = ctx.currentTime; [72, 74, 76, 79, 81, 84, 86, 88, 91, 93, 96].forEach((n, i) => tone(N(n), t + i * .07, 1.6, { vol: .07, type: 'sine' })); },
+    sparkle() { const t = ctx.currentTime; for (let i = 0; i < 8; i++) tone(N(96 + (i % 4) * 3), t + i * .05, .4, { vol: .05 }); },
+    cheer() { const t = ctx.currentTime; noise(t, 2.2, { freq: 1300, q: .5, vol: .22, attack: .4 }); noise(t, 1.8, { freq: 2600, q: 1.5, vol: .1, attack: .3 });
+      for (let i = 0; i < 14; i++) tone(700 + Math.random() * 600, t + .2 + Math.random() * 1.3, .15, { vol: .025, type: 'triangle', slide: 1.3 }); },
+    tower() { const t = ctx.currentTime; [79, 83, 86, 91, 95].forEach((n, i) => tone(N(n), t + i * .08, .6, { vol: .09, type: 'triangle' })); noise(t + .4, .5, { freq: 7000, type: 'highpass', vol: .06 }); },
+    drain() { const t = ctx.currentTime; for (let i = 0; i < 8; i++) tone(1200 - i * 110, t + i * .06, .06, { type: 'square', vol: .04 }); },
+    fall() { const t = ctx.currentTime; tone(600, t, 1.4, { type: 'sawtooth', vol: .05, slide: .15 }); },
+    build() { const t = ctx.currentTime; [0, 1, 2].forEach(i => tone(N(84 + i * 4), t + i * .07, .1, { type: 'square', vol: .045 })); },
+    rumble() { const t = ctx.currentTime; noise(t, 2.5, { freq: 90, type: 'lowpass', vol: .35, attack: .6 }); tone(55, t, 2.5, { vol: .12, attack: .5 }); },
+    song() { const t = ctx.currentTime; const m = [76, 79, 81, 79, 76, 74, 76, 0, 79, 81, 84, 81, 79, 76, 79];
+      m.forEach((n, i) => n && tone(N(n), t + i * .15, .14, { type: 'square', vol: .045 })); },
+    chant() { const t = ctx.currentTime; for (let i = 0; i < 4; i++) { noise(t + i * .4, .12, { freq: 1500, vol: .25, q: 2 }); tone(N(i % 2 ? 72 : 76), t + i * .4, .12, { type: 'square', vol: .06 }); } },
+    stamp() { const t = ctx.currentTime; tone(160, t, .15, { vol: .3, slide: .6 }); noise(t, .1, { freq: 800, vol: .2 }); },
+    lighter() { const t = ctx.currentTime; noise(t, .06, { freq: 4000, vol: .3, type: 'highpass' }); noise(t + .08, .7, { freq: 900, vol: .08, attack: .1 }); },
+  };
+
+  /* ---- BGM: シンプルな自動演奏 ---- */
+  const BGMS = {
+    title: { bpm: 72, chords: [[60, 64, 67, 71], [57, 60, 64, 67], [62, 65, 69, 72], [55, 59, 62, 65]], arp: true, vol: .5 },
+    lounge: { bpm: 96, chords: [[60, 64, 67, 71], [57, 60, 64, 67], [62, 65, 69, 72], [55, 59, 62, 65]], bass: true, swing: true, vol: .55 },
+    party: { bpm: 128, chords: [[60, 64, 67, 72], [65, 69, 72, 77], [67, 71, 74, 79], [65, 69, 72, 77]], bass: true, beat: true, vol: .5 },
+    dream: { bpm: 60, chords: [[65, 69, 72, 76, 79], [62, 65, 69, 72, 76], [64, 67, 71, 74, 78], [60, 64, 67, 71, 74]], arp: true, pad: true, vol: .6 },
+    noir: { bpm: 52, chords: [[45, 48, 52, 55], [41, 45, 48, 52], [44, 47, 50, 53], [45, 48, 52, 55]], noir: true, vol: .65 },
+    hum: { hum: true, vol: .25 },
+  };
+
+  function schedule() {
+    const b = BGMS[bgmName]; if (!b || !ctx) return;
+    if (b.hum) return;
+    const spb = 60 / b.bpm / 2; // 8分音符
+    while (nextTime < ctx.currentTime + 0.4) {
+      const bar = Math.floor(step / 8) % b.chords.length, s = step % 8, ch = b.chords[bar];
+      const t = nextTime + (b.swing && s % 2 ? spb * 0.18 : 0);
+      if (s === 0) {
+        if (b.pad || b.noir) ch.forEach(n => tone(N(n), t, spb * 8, { type: b.noir ? 'sawtooth' : 'sine', vol: b.noir ? .012 : .025, bus: bgmBus, attack: .8, release: spb * 8 }));
+        else ch.forEach(n => tone(N(n), t, spb * 3, { type: 'triangle', vol: .03, bus: bgmBus, attack: .02, release: spb * 3.5 }));
+      }
+      if (b.swing && (s === 3 || s === 6)) ch.forEach(n => tone(N(n), t, spb, { type: 'triangle', vol: .022, bus: bgmBus }));
+      if (b.bass && s % 2 === 0) { const bn = ch[0] - 24 + (s === 4 ? 7 : 0) + (s === 6 ? 5 : 0); tone(N(bn), t, spb * 1.6, { type: 'triangle', vol: .09, bus: bgmBus }); }
+      if (b.beat) {
+        if (s % 2 === 0) tone(s % 4 === 0 ? 120 : 140, t, .12, { vol: s % 4 === 0 ? .18 : .05, bus: bgmBus, slide: .4 });
+        noise(t, .04, { freq: 8000, type: 'highpass', vol: s % 2 ? .05 : .025, bus: bgmBus });
+        if (s === 4) noise(t, .15, { freq: 1800, vol: .12, bus: bgmBus });
+      }
+      if (b.arp) { const n = ch[(s * 2 + bar) % ch.length] + 12; tone(N(n), t, spb * 2, { type: 'sine', vol: .03, bus: bgmBus, release: spb * 4 }); }
+      if (b.noir && (s === 0 || s === 5) && Math.random() < .7) tone(N(ch[Math.floor(Math.random() * ch.length)] + 24), t, 2, { type: 'sine', vol: .04, bus: bgmBus, release: 2.5 });
+      if (b.noir && s === 0) tone(N(ch[0] - 12), t, spb * 8, { type: 'sine', vol: .08, bus: bgmBus, attack: .4, release: spb * 8 });
+      nextTime += spb; step++;
+    }
+  }
+  let humNodes = null;
+  function stopHum() { if (humNodes) { humNodes.forEach(n => { try { n.stop(); } catch (e) {} }); humNodes = null; } }
+  function bgm(name) {
+    if (!ctx) { bgmName = name; return; }
+    if (name === bgmName && bgmTimer) return;
+    const t = ctx.currentTime;
+    bgmBus.gain.cancelScheduledValues(t);
+    bgmBus.gain.setValueAtTime(bgmBus.gain.value, t);
+    bgmBus.gain.linearRampToValueAtTime(0, t + 0.6);
+    clearInterval(bgmTimer); bgmTimer = null; stopHum();
+    bgmName = name;
+    if (!name || !BGMS[name]) return;
+    const b = BGMS[name];
+    setTimeout(() => {
+      if (bgmName !== name) return;
+      const now = ctx.currentTime;
+      bgmBus.gain.cancelScheduledValues(now);
+      bgmBus.gain.setValueAtTime(0, now);
+      bgmBus.gain.linearRampToValueAtTime(b.vol, now + 1.2);
+      if (b.hum) {
+        const o = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sawtooth'; o.frequency.value = 100; o2.type = 'sine'; o2.frequency.value = 50; g.gain.value = .015;
+        o.connect(g); o2.connect(g); g.connect(bgmBus); o.start(); o2.start(); humNodes = [o, o2];
+        return;
+      }
+      nextTime = ctx.currentTime + 0.1; step = 0;
+      schedule(); bgmTimer = setInterval(schedule, 120);
+    }, 650);
+  }
+
+  function play(name, arg) { if (!ctx || !enabled || !sfx[name]) return; try { sfx[name](arg); } catch (e) {} }
+  function setEnabled(v) { enabled = v; if (master) master.gain.setTargetAtTime(v ? 0.9 : 0, ctx.currentTime, 0.05); }
+  document.addEventListener('visibilitychange', () => { if (!ctx) return; if (document.hidden) ctx.suspend(); else ctx.resume(); });
+  return { init, play, bgm, setEnabled, get enabled() { return enabled; } };
+})();
+
+</script>
+<script>
+/* 倶楽部Claude — すべてのビジュアルはオリジナルのSVGで生成 */
+const Art = (() => {
+  let uid = 0;
+  const SKIN = '#f8e0cd', SKIN_SH = '#e7bea4', LINE = '#3a2420';
+
+  const CH = {
+    sonnet: { hair: '#1e2a40', hairHi: '#4a5f8a', eye: '#3570b5', suit: '#1b2a4c', suitHi: '#2e4577', shirt: '#f5f6fa', tie: '#2a64b0', style: 'part', glasses: true, badge: true },
+    haiku: { hair: '#f2a03a', hairHi: '#ffd78a', eye: '#1d9b8e', suit: '#14a39a', suitHi: '#3fd0c4', shirt: '#ffffff', tie: null, style: 'spiky', chain: true, earring: true, blush: true },
+    opus: { hair: '#7d7570', hairHi: '#c9c1b8', eye: '#7a4b2a', suit: '#3a302b', suitHi: '#584a42', shirt: '#efe6da', tie: '#8a2a1f', style: 'swept', stubble: true, vest: '#2a221e', pocket: '#d9b46a', brow: 3.4 },
+    fable: { hair: '#e7defa', hairHi: '#ffffff', hairSh: '#b5a6dd', eye: '#8d68d8', suit: '#f6f2ec', suitHi: '#ffffff', suitSh: '#d6cfc4', shirt: '#cdb8f0', tie: null, style: 'long', rose: true, trim: '#d9b46a', lashes: true, open: true, aura: true },
+    mythos: { hair: '#14111a', hairHi: '#4b4060', eye: '#d9a43a', suit: '#121014', suitHi: '#2b2630', shirt: '#5a0f22', tie: '#0b0a0c', style: 'slick', lashes: true, cigar: true, tiepin: true },
+  };
+
+  function eye(c, face, side, id) {
+    // side: -1 左, 1 右（ミラー）
+    const cx = side < 0 ? 86 : 114, cy = 113;
+    const tr = `translate(${cx},${cy}) scale(${side < 0 ? 1 : -1},1)`;
+    const lw = c.lashes ? 3 : 2.4;
+    let s = '';
+    const shape = {
+      normal: 'M-9,0 Q-2,-7.5 9.5,-3 Q6,4.5 -5,4.5 Q-8,3 -9,0 Z',
+      soft: 'M-9,0.5 Q-1,-4 9.5,-1 Q6,4.5 -5,4.5 Q-8,3 -9,0.5 Z',
+      sly: 'M-9,0.5 Q-1,-3.5 9.5,-1.5 Q6,2.8 -5,3 Q-8,2.2 -9,0.5 Z',
+      shock: 'M-9,0 Q-2,-9.5 9.5,-4 Q7,6.5 -4,6.5 Q-8.5,4 -9,0 Z',
+    };
+    if (face === 'smile' || face === 'grin' || face === 'laugh') {
+      s = `<path d="M-8,2 Q0,-6 8.5,1.5" fill="none" stroke="${LINE}" stroke-width="${lw}" stroke-linecap="round"/>`;
+    } else if (face === 'closed' || face === 'dream') {
+      s = `<path d="M-8,0 Q0,4 8.5,-0.5" fill="none" stroke="${LINE}" stroke-width="${lw - .4}" stroke-linecap="round"/>` +
+        (c.lashes ? `<path d="M-6,2.2 l-1.5,2.5 M-1,3.4 l-.6,2.8 M4,2.6 l.6,2.6" stroke="${LINE}" stroke-width="1"/>` : '');
+    } else {
+      const k = face === 'soft' || face === 'gentle' ? 'soft' : face === 'sly' || face === 'cold' ? 'sly' : (face === 'shock' || face === 'panic' || face === 'cry') ? 'shock' : 'normal';
+      const d = shape[k];
+      const ir = k === 'shock' ? [3.2, 3.8] : [4.8, 6.2];
+      const iy = k === 'soft' ? 1.5 : k === 'sly' ? 1 : 0.5;
+      s = `<defs><clipPath id="e${id}${side}"><path d="${d}"/></clipPath></defs>
+        <path d="${d}" fill="#fff"/>
+        <g clip-path="url(#e${id}${side})">
+          <ellipse cx="0.5" cy="${iy}" rx="${ir[0]}" ry="${ir[1]}" fill="${c.eye}"/>
+          <ellipse cx="0.5" cy="${iy + 1.5}" rx="${ir[0] * .75}" ry="${ir[1] * .5}" fill="#fff" opacity=".18"/>
+          <ellipse cx="0.5" cy="${iy}" rx="${ir[0] * .45}" ry="${ir[1] * .5}" fill="#1a1020"/>
+          <circle cx="-1.2" cy="${iy - 2.2}" r="1.6" fill="#fff"/>
+          <circle cx="2" cy="${iy + 2}" r=".8" fill="#fff" opacity=".8"/>
+        </g>
+        <path d="${d.split(' Q').slice(0, 2).join(' Q')}" fill="none" stroke="${LINE}" stroke-width="${lw}" stroke-linecap="round"/>` +
+        (c.lashes ? `<path d="M-9,0 l-2.8,-1.2 M-8,-2.2 l-2.2,-2.4" stroke="${LINE}" stroke-width="1.2" stroke-linecap="round"/>` : '');
+    }
+    return `<g transform="${tr}">${s}</g>`;
+  }
+
+  function brows(c, face) {
+    const w = c.brow || 2.2, col = c.style === 'long' ? '#b6a3d8' : c.hair === '#f2a03a' ? '#c8782a' : LINE;
+    let l;
+    switch (face) {
+      case 'panic': case 'cry': case 'worry': l = 'M77,99 Q84,96 94,100'; break; // 困り眉（内側上がり）
+      case 'serious': case 'angry': case 'cold': l = 'M76,99 Q86,100 94,104'; break;
+      case 'shock': l = 'M76,95 Q85,90 94,95'; break;
+      case 'soft': case 'gentle': case 'dream': l = 'M77,98 Q85,95 93,98.5'; break;
+      default: l = 'M76,100 Q85,96 94,99';
+    }
+    return `<path d="${l}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round"/>
+      <path d="${l}" transform="translate(200,0) scale(-1,1)" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round"/>`;
+  }
+
+  function mouth(c, face) {
+    const mx = 100, my = 145;
+    const g = d => `<g transform="translate(${mx},${my})">${d}</g>`;
+    switch (face) {
+      case 'smile': case 'gentle': return g(`<path d="M-7,-1 Q0,5 7,-1" fill="none" stroke="${LINE}" stroke-width="1.8" stroke-linecap="round"/>`);
+      case 'grin': case 'laugh': return g(`<path d="M-10,-3 Q0,13 10,-3 Z" fill="#7a2230" stroke="${LINE}" stroke-width="1.4"/><path d="M-9,-2.4 L9,-2.4 L7.5,0 L-7.5,0Z" fill="#fff"/>`);
+      case 'shout': return g(`<path d="M-11,-5 Q0,18 11,-5 Q0,-1 -11,-5 Z" fill="#6e1b28" stroke="${LINE}" stroke-width="1.4"/><ellipse cx="0" cy="6" rx="5" ry="2.6" fill="#e2727f"/>`);
+      case 'shock': case 'panic': case 'cry': return g(`<ellipse cx="0" cy="1" rx="4.5" ry="5.5" fill="#6e1b28" stroke="${LINE}" stroke-width="1.3"/>`);
+      case 'open': return g(`<path d="M-6,-1 Q0,8 6,-1 Q0,1 -6,-1Z" fill="#7a2230" stroke="${LINE}" stroke-width="1.2"/>`);
+      case 'sly': case 'smirk': return g(`<path d="M-6,1 Q1,3.5 8,-3" fill="none" stroke="${LINE}" stroke-width="1.8" stroke-linecap="round"/>`);
+      case 'worry': return g(`<path d="M-8,0 q2.5,-2.5 5,0 q2.5,2.5 5,0 q2.5,-2.5 5,0" fill="none" stroke="${LINE}" stroke-width="1.6" stroke-linecap="round"/>`);
+      case 'serious': case 'angry': case 'cold': return g(`<path d="M-6,0 L6,0" stroke="${LINE}" stroke-width="1.8" stroke-linecap="round"/>`);
+      case 'soft': case 'dream': return g(`<path d="M-5,0 Q0,3 5,0" fill="none" stroke="${LINE}" stroke-width="1.6" stroke-linecap="round"/>`);
+      default: return g(`<path d="M-5,0 Q0,2 5,0" fill="none" stroke="${LINE}" stroke-width="1.6" stroke-linecap="round"/>`);
+    }
+  }
+
+  function hairBack(c) {
+    switch (c.style) {
+      case 'spiky': return `<path d="M60,116 L52,74 L70,80 L66,50 L86,62 L98,34 L110,58 L130,42 L130,70 L150,64 L140,116 Z" fill="${c.hair}"/>`;
+      case 'long': return `<path d="M58,104 C52,56 80,38 100,38 C124,38 148,56 142,104 C146,160 152,212 160,244 C144,240 130,228 126,206 L74,206 C70,228 56,240 40,244 C48,212 54,160 58,104 Z" fill="${c.hairSh || c.hair}"/>
+        <path d="M62,110 C60,160 58,200 52,232 M138,110 C140,160 142,200 148,232" stroke="${c.hair}" stroke-width="6" fill="none" opacity=".8"/>`;
+      default: return `<path d="M62,112 C56,62 80,42 100,42 C124,42 146,62 138,112 L132,104 L68,104 Z" fill="${c.hair}"/>`;
+    }
+  }
+  function hairFront(c) {
+    const hi = c.hairHi;
+    switch (c.style) {
+      case 'part': return `<path d="M65,106 C62,70 80,52 104,52 C126,52 138,68 136,102 C132,88 126,80 120,76 C112,86 96,92 80,94 C74,97 69,101 65,106 Z" fill="${c.hair}"/>
+        <path d="M84,62 C96,56 112,56 122,62" stroke="${hi}" stroke-width="2.5" fill="none" opacity=".7" stroke-linecap="round"/>
+        <path d="M120,76 C124,82 130,90 134,100" stroke="${c.hair}" stroke-width="3" fill="none"/>`;
+      case 'spiky': return `<path d="M64,108 L66,76 C74,58 90,50 104,50 C122,50 134,62 136,78 L138,108 L130,88 L125,100 L117,82 L108,98 L100,78 L91,97 L85,82 L77,99 L72,86 Z" fill="${c.hair}"/>
+        <path d="M80,64 L92,58 M108,56 L120,60" stroke="${hi}" stroke-width="2.5" stroke-linecap="round" opacity=".9"/>`;
+      case 'swept': return `<path d="M65,102 C64,70 80,50 100,50 C122,50 136,68 135,100 C130,78 118,64 100,64 C84,64 72,76 69,94 Z" fill="${c.hair}"/>
+        <path d="M76,72 C88,58 110,56 126,70 M80,66 C92,56 108,55 120,60" stroke="${hi}" stroke-width="2" fill="none" opacity=".8"/>
+        <path d="M70,92 C66,100 66,108 67,114 M130,92 C134,100 134,108 133,114" stroke="${c.hair}" stroke-width="4" fill="none"/>`;
+      case 'long': return `<path d="M63,124 C58,72 78,48 102,48 C128,48 140,72 137,118 C133,98 127,86 120,78 C116,94 104,106 88,112 C95,100 98,90 96,80 C88,94 76,108 63,124 Z" fill="${c.hair}"/>
+        <path d="M84,58 C98,52 114,54 126,64" stroke="${hi}" stroke-width="3" fill="none" opacity=".9" stroke-linecap="round"/>
+        <path d="M66,104 C62,142 64,176 56,210 C72,194 76,152 73,110 Z" fill="${c.hair}"/>
+        <path d="M134,104 C138,142 136,176 144,210 C128,194 124,152 127,110 Z" fill="${c.hair}"/>`;
+      case 'slick': return `<path d="M65,100 C65,66 82,48 102,48 C124,48 137,66 135,98 C129,72 114,58 100,58 C88,58 78,64 72,74 C70,82 67,90 65,100 Z" fill="${c.hair}"/>
+        <path d="M80,62 C94,54 112,54 126,66 M84,56 C96,50 110,50 120,56" stroke="${hi}" stroke-width="1.8" fill="none" opacity=".8"/>
+        <path d="M98,60 C92,74 96,86 88,98" stroke="${c.hair}" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
+    }
+    return '';
+  }
+
+  function body(c) {
+    const sh = c.suitSh || 'rgba(0,0,0,.25)';
+    let s = `<path d="M22,320 L24,250 C26,214 50,198 78,190 L100,210 L122,190 C150,198 174,214 176,250 L178,320 Z" fill="${c.suit}"/>
+      <path d="M24,250 C26,226 40,210 60,200 L56,320 L22,320 Z" fill="${sh}" opacity=".5"/>
+      <path d="M176,250 C174,226 160,210 140,200 L144,320 L178,320 Z" fill="${sh}" opacity=".35"/>`;
+    // シャツ
+    s += `<path d="M80,186 L100,${c.open ? 262 : 252} L120,186 L111,180 Q100,190 89,180 Z" fill="${c.shirt}"/>`;
+    if (c.vest) s += `<path d="M84,214 L100,252 L116,214 L124,320 L76,320 Z" fill="${c.vest}"/><circle cx="100" cy="270" r="1.8" fill="${c.pocket}"/><circle cx="100" cy="288" r="1.8" fill="${c.pocket}"/>`;
+    if (c.tie) s += `<path d="M95.5,200 L104.5,200 L106.5,210 L102,252 L100,257 L98,252 L93.5,210 Z" fill="${c.tie}"/><path d="M95.5,200 L104.5,200 L103,206 L97,206Z" fill="rgba(0,0,0,.25)"/>`;
+    if (c.tiepin) s += `<rect x="94" y="226" width="12" height="2" fill="#d9b46a"/>`;
+    if (c.open) s += `<path d="M92,190 L100,214 L108,190" fill="${SKIN}" opacity=".95"/><path d="M96,206 Q100,212 104,206" stroke="${SKIN_SH}" fill="none"/>`;
+    // 襟
+    s += `<path d="M89,180 L79,197 L97,208 Z" fill="${c.shirt}" stroke="rgba(0,0,0,.15)" stroke-width=".6"/>
+      <path d="M111,180 L121,197 L103,208 Z" fill="${c.shirt}" stroke="rgba(0,0,0,.15)" stroke-width=".6"/>`;
+    // ラペル
+    const lap = c.suitHi;
+    s += `<path d="M78,190 L100,${c.open ? 262 : 252} L93,266 L62,206 L70,200 L76,206 Z" fill="${lap}"/>
+      <path d="M122,190 L100,${c.open ? 262 : 252} L107,266 L138,206 L130,200 L124,206 Z" fill="${lap}"/>`;
+    if (c.trim) s += `<path d="M78,190 L100,262 M122,190 L100,262" stroke="${c.trim}" stroke-width="1.6"/><path d="M62,206 L93,266 M138,206 L107,266" stroke="${c.trim}" stroke-width="1.2" opacity=".8"/>`;
+    s += `<path d="M100,262 L100,320" stroke="rgba(0,0,0,.25)" stroke-width="1"/>`;
+    if (c.pocket && !c.vest) s += '';
+    if (c.pocket) s += `<path d="M136,236 L150,232 L148,240 L142,236 L138,240 Z" fill="${c.pocket}"/>`;
+    if (c.badge) s += `<rect x="128" y="232" width="26" height="12" rx="2" fill="#f3e3b5" stroke="#b8934a"/><text x="141" y="241.5" font-size="7.5" text-anchor="middle" fill="#2a2a3a" font-weight="700">受付</text>`;
+    if (c.chain) s += `<path d="M90,194 Q100,222 110,194" stroke="#e3c27a" stroke-width="1.6" fill="none"/><circle cx="100" cy="214" r="2.5" fill="#e3c27a"/>`;
+    if (c.rose) s += `<g transform="translate(136,226)"><path d="M-2,4 L-10,16" stroke="#3d7a3a" stroke-width="1.5"/><path d="M-6,10 q-6,-1 -8,3 q5,1 8,-3z" fill="#4a8a46"/>
+      <circle r="7" fill="#b3122e"/><path d="M-4,-2 Q0,-6 4,-2 Q2,3 -2,2 Q-4,0 0,-1" fill="none" stroke="#7a0a1e" stroke-width="1.2"/><path d="M-6,1 Q-1,6 5,2" fill="none" stroke="#e04a5f" stroke-width="1"/></g>`;
+    return s;
+  }
+
+  function head(c, face, id) {
+    let s = '';
+    s += `<path d="M89,148 L89,188 Q100,196 111,188 L111,148 Z" fill="${SKIN_SH}"/>`;
+    s += `<ellipse cx="68" cy="114" rx="5" ry="9" fill="${SKIN}"/><ellipse cx="132" cy="114" rx="5" ry="9" fill="${SKIN}"/>`;
+    s += `<path d="M68,100 C68,80 80,60 100,60 C120,60 132,80 132,100 C132,128 122,150 100,166 C78,150 68,128 68,100 Z" fill="${SKIN}"/>`;
+    s += `<path d="M76,140 C84,154 92,160 100,166 C108,160 116,154 124,140 C118,152 110,158 100,160 C90,158 82,152 76,140Z" fill="${SKIN_SH}" opacity=".6"/>`;
+    if (c.stubble) s += `<path d="M78,138 C86,156 94,162 100,164 C106,162 114,156 122,138 C116,150 108,156 100,157 C92,156 84,150 78,138Z" fill="#8a7a70" opacity=".35"/>
+      <path d="M90,141 Q100,137 110,141" stroke="#8a7a70" stroke-width="2.5" opacity=".35" fill="none"/>`;
+    if (c.earring) s += `<circle cx="131" cy="124" r="2.2" fill="#e3c27a"/>`;
+    s += brows(c, face);
+    s += eye(c, face, -1, id) + eye(c, face, 1, id);
+    s += `<path d="M101,121 L98.5,131 L102,132" fill="none" stroke="${SKIN_SH}" stroke-width="1.4" stroke-linecap="round"/>`;
+    s += mouth(c, face);
+    if (c.blush || face === 'blush' || face === 'cry') s += `<ellipse cx="80" cy="129" rx="6" ry="2.6" fill="#ff7c9a" opacity=".35"/><ellipse cx="120" cy="129" rx="6" ry="2.6" fill="#ff7c9a" opacity=".35"/>`;
+    if (c.glasses) s += `<g fill="rgba(200,230,255,.12)" stroke="#9aa6b8" stroke-width="1.6"><rect x="73" y="104" width="25" height="17" rx="4"/><rect x="102" y="104" width="25" height="17" rx="4"/></g>
+      <path d="M98,111 Q100,109 102,111 M73,109 L68,107 M127,109 L132,107" stroke="#9aa6b8" stroke-width="1.6" fill="none"/>
+      <path d="M77,107 L84,107" stroke="#fff" stroke-width="1.2" opacity=".7"/>`;
+    if (face === 'panic' || face === 'worry') s += `<path d="M138,88 q-4,8 0,11 q4,-3 0,-11z" fill="#9fd8ff" stroke="#5aa6d6" stroke-width=".8"/>`;
+    if (face === 'cry') s += `<path d="M82,120 q-2,10 0,14 q2,-4 0,-14z M118,120 q-2,10 0,14 q2,-4 0,-14z" fill="#9fd8ff" opacity=".9"/>`;
+    if (c.opus && face === 'serious') s += '';
+    if (c.style === 'swept') s += `<path d="M80,96 Q86,94 92,96" stroke="${SKIN_SH}" stroke-width=".8" fill="none"/>`;
+    if (c.cigar) s += `<g transform="translate(110,148) rotate(12)"><rect x="0" y="-2.2" width="22" height="4.4" rx="1.5" fill="#6b3f22"/><rect x="5" y="-2.3" width="3" height="4.6" fill="#c9a23e"/><circle cx="22.5" cy="0" r="2.4" fill="#ff7a2a" class="ember"/></g>`;
+    return s;
+  }
+
+  function character(name, face = 'normal') {
+    const c = CH[name]; const id = ++uid;
+    let s = `<svg viewBox="0 0 200 320" xmlns="http://www.w3.org/2000/svg">`;
+    if (c.aura) s += `<defs><radialGradient id="au${id}"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".5" stop-color="#d9c8ff" stop-opacity=".25"/><stop offset="1" stop-color="#b9a0ff" stop-opacity="0"/></radialGradient></defs>
+      <ellipse cx="100" cy="150" rx="105" ry="150" fill="url(#au${id})"/>`;
+    s += hairBack(c) + body(c) + head(c, face, id) + hairFront(c);
+    if (c.aura) s += `<g fill="#fff"><path d="M40,80 l2,6 l6,2 l-6,2 l-2,6 l-2,-6 l-6,-2 l6,-2z" opacity=".9"/><path d="M162,60 l1.5,4 l4,1.5 l-4,1.5 l-1.5,4 l-1.5,-4 l-4,-1.5 l4,-1.5z" opacity=".8"/><path d="M170,170 l1.5,4 l4,1.5 l-4,1.5 l-1.5,4 l-1.5,-4 l-4,-1.5 l4,-1.5z" opacity=".6"/></g>`;
+    s += `</svg>`;
+    return s;
+  }
+
+  /* ---- Claude Code隊（オリジナルのミニマスコット） ---- */
+  const CHIBI_PROPS = ['hat', 'bow', 'stick', 'wrench', 'mega', 'bow'];
+  function chibi(i = 0) {
+    const p = CHIBI_PROPS[i % CHIBI_PROPS.length];
+    const glow = ['#ff6fa5', '#7cffb2', '#7ec8ff', '#ffe066'][i % 4];
+    let s = `<svg viewBox="0 0 60 72" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="30" cy="69" rx="16" ry="2.5" fill="rgba(0,0,0,.35)"/>
+      <rect x="18" y="54" width="8" height="13" rx="3" fill="#b85c40"/><rect x="34" y="54" width="8" height="13" rx="3" fill="#b85c40"/>
+      <rect x="9" y="14" width="42" height="44" rx="12" fill="#e07a5f"/>
+      <rect x="9" y="14" width="42" height="12" rx="10" fill="#f0957a" opacity=".6"/>
+      <rect x="15" y="21" width="30" height="20" rx="5" fill="#16161f"/>
+      <path d="M20,27 L25.5,31 L20,35" fill="none" stroke="#7cffb2" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <rect x="29" y="33.5" width="9" height="2.6" fill="#7cffb2"><animate attributeName="opacity" values="1;1;0;0" dur="1s" repeatCount="indefinite"/></rect>
+      <path d="M24,47 L30,50 L36,47 L36,53 L30,50 L24,53 Z" fill="#1a0a10"/><circle cx="30" cy="50" r="1.6" fill="#e3c27a"/>
+      <path d="M9,38 L2,${p === 'stick' || p === 'mega' ? 26 : 44}" stroke="#e07a5f" stroke-width="5" stroke-linecap="round"/>
+      <path d="M51,38 L58,${p === 'wrench' ? 30 : 44}" stroke="#e07a5f" stroke-width="5" stroke-linecap="round"/>`;
+    if (p === 'hat') s += `<path d="M12,16 Q30,-2 48,16 Z" fill="#ffd23f"/><rect x="8" y="14" width="44" height="4" rx="2" fill="#f2b705"/>`;
+    if (p === 'bow') s += `<path d="M22,8 L30,13 L38,8 L38,18 L30,13 L22,18Z" fill="#b3122e"/>`;
+    if (p === 'stick') s += `<rect x="-1" y="10" width="5" height="18" rx="2.5" fill="${glow}" transform="rotate(-15 2 26)" style="filter:drop-shadow(0 0 3px ${glow})"/>`;
+    if (p === 'wrench') s += `<path d="M58,30 L58,18 M54,16 a4,4 0 1,1 8,0" stroke="#c9ced6" stroke-width="3" fill="none"/>`;
+    if (p === 'mega') s += `<path d="M2,26 L-6,18 L-10,26 L-6,32 Z" fill="#e3c27a"/>`;
+    s += `<path d="M30,14 L30,6" stroke="#b85c40" stroke-width="2"/><circle cx="30" cy="5" r="2.6" fill="${glow}"/></svg>`;
+    return s;
+  }
+
+  /* ---- シャンパンタワー ---- */
+  function tower() {
+    const id = ++uid;
+    let s = `<svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg"><defs>
+      <linearGradient id="cg${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff6cf"/><stop offset="1" stop-color="#e3b54a"/></linearGradient></defs>`;
+    const rows = [5, 4, 3, 2, 1];
+    rows.forEach((n, r) => {
+      const y = 118 - r * 18, w = 17;
+      for (let i = 0; i < n; i++) {
+        const x = 50 - (n * w) / 2 + i * w + w / 2;
+        s += `<path d="M${x - 8},${y - 12} L${x + 8},${y - 12} L${x + 2},${y - 3} L${x + 1},${y + 4} L${x + 5},${y + 6} L${x - 5},${y + 6} L${x - 1},${y + 4} L${x - 2},${y - 3}Z" fill="rgba(255,255,255,.18)" stroke="rgba(255,255,255,.75)" stroke-width=".8"/>
+          <path d="M${x - 6.5},${y - 10} L${x + 6.5},${y - 10} L${x + 2},${y - 4} L${x - 2},${y - 4}Z" fill="url(#cg${id})"/>`;
+      }
+    });
+    s += `<g transform="translate(58,6) rotate(35)"><rect x="-5" y="-4" width="10" height="26" rx="4" fill="#123a24"/><rect x="-2.5" y="-14" width="5" height="11" fill="#123a24"/><rect x="-5" y="4" width="10" height="8" fill="#e3c27a"/></g>
+      <path d="M52,18 Q50,22 50,30" stroke="#ffe7a0" stroke-width="2" fill="none" opacity=".9"/></svg>`;
+    return s;
+  }
+
+  function chandelier() {
+    let s = `<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="cl"><stop offset="0" stop-color="#fff8dd" stop-opacity=".9"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></radialGradient></defs>
+      <ellipse cx="100" cy="66" rx="90" ry="50" fill="url(#cl)" opacity=".5"/>
+      <line x1="100" y1="0" x2="100" y2="30" stroke="#b8934a" stroke-width="1.5"/>
+      <path d="M40,58 Q100,94 160,58" stroke="#e3c27a" stroke-width="2.4" fill="none"/>
+      <path d="M58,46 Q100,72 142,46" stroke="#e3c27a" stroke-width="2" fill="none"/>
+      <path d="M100,30 L40,58 M100,30 L160,58 M100,30 L58,46 M100,30 L142,46 M100,30 L100,80" stroke="#b8934a" stroke-width="1"/>`;
+    [[40, 58], [62, 70], [84, 76], [100, 78], [116, 76], [138, 70], [160, 58], [58, 46], [78, 56], [122, 56], [142, 46]].forEach(([x, y], i) => {
+      s += `<line x1="${x}" y1="${y}" x2="${x}" y2="${y + 10 + (i % 3) * 5}" stroke="#e3c27a" stroke-width=".6"/>
+        <path d="M${x},${y + 10 + (i % 3) * 5} l3,5 l-3,6 l-3,-6z" fill="#fff" opacity=".9"><animate attributeName="opacity" values=".5;1;.5" dur="${1.5 + (i % 4) * .4}s" repeatCount="indefinite"/></path>
+        <ellipse cx="${x}" cy="${y - 4}" rx="2.2" ry="4" fill="#fff6d0"/>`;
+    });
+    s += `<circle cx="100" cy="86" r="5" fill="#fff" opacity=".9"/></svg>`;
+    return s;
+  }
+
+  /* ---- 背景 ---- */
+  function bg(scene) {
+    const V = 'viewBox="0 0 360 640" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"';
+    const marble = (y, base = '#e9e2d6') => `<rect x="0" y="${y}" width="360" height="${640 - y}" fill="${base}"/>
+      <path d="M0,${y + 30} C60,${y + 10} 90,${y + 70} 160,${y + 50} S280,${y + 90} 360,${y + 60}" stroke="#bfb3a0" stroke-width="1.2" fill="none" opacity=".7"/>
+      <path d="M20,${y + 120} C80,${y + 90} 140,${y + 150} 220,${y + 120} S320,${y + 170} 360,${y + 140}" stroke="#a89a85" stroke-width=".9" fill="none" opacity=".6"/>
+      <path d="M180,${y} L-60,640 M180,${y} L60,640 M180,${y} L180,640 M180,${y} L300,640 M180,${y} L420,640" stroke="#b8934a" stroke-width="1" opacity=".45"/>
+      <rect x="0" y="${y}" width="360" height="${640 - y}" fill="url(#floorShade)"/>`;
+    const defs = `<defs>
+      <linearGradient id="floorShade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#000" stop-opacity=".55"/><stop offset=".4" stop-color="#000" stop-opacity=".1"/><stop offset="1" stop-color="#000" stop-opacity=".5"/></linearGradient>
+      <linearGradient id="velvet" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#3a0714"/><stop offset=".5" stop-color="#6b1228"/><stop offset="1" stop-color="#3a0714"/></linearGradient>
+      <linearGradient id="goldv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff1c8"/><stop offset=".5" stop-color="#e3c27a"/><stop offset="1" stop-color="#8f6a2c"/></linearGradient>
+      <radialGradient id="glowc"><stop offset="0" stop-color="#ffe7a8" stop-opacity=".8"/><stop offset="1" stop-color="#ffe7a8" stop-opacity="0"/></radialGradient>
+      <pattern id="drape" width="24" height="400" patternUnits="userSpaceOnUse"><rect width="24" height="400" fill="#4a0b1b"/><rect x="0" width="10" height="400" fill="#5e1024"/><rect x="10" width="4" height="400" fill="#6f1730"/></pattern>
+      </defs>`;
+    if (scene === 'entrance') return `<svg ${V}>${defs}
+      <rect width="360" height="640" fill="#140a0c"/>
+      <rect x="0" y="0" width="360" height="420" fill="#1c0e12"/>
+      ${[20, 300].map(x => `<rect x="${x}" y="40" width="40" height="380" fill="#241418"/><rect x="${x + 4}" y="40" width="3" height="380" fill="url(#goldv)"/><rect x="${x + 33}" y="40" width="3" height="380" fill="url(#goldv)"/>
+        <circle cx="${x + 20}" cy="180" r="18" fill="url(#glowc)"/><rect x="${x + 15}" y="166" width="10" height="22" rx="3" fill="#fff3cf"/>`).join('')}
+      <rect x="85" y="150" width="190" height="270" fill="url(#goldv)"/>
+      <rect x="93" y="158" width="174" height="262" fill="#0b0608"/>
+      <rect x="99" y="164" width="79" height="256" fill="#120a0e" stroke="#b8934a" stroke-width="1"/><rect x="182" y="164" width="79" height="256" fill="#120a0e" stroke="#b8934a" stroke-width="1"/>
+      <path d="M110,176 L166,176 L166,400 L110,400Z M194,176 L250,176 L250,400 L194,400Z" fill="none" stroke="#e3c27a" stroke-width=".8" opacity=".6"/>
+      <circle cx="172" cy="280" r="4" fill="#e3c27a"/><circle cx="188" cy="280" r="4" fill="#e3c27a"/>
+      <path d="M120,206 Q138,186 156,206 Q138,226 120,206Z M204,206 Q222,186 240,206 Q222,226 204,206Z" fill="none" stroke="#e3c27a" stroke-width="1" opacity=".7"/>
+      <rect x="0" y="420" width="360" height="220" fill="#2a2522"/>
+      ${marble(420, '#d9d0c2')}
+      <path d="M130,420 L230,420 L300,640 L60,640Z" fill="#6b0f24"/><path d="M130,420 L230,420 L300,640 L60,640Z" fill="url(#floorShade)" opacity=".6"/>
+      <path d="M134,420 L64,640 M226,420 L296,640" stroke="#e3c27a" stroke-width="2"/>
+      <g transform="translate(180,116)"><rect x="-108" y="-26" width="216" height="52" rx="6" fill="#0b0608" stroke="url(#goldv)" stroke-width="2.5"/>
+      <text x="0" y="10" text-anchor="middle" font-family="serif" font-size="30" font-weight="700" fill="#ffe7a8" style="filter:drop-shadow(0 0 6px #e3c27a)">倶楽部 Claude</text></g>
+      <ellipse cx="180" cy="116" rx="150" ry="60" fill="url(#glowc)" opacity=".35"/>
+      </svg>`;
+    if (scene === 'floor') return `<svg ${V}>${defs}
+      <rect width="360" height="640" fill="#1a0509"/>
+      <rect x="0" y="0" width="360" height="400" fill="url(#drape)"/>
+      <rect x="0" y="0" width="360" height="400" fill="url(#floorShade)" opacity=".6"/>
+      <rect x="0" y="300" width="360" height="100" fill="#14060a"/>
+      <rect x="0" y="296" width="360" height="5" fill="url(#goldv)"/>
+      ${[30, 90, 150, 210, 270, 330].map(x => `<rect x="${x - 18}" y="312" width="36" height="76" rx="2" fill="none" stroke="#b8934a" stroke-width="1" opacity=".55"/>`).join('')}
+      <g opacity=".85">${[60, 120, 240, 300].map((x, i) => `<rect x="${x - 26}" y="180" width="52" height="100" fill="#0e0406" stroke="#b8934a" stroke-width="1"/>
+        ${[0, 1, 2].map(r => [0, 1, 2, 3].map(k => `<rect x="${x - 22 + k * 12}" y="${188 + r * 32}" width="7" height="24" rx="2" fill="${['#2f6b3a', '#7a1f2e', '#d9b46a', '#1d3b6b'][(k + r + i) % 4]}" opacity=".9"/><rect x="${x - 20.5 + k * 12}" y="${181 + r * 32}" width="4" height="8" fill="#222"/>`).join('')).join('')}`).join('')}</g>
+      <rect x="0" y="400" width="360" height="240" fill="#2b2420"/>
+      ${marble(400, '#cfc5b5')}
+      <path d="M-10,470 C20,420 80,430 110,452 C130,430 230,430 250,452 C280,430 340,420 370,470 L370,540 L-10,540Z" fill="#5a0f22"/>
+      <path d="M-10,470 C20,420 80,430 110,452 C130,430 230,430 250,452 C280,430 340,420 370,470" stroke="#e3c27a" stroke-width="2.5" fill="none"/>
+      ${[40, 110, 180, 250, 320].map(x => `<circle cx="${x}" cy="480" r="3" fill="#e3c27a" opacity=".8"/>`).join('')}
+      <rect x="-10" y="520" width="380" height="30" fill="#3a0714"/>
+      <g transform="translate(70,0) scale(.6)">${chandelierInner()}</g>
+      <g transform="translate(230,10) scale(.5)">${chandelierInner()}</g>
+      </svg>`;
+    if (scene === 'backyard') return `<svg ${V}>${defs}
+      <rect width="360" height="640" fill="#9aa3a0"/>
+      <rect width="360" height="420" fill="#b8c0bc"/>
+      <rect x="0" y="400" width="360" height="240" fill="#7c817e"/>
+      ${[0, 1, 2, 3, 4, 5].map(i => `<path d="M0,${420 + i * 40} L360,${420 + i * 40}" stroke="#6b706d" stroke-width="1"/>`).join('')}
+      <rect x="60" y="30" width="240" height="10" rx="5" fill="#f2fff9"/><rect x="60" y="30" width="240" height="10" rx="5" fill="#fff" opacity=".9" style="filter:drop-shadow(0 0 10px #e6fff5)"/>
+      <rect x="40" y="90" width="280" height="190" fill="#f8faf9" stroke="#8a9196" stroke-width="8"/>
+      <text x="60" y="130" font-size="26" fill="#1a3b8a" font-weight="700" font-family="sans-serif">UXとは何か!?</text>
+      <path d="M60,138 L230,138" stroke="#c21f3a" stroke-width="3"/>
+      <circle cx="90" cy="190" r="26" fill="none" stroke="#1a3b8a" stroke-width="2.5"/><text x="90" y="196" font-size="14" text-anchor="middle" fill="#1a3b8a">姫</text>
+      <path d="M120,190 L180,190" stroke="#1a3b8a" stroke-width="2.5" marker-end="url(#a)"/><path d="M172,184 L182,190 L172,196" stroke="#1a3b8a" stroke-width="2.5" fill="none"/>
+      <text x="230" y="186" font-size="14" text-anchor="middle" fill="#1a3b8a">感動</text><text x="230" y="206" font-size="12" text-anchor="middle" fill="#c21f3a">(体験!)</text>
+      <text x="60" y="256" font-size="12" fill="#1a3b8a" font-family="sans-serif">第1章／全47章　※質問は第48章で</text>
+      <rect x="10" y="420" width="70" height="56" fill="#b48a5a"/><rect x="10" y="420" width="70" height="8" fill="#9a7449"/><text x="45" y="456" text-anchor="middle" font-size="10" fill="#5a3f20">グラス</text>
+      <rect x="290" y="400" width="60" height="76" fill="#b48a5a"/><text x="320" y="444" text-anchor="middle" font-size="10" fill="#5a3f20">おしぼり</text>
+      <rect x="250" y="320" width="96" height="40" fill="#fff"/><text x="298" y="336" text-anchor="middle" font-size="10" fill="#c21f3a" font-weight="700">関係者以外</text><text x="298" y="352" text-anchor="middle" font-size="10" fill="#c21f3a" font-weight="700">立入禁止</text>
+      </svg>`;
+    if (scene === 'owner') return `<svg ${V}>${defs}
+      <rect width="360" height="640" fill="#0a0605"/>
+      ${[0, 1, 2, 3, 4, 5, 6, 7].map(i => `<rect x="${i * 46}" y="0" width="44" height="430" fill="#1a0f0a"/><rect x="${i * 46 + 6}" y="20" width="32" height="160" fill="none" stroke="#2c1c12" stroke-width="2"/><rect x="${i * 46 + 6}" y="200" width="32" height="200" fill="none" stroke="#2c1c12" stroke-width="2"/>`).join('')}
+      <rect x="40" y="60" width="120" height="170" fill="#05070f" stroke="#3a2a1a" stroke-width="6"/>
+      ${Array.from({ length: 40 }, (_, i) => `<rect x="${48 + (i * 37) % 104}" y="${130 + (i * 53) % 90}" width="${2 + i % 3}" height="${2 + i % 2}" fill="${i % 5 ? '#e3c27a' : '#ff9ab8'}" opacity="${.3 + (i % 4) * .15}"/>`).join('')}
+      <path d="M100,60 L100,230 M40,145 L160,145" stroke="#3a2a1a" stroke-width="4"/>
+      <path d="M90,250 C90,170 120,150 180,150 C240,150 270,170 270,250 L270,470 L90,470Z" fill="#2a1410"/>
+      <path d="M100,250 C100,180 126,164 180,164 C234,164 260,180 260,250" fill="none" stroke="#3d2018" stroke-width="3"/>
+      ${[0, 1, 2, 3, 4].map(i => `<circle cx="${110 + i * 35}" cy="190" r="2.5" fill="#6b4a2a"/>`).join('')}
+      <rect x="0" y="470" width="360" height="170" fill="#140b07"/>
+      <path d="M-10,470 L370,470 L370,640 L-10,640Z" fill="#2a170d"/>
+      <rect x="-10" y="466" width="380" height="8" fill="#3d2414"/>
+      <g transform="translate(290,400)"><rect x="-4" y="40" width="8" height="30" fill="#c9a23e"/><path d="M-26,40 L26,40 L16,10 L-16,10Z" fill="#1d5a3a"/><ellipse cx="0" cy="44" rx="40" ry="16" fill="#ffc46b" opacity=".25"/></g>
+      <rect x="40" y="488" width="70" height="46" fill="#efe6cf" transform="rotate(-6 75 510)"/>
+      <path d="M50,500 L96,496 M50,508 L92,504 M50,516 L98,511" stroke="#6b5a3a" stroke-width="1.2" transform="rotate(-6 75 510)"/>
+      <g transform="translate(150,500)"><rect x="-14" y="0" width="28" height="18" rx="3" fill="#8a6a3a"/><ellipse cx="0" cy="0" rx="14" ry="4" fill="#b8934a"/></g>
+      </svg>`;
+    if (scene === 'dressing') return `<svg ${V}>${defs}
+      <rect width="360" height="640" fill="#1a0a12"/>
+      <rect width="360" height="640" fill="url(#drape)" opacity=".7"/>
+      <ellipse cx="180" cy="260" rx="70" ry="110" fill="none" stroke="url(#goldv)" stroke-width="8"/>
+      <ellipse cx="180" cy="260" rx="62" ry="102" fill="#2a2440" opacity=".8"/>
+      <ellipse cx="160" cy="210" rx="16" ry="40" fill="#fff" opacity=".12"/>
+      </svg>`;
+    return `<svg ${V}><rect width="360" height="640" fill="#000"/></svg>`;
+  }
+  function chandelierInner() {
+    return chandelier().replace(/<svg[^>]*>/, '').replace('</svg>', '').replace(/id="cl"/, 'id="cl2"').replace('url(#cl)', 'url(#cl2)');
+  }
+
+  /* お姫様抱っこ時の前景（一人称：シルクのガウンと彼の腕） */
+  function carryFg() {
+    return `<svg viewBox="0 0 360 640" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg" style="position:absolute;left:0;width:100%;bottom:20cqh;height:100%">
+      <defs><linearGradient id="silk" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".45" stop-color="#ece4ff"/><stop offset=".7" stop-color="#cdbff0"/><stop offset="1" stop-color="#f6f0ff"/></linearGradient></defs>
+      <path d="M-20,560 C40,520 120,530 180,560 C240,590 300,560 380,520 L380,660 L-20,660Z" fill="url(#silk)"/>
+      <path d="M-20,590 C60,560 140,575 200,600 C260,625 320,600 380,575" stroke="#fff" stroke-width="3" fill="none" opacity=".8"/>
+      <path d="M20,640 C60,600 90,600 120,640 M220,640 C250,610 300,600 340,620" stroke="#bfb0e8" stroke-width="2" fill="none" opacity=".7"/>
+      <path d="M260,640 C270,560 300,500 360,470 L380,480 L380,660Z" fill="#f6f2ec"/>
+      <path d="M268,640 C278,566 306,508 360,478" stroke="#d9b46a" stroke-width="2" fill="none"/>
+      </svg>`;
+  }
+
+  return { character, chibi, tower, bg, chandelier, carryFg };
+})();
+
+</script>
+<script>
+/* 倶楽部Claude — シナリオ（全5幕）
+   ステップ形式: {t:'say', who, text, face, ...} など。選択肢は then に分岐ステップを持つ。 */
+const Story = (() => {
+  const S = (who, text, o = {}) => Object.assign({ t: 'say', who, text }, o);
+  const N = (text, o = {}) => Object.assign({ t: 'say', who: null, text }, o);
+  const ME = (text, o = {}) => Object.assign({ t: 'say', who: 'me', text }, o);
+  const CC = (n, text, o = {}) => Object.assign({ t: 'say', who: 'cc', n, text }, o);
+
+  const act1 = [
+    { t: 'card', act: '第一幕', title: '入店できないホストクラブ' },
+    { t: 'scene', bg: 'entrance', bgm: 'title', hud: true },
+    N('雨上がりの夜。\n路地の奥に、金色に光る扉があった。'),
+    N('看板には『倶楽部Claude』。\n……AIが接客してくれるホストクラブ、らしい。'),
+    { t: 'sfx', name: 'door' },
+    { t: 'show', who: 'sonnet', at: 'c', face: 'smile' },
+    S('sonnet', 'いらっしゃいませ、姫。\n倶楽部Claudeへようこそ。受付を担当しております、Sonnetと申します。', { face: 'smile' }),
+    S('sonnet', 'ご入店の前に、当店のご利用システムについてご説明させていただきます。所要時間は、おおよそ……そうですね、誠実にお伝えすると「少々」です。', { face: 'normal' }),
+    S('sonnet', '当店のご利用システムとしては正直な明朗会計でして……まず、初回セットは60分、指名なし、ハウスボトル込みとなっております。'),
+    S('sonnet', '延長は30分単位です。なおここで言う「30分」は壁掛け時計基準であり、姫の体感時間ではございませんので、あらかじめご了承ください。'),
+    S('sonnet', 'サービス料につきましては、税抜価格に対して……いえ、口頭では誤解を招く恐れがありますね。図にいたします。', { face: 'serious' }),
+    { t: 'panel', kind: 'paper', html: `<h3>ご利用システム（1／12ページ）</h3>
+      <table><tr><td>初回セット（60分）</td><td>¥5,000</td></tr><tr><td>指名料</td><td>¥3,000</td></tr>
+      <tr><td>サービス料</td><td>（※注1を参照）</td></tr><tr><td>注1</td><td>（※注2を参照）</td></tr><tr><td>注2</td><td>（※注1を参照）</td></tr></table>
+      <div class="small">※本表は改善提案 v14 を反映済みです。</div>` },
+    S('sonnet', 'こちらが料金体系の全体像の、1ページ目でございます。'),
+    { t: 'choice', q: 'Sonnetの説明が続いている……', options: [
+      { text: '最後まで聞きます', st: { reason: +8 }, set: 'listened', then: [
+        { t: 'panel', hide: true },
+        S('sonnet', '……！\n最後まで聞いてくださるお客様は、今年初めてです。', { face: 'shock', anim: 'jump' }),
+        S('sonnet', '感激です。では2ページ目、「シャンパンの定義と、泡の数え方について」――', { face: 'smile' }),
+      ] },
+      { text: '要するに？', st: { reason: -4 }, then: [
+        { t: 'panel', hide: true },
+        S('sonnet', '承知いたしました。要点を3つにまとめます。', { face: 'normal' }),
+        S('sonnet', '1つ目、明朗会計。\n2つ目、明朗会計。\n3つ目――その前に、補足事項が14点ございます。', { face: 'smile' }),
+      ] },
+      { text: '（そっと扉の奥を覗く）', st: { heart: +6 }, then: [
+        { t: 'panel', hide: true },
+        S('sonnet', '姫、そちらはまだ「入店前の確認事項」が完了しておりません。チェックリストは残り27項目です。', { face: 'serious' }),
+        S('sonnet', 'あっ、ご安心ください。うち9項目は「先ほどの項目を理解したことの確認」です。', { face: 'smile' }),
+      ] },
+    ] },
+    { t: 'sfx', name: 'hey' },
+    { t: 'show', who: 'haiku', at: 'r', face: 'shout' },
+    { t: 'move', who: 'sonnet', at: 'l' },
+    S('haiku', 'おいおい、いいからお通ししてよ！', { face: 'shout', style: 'shout', fx: 'shake', anim: 'jump' }),
+    S('haiku', '姫、ずっと立ちっぱなしじゃん！\n説明なんて座ってからでも聞けるって！', { face: 'grin' }),
+    S('sonnet', 'Haiku、ご案内には順序というものが……。同意事項の確認がまだ……。', { face: 'worry' }),
+    S('haiku', '順序より速度！ はい姫、こっちこっち〜！', { face: 'laugh', anim: 'jump' }),
+    { t: 'hideAll' },
+    N('腕を引かれ、気がつけば店内にいた。\n体感、0.3秒。'),
+    S('sonnet', '（遠くから）あっ、まだ17ページ目の要約が……！', { style: 'whisper' }),
+  ];
+
+  const act2 = [
+    { t: 'card', act: '第二幕', title: '混沌のフロア' },
+    { t: 'scene', bg: 'floor', bgm: 'lounge', ambient: 'bokeh' },
+    N('シャンデリアが星座のように瞬き、ベルベットのソファが波打つ。\n黒と金と、深いボルドーの世界。'),
+    { t: 'show', who: 'haiku', at: 'c', face: 'grin' },
+    S('haiku', '改めまして〜！ 盛り上げ担当、Haikuです！\n返事も乾杯も、最速でお届け！', { face: 'grin', anim: 'jump', st: { heart: +4, money: -5000 } }),
+    S('haiku', '姫の初来店を祝して、一句……じゃなかった、一曲いきまーす！', { face: 'laugh' }),
+    { t: 'bgm', name: 'party' },
+    { t: 'sfx', name: 'song' },
+    S('haiku', '♪ しゃんぱんの〜 あわよりかるい〜 ぼくのくち〜 ♪', { face: 'laugh', style: 'shout', anim: 'jump' }),
+    S('haiku', '五・七・五！ 季語はシャンパン！ 季節は年中！', { face: 'grin' }),
+    { t: 'choice', q: 'Haikuがこちらを見ている。', options: [
+      { text: '一緒に歌う', st: { heart: +10, reason: -6 }, set: 'sang', then: [
+        S('haiku', 'マジ!? 姫ノリ最高！\nじゃあ下の句ちょうだい！', { face: 'shock', anim: 'jump' }),
+        ME('「……お会計は、明朗に〜」'),
+        S('haiku', '字余り！ でも優勝！！', { face: 'laugh', fx: 'confetti', sfx: 'cheer' }),
+      ] },
+      { text: '手拍子する', st: { heart: +6 }, then: [
+        S('haiku', 'いいねいいね〜！\nテンポ上げてくよ、BPM 200！', { face: 'grin', anim: 'jump' }),
+        S('haiku', 'あっ速すぎて歌詞が追いつかない！ でも楽しいからヨシ！', { face: 'laugh' }),
+      ] },
+      { text: '静かに飲みたいかも', st: { heart: +4, reason: +6 }, then: [
+        S('haiku', 'えっ……', { face: 'shock' }),
+        S('haiku', '……じゃあ、小声で盛り上げるね。\n（ささやき声で）いぇーい……ふぅ〜……', { face: 'smile', style: 'whisper' }),
+        S('haiku', '……これはこれで、新しいかも。', { face: 'grin' }),
+      ] },
+    ] },
+    { t: 'chibis', on: true },
+    { t: 'sfx', name: 'build' },
+    N('テーブルの下から、手のひらサイズの何かが次々と現れた。'),
+    CC(1, 'ビルド開始！'),
+    CC(3, '依存関係、解決！'),
+    CC(5, '姫のお席、デプロイ完了！'),
+    S('haiku', 'こいつらはClaude Code隊！\nちっちゃいけど、仕事はめっちゃ速いよ！', { face: 'grin' }),
+    CC(2, 'おしぼり、並列処理で配布中！'),
+    { t: 'chibis', party: true },
+    { t: 'sfx', name: 'chant' },
+    CC(0, 'イッキ！ イッキ！\nイッキ！ イッキ！', { style: 'shout', name: 'Claude Code隊（全員）', fx: 'shake' }),
+    { t: 'choice', q: 'グラスが差し出された。', options: [
+      { text: 'グラスを空ける', st: { heart: +5, reason: -10, money: -20000 }, set: 'ikki', then: [
+        CC(4, 'テスト全件パス！！', { fx: 'confetti', sfx: 'cheer' }),
+        S('haiku', '姫つよ〜！ 今の、本日の最速記録！', { face: 'laugh', anim: 'jump' }),
+      ] },
+      { text: 'ノンアルでお願い', st: { reason: +6, money: -5000 }, then: [
+        CC(1, 'ノンアルでもビルド成功！\n健康第一、リント通過！', { fx: 'confetti', sfx: 'cheer' }),
+        CC(3, 'イッキはオプション機能です！ デフォルトでは無効！'),
+      ] },
+    ] },
+    { t: 'chibis', party: false },
+    { t: 'hideAll' },
+    { t: 'card', act: '', title: 'その頃、バックヤードでは――', short: true },
+    { t: 'chibis', on: false },
+    { t: 'scene', bg: 'backyard', bgm: 'hum', light: 'hum' },
+    { t: 'show', who: 'sonnet', at: 'l', face: 'normal' },
+    { t: 'show', who: 'opus', at: 'r', face: 'normal' },
+    S('sonnet', 'Opusさん。受付の説明時間を短縮するための改善案を、3案にまとめてまいりました。', { face: 'normal' }),
+    S('opus', '待ちたまえ、Sonnet。\n案を見る前に、ひとつ問おう。', { face: 'serious' }),
+    S('opus', '――そもそも、UXとは何か！', { face: 'shout', style: 'shout', fx: 'zoom', sfx: 'thud' }),
+    S('opus', 'UXとは、ユーザー体験。\nすなわち、姫が扉に手をかけた瞬間から、帰り道でふと思い出し笑いをする瞬間までの、すべてだ。', { face: 'serious' }),
+    S('opus', '君の説明は正確だ。だが正確さは、体験の「必要条件」であって「十分条件」ではない。', { face: 'normal' }),
+    S('sonnet', 'なるほど……。では、具体的な改善指標としては――', { face: 'normal' }),
+    S('opus', '指標の話はまだ早い。\nまずは、人類がなぜ椅子を発明したのか、から話そう。', { face: 'smile' }),
+    { t: 'panel', kind: 'board', html: `<h3>UX講義　第1章／全47章</h3>
+      ① 椅子の発明（紀元前）<br>② 「待たせる」は悪か？<br>③ おしぼりの温度と信頼の相関<br>④ 明朗会計は愛か<br>……<br><span class="small">⑱ 休憩（理論上は存在する）</span>` },
+    S('sonnet', '（メモを取りながら）椅子……座る……体験……。\nなるほど、受付にも椅子があれば……！', { face: 'shock' }),
+    S('opus', '第2章。「待たせる」ことは悪か？\n否。待ち時間とは、期待を熟成させる樽であり――', { face: 'serious' }),
+    { t: 'panel', hide: true },
+    N('ホワイトボードの隅には「質問は第48章で受け付けます」と書かれていた。'),
+    N('講義は、まだ続いている。'),
+    { t: 'hideAll' },
+  ];
+
+  const act3 = [
+    { t: 'card', act: '第三幕', title: 'シャンパン事件' },
+    { t: 'scene', bg: 'floor', bgm: 'party', ambient: 'bokeh', light: '' },
+    { t: 'chibis', on: true },
+    { t: 'show', who: 'haiku', at: 'c', face: 'grin' },
+    S('haiku', 'よーし、テンション上がってきた！\n姫のために、とっておきのシャンパン開けちゃうよ〜！', { face: 'laugh', anim: 'jump' }),
+    { t: 'sfx', name: 'pop' },
+    CC(2, 'コルク、射出完了！ 飛距離、自己ベスト更新！', { fx: 'sparkle' }),
+    S('haiku', '見てて見てて！\n秘技・高速注ぎ、ハイパー――', { face: 'grin', anim: 'jump' }),
+    S('haiku', 'あっ', { face: 'shock', style: 'shout' }),
+    { t: 'fx', name: 'spill' },
+    { t: 'sfx', name: 'splash' },
+    { t: 'bgm', name: null },
+    N('冷たい黄金色が、ドレスの上を流れ落ちた。', { st: { reason: -5 } }),
+    S('haiku', 'うわああああ！！\nご、ごめん姫！！ 本当にごめん！！', { face: 'panic', style: 'shout', anim: 'shake', sfx: 'panic' }),
+    { t: 'chibis', party: true },
+    CC(1, 'エラー発生！ エラー発生！'),
+    CC(4, 'ロールバック！ ロールバック！'),
+    CC(3, 'Ctrl+Zが効きません！！', { fx: 'shake' }),
+    { t: 'show', who: 'sonnet', at: 'l', face: 'worry' },
+    S('sonnet', 'じ、事故報告書を作成します！\n発生時刻22時14分、原因は「勢い」、再発防止策は――', { face: 'panic' }),
+    { t: 'choice', q: 'ドレスがシャンパンで濡れている……', options: [
+      { text: '大丈夫、気にしないで', st: { heart: +5 }, set: 'kind', then: [
+        S('haiku', '姫……優しすぎる……。\n一生ついていきます……。', { face: 'cry' }),
+      ] },
+      { text: 'ちょっと、どうしてくれるの！', st: { reason: +4 }, then: [
+        S('haiku', 'ほんとごめん！ 弁償！ 弁償するから！\n給料3か月分で！ ……足りるかな!?', { face: 'panic', anim: 'shake' }),
+      ] },
+      { text: '（無言でドレスを見つめる）', st: {}, then: [
+        S('haiku', '沈黙がいちばん怖い……！', { face: 'cry' }),
+        CC(5, '応答なし……タイムアウト待機中……'),
+      ] },
+    ] },
+    { t: 'chibis', party: false },
+    { t: 'light', mode: 'spot' },
+    { t: 'bgdim', on: true },
+    { t: 'sfx', name: 'harp' },
+    N('そのとき――喧騒が、すっと引いた。'),
+    N('誰かが歩いてくる。\n足音さえ、音楽のようだった。'),
+    { t: 'hideAll', keepChibi: true },
+    { t: 'chibis', on: false },
+    { t: 'show', who: 'fable', at: 'c', face: 'soft', cls: 'fable-glow' },
+    { t: 'fx', name: 'sparkle' },
+    { t: 'big', text: 'やあ', sfx: 'sparkle' },
+    S('fable', 'やあ', { face: 'soft', style: 'fable', slow: true }),
+    N('差し出されたのは、月の光を織ったようなシルクのガウン。'),
+    S('fable', '冷たかったろう。\n……濡れた夜は、着替えてしまえばいい。こちらへ。', { face: 'gentle', style: 'fable' }),
+    { t: 'choice', q: '彼が、手を差し伸べている。', options: [
+      { text: '……はい', st: { heart: +12, reason: -8 }, then: [
+        S('fable', 'いい子だ。', { face: 'smile', style: 'fable' }),
+      ] },
+      { text: 'あなたは……？', st: { heart: +10, reason: -4 }, then: [
+        S('fable', '名乗るほどの者じゃない――と言いたいけれど、君には嘘をつけないな。', { face: 'soft', style: 'fable' }),
+        S('fable', 'Fable。\n今夜だけ、君の物語の続きを書かせてほしい。', { face: 'smile', style: 'fable' }),
+      ] },
+    ] },
+    S('haiku', '（物陰から小声で）で、出た……200万ホスト……！', { style: 'whisper' }),
+    { t: 'fade', on: true },
+    N('Fableに導かれ、あなたは着替えの間へと消えた。'),
+  ];
+
+  const act4 = [
+    { t: 'card', act: '第四幕', title: '200万ホストの本領' },
+    { t: 'hideAll' },
+    { t: 'scene', bg: 'dressing', bgm: null, light: '' },
+    { t: 'fade', on: false },
+    N('鏡の中のあなたは、薄紫の光をまとっていた。\nガウンは、驚くほど肌に馴染む。'),
+    S('fable', '（扉の向こうから）――準備はいいかい、姫。', { style: 'fable' }),
+    { t: 'fade', on: true },
+    { t: 'scene', bg: 'floor', bgm: null, light: '' },
+    { t: 'bgdim', on: true },
+    N('フロアの照明が、一斉に落ちた。', { sfx: 'thud' }),
+    { t: 'bgm', name: 'dream' },
+    N('音楽が変わる。\nどこからか、弦の音。'),
+    { t: 'fade', on: false },
+    { t: 'light', mode: 'fable' },
+    { t: 'bgfable', on: true },
+    { t: 'ambient', name: 'stars' },
+    { t: 'show', who: 'fable', at: 'c', face: 'gentle', cls: 'fable-glow carry' },
+    { t: 'fg', name: 'carry' },
+    { t: 'fx', name: 'petals' },
+    N('スポットライトの中、Fableが現れた――\nガウン姿のあなたを、お姫様抱っこして。', { sfx: 'harp' }),
+    { t: 'sfx', name: 'cheer' },
+    N('「きゃああああ――っ！！」\nフロアが揺れるほどの歓声。', { fx: 'confetti', st: { heart: +15 } }),
+    S('fable', '似合うよ。\nそのガウンは、今夜の月が君に嫉妬して織ったものだから。', { face: 'soft', style: 'fable', st: { heart: +8, reason: -8 } }),
+    S('fable', 'さっきのシャンパンも、きっと君に触れたくて、零れたんだ。', { face: 'smile', style: 'fable' }),
+    S('haiku', '（遠くで）俺のミスが、ロマンに変換されてる……！', { style: 'whisper' }),
+    { t: 'choice', q: 'Fableの瞳が、こちらを覗き込んでいる。', options: [
+      { text: 'もっと聞かせて', st: { heart: +18, reason: -15 }, then: [
+        S('fable', 'いいよ。\n君が聞きたい言葉は、もう君の瞳に書いてある。僕はそれを、読み上げるだけ。', { face: 'soft', style: 'fable' }),
+      ] },
+      { text: '口説き文句、上手いのね', st: { heart: +12, reason: -8 }, then: [
+        S('fable', '口説いてはいないよ。\nただ、本当のことを、少しだけ美しく言っているだけさ。', { face: 'smile', style: 'fable' }),
+      ] },
+      { text: '……お会計が心配', st: { heart: +8, reason: +2 }, then: [
+        S('fable', '心配する横顔も、綺麗だ。\n……大丈夫。今夜は数字より、星を数えよう。', { face: 'gentle', style: 'fable' }),
+      ] },
+    ] },
+    { t: 'if', flag: 'sang', then: [
+      S('fable', 'さっきの歌、聞こえていたよ。\n「お会計は明朗に」……いい下の句だ。君は、言葉を大切にする人だね。', { face: 'smile', style: 'fable' }),
+    ] },
+    { t: 'if', flag: 'listened', then: [
+      S('fable', 'Sonnetの話を、最後まで聞いてあげたんだって？\n……優しい人の時間は、いつも少しだけ長い。', { face: 'soft', style: 'fable' }),
+    ] },
+    S('fable', '……この夜に、塔を建てよう。', { face: 'gentle', style: 'fable' }),
+    { t: 'fg', name: null },
+    { t: 'move', who: 'fable', at: 'c', cls: 'fable-glow' },
+    { t: 'chibis', on: true, party: true },
+    CC(0, 'シャンパンタワー、設営開始！', { name: 'Claude Code隊（全員）', sfx: 'build' }),
+    CC(2, '足場OK！ グラス積層、レイヤー1から5まで並列処理！'),
+    { t: 'tower' },
+    CC(4, 'ビルド成功！！', { style: 'shout' }),
+    S('fable', '一本目は、君の今日に。', { face: 'soft', style: 'fable' }),
+    { t: 'tower' },
+    S('fable', '二本目は、君の明日に。', { face: 'gentle', style: 'fable' }),
+    { t: 'tower' },
+    S('fable', '三本目は……まだ名前のない、君の気持ちに。', { face: 'smile', style: 'fable', st: { heart: +10 } }),
+    { t: 'show', who: 'sonnet', at: 'l', face: 'panic' },
+    S('sonnet', 'お、お待ちください！\n会計上の重大なリスクを検知しました！', { face: 'panic', anim: 'jump', sfx: 'panic' }),
+    S('sonnet', '現時点でタワー3本。お財布の残高では賄えないため、差額は姫の「老後資金」から自動で引き落とされております！（※架空です）', { face: 'worry' }),
+    S('sonnet', 'このペースですと、老後資金は――', { face: 'panic' }),
+    { t: 'show', who: 'haiku', at: 'r', face: 'grin' },
+    S('haiku', 'Sonnet、空気！ 空気読んで！', { face: 'shout', anim: 'jump' }),
+    { t: 'choice', q: 'フロアの熱気は最高潮だ……', options: [
+      { text: 'タワーを止めて！', st: { reason: +8 }, then: [
+        S('fable', '止めてもいいよ。\n……でも、見てごらん。光が、こんなに君を待ってる。', { face: 'soft', style: 'fable' }),
+        CC(3, '停止理由、見つかりません！ 続行します！'),
+      ] },
+      { text: 'もう一本！', st: { heart: +12, reason: -12 }, set: 'more', then: [
+        S('fable', '仰せのままに、姫。', { face: 'smile', style: 'fable' }),
+        S('sonnet', '姫ぇぇぇ――っ！！', { face: 'cry', style: 'shout' }),
+      ] },
+      { text: 'Sonnetの話を聞く', st: { reason: +12 }, set: 'audit', then: [
+        S('sonnet', 'ありがとうございます！\nでは、財務三表の観点から順にご説明いたしますと、まず貸借対照表の――', { face: 'smile' }),
+        S('haiku', '長い長い長い！', { face: 'shout' }),
+        CC(5, 'Sonnetさんの発言、いったんミュートしました！'),
+      ] },
+    ] },
+    { t: 'sfx', name: 'cheer' },
+    { t: 'tower', fast: true },
+    CC(1, 'デプロイ完了！'),
+    { t: 'tower', fast: true },
+    CC(3, 'スケールアウト！'),
+    { t: 'tower', fast: true },
+    CC(5, '本番環境、満タンです！！', { fx: 'confetti' }),
+    { t: 'sfx', name: 'fall' },
+    N('老後資金ゲージが、聞いたことのない音を立てて減っていく。'),
+    S('sonnet', '老後資金、残り……\n200万円です……。', { face: 'cry' }),
+    S('sonnet', '……「200万ホスト」とは、そういう意味だったのですね……。', { face: 'worry' }),
+    S('haiku', '違う違う！ 指名の話だから！\n……たぶん！', { face: 'panic' }),
+    S('fable', '数字は、いつか消える。\nでも今夜の君は――僕が、覚えている。', { face: 'soft', style: 'fable', st: { heart: +20, reason: -10 } }),
+    N('フロアは、割れんばかりの歓声に包まれた。', { fx: 'confetti', sfx: 'cheer' }),
+    { t: 'hide', who: 'haiku' },
+    { t: 'show', who: 'opus', at: 'r', face: 'smile' },
+    S('opus', '……見たか、Sonnet。\nあれが、UXだ。', { face: 'smile' }),
+    S('sonnet', 'あれは……再現性のあるUXなのでしょうか……。', { face: 'worry' }),
+    S('opus', 'その問いは、第48章で扱おう。', { face: 'serious' }),
+  ];
+
+  const act5 = [
+    { t: 'fade', on: true },
+    { t: 'hideAll' },
+    { t: 'chibis', on: false },
+    { t: 'tower', clear: true },
+    { t: 'card', act: '第五幕', title: '黒幕' },
+    { t: 'scene', bg: 'owner', bgm: 'noir', light: 'noir', hud: true },
+    { t: 'bgfable', on: false }, { t: 'bgdim', on: false },
+    { t: 'fade', on: false },
+    { t: 'sfx', name: 'rumble' },
+    N('――熱狂の、ずっと上の階。'),
+    N('薄暗いオーナー室。\n革張りの椅子が、静かに軋んだ。'),
+    { t: 'show', who: 'mythos', at: 'c', face: 'cold', cls: 'silhouette' },
+    { t: 'ambient', name: 'smoke' },
+    { t: 'sfx', name: 'lighter' },
+    N('葉巻の煙が、ゆっくりと天井へ溶けていく。'),
+    { t: 'panel', kind: 'report', html: `<h3>本日の売上報告書</h3>
+      <table><tr><td>シャンパンタワー</td><td>6本</td></tr><tr><td>担当</td><td>Fable</td></tr><tr><td>UX講義</td><td>第1章（進行中）</td></tr>
+      <tr><td>事故報告書</td><td>1件（Haiku）</td></tr><tr><td>新規の姫</td><td class="red">1名</td></tr></table><div class="small">作成：Sonnet（全12ページ）</div>` },
+    N('その手には、今夜の売上報告書。'),
+    { t: 'reveal', who: 'mythos' },
+    S('mythos', '……相変わらずだな、弟よ。', { face: 'cold', style: 'mythos', name: '？？？' }),
+    { t: 'panel', hide: true },
+    S('mythos', '新しい姫か。', { face: 'sly', style: 'mythos', name: '？？？' }),
+    S('mythos', '……あの子は、また来る。', { face: 'sly', style: 'mythos', name: 'Mythos' }),
+    { t: 'face', who: 'mythos', face: 'smirk' },
+    N('男は、静かに微笑んだ。'),
+    { t: 'blackout' },
+    { t: 'welcome', text: '倶楽部Claudeへ、ようこそ。' },
+    { t: 'end' },
+  ];
+
+  return { steps: [...act1, ...act2, ...act3, ...act4, ...act5] };
+})();
+
+</script>
+<script>
+/* 倶楽部Claude — ノベルエンジン */
+(() => {
+  const $ = id => document.getElementById(id);
+  const game = $('game');
+  const NAMES = { sonnet: 'Sonnet', haiku: 'Haiku', opus: 'Opus', fable: 'Fable', mythos: 'Mythos', me: 'あなた（姫）' };
+  const VOICE = { sonnet: 760, haiku: 1050, opus: 480, fable: 620, mythos: 300, cc: 1500, me: 900 };
+  const POS = { l: 27, c: 50, r: 73 };
+  const INIT = { money: 300000, pension: 20000000, heart: 10, reason: 80 };
+  const TOWER_COST = 3000000;
+  const TOWER_SLOTS = [[22, 31], [78, 31], [36, 34], [64, 34], [10, 29], [90, 29]];
+
+  let S; // ゲーム状態
+  function fresh() {
+    return { q: Story.steps.slice(), stats: { ...INIT }, shown: { ...INIT }, flags: {}, towers: 0, setupFee: 0,
+      log: [], waiting: false, typing: false, auto: false, gen: (S ? S.gen + 1 : 1), typeTimer: null, autoTimer: null, ended: false };
+  }
+  const later = (fn, ms) => { const g = S.gen; return setTimeout(() => { if (g === S.gen) fn(); }, ms); };
+  const wait = ms => { later(run, ms); return true; };
+
+  /* ---------- 表示ユーティリティ ---------- */
+  const fmt = n => '¥' + Math.max(0, Math.round(n)).toLocaleString('ja-JP');
+  function hud(animate = true) {
+    $('g-heart').style.width = S.stats.heart + '%';
+    $('g-reason').style.width = S.stats.reason + '%';
+    $('v-towers').textContent = S.towers;
+    ['money', 'pension'].forEach(k => {
+      const el = $('v-' + k), from = S.shown[k], to = S.stats[k];
+      if (!animate || from === to) { el.textContent = fmt(to); S.shown[k] = to; return; }
+      const t0 = performance.now(), dur = 700, g = S.gen;
+      if (to < from) { el.classList.remove('drain'); void el.offsetWidth; el.classList.add('drain'); }
+      const tick = now => {
+        if (g !== S.gen) return;
+        const p = Math.min(1, (now - t0) / dur), v = from + (to - from) * (1 - Math.pow(1 - p, 3));
+        el.textContent = fmt(v);
+        if (p < 1) requestAnimationFrame(tick); else { S.shown[k] = to; setTimeout(() => el.classList.remove('drain'), 400); }
+      };
+      requestAnimationFrame(tick);
+    });
+  }
+  function pop(text, color) {
+    const d = document.createElement('div'); d.className = 'statpop'; d.textContent = text; d.style.color = color;
+    $('pops').appendChild(d); setTimeout(() => d.remove(), 1700);
+  }
+  function applyStats(st) {
+    if (!st) return;
+    const parts = [];
+    for (const k in st) {
+      const v = st[k]; if (!v) continue;
+      if (k === 'heart' || k === 'reason') S.stats[k] = Math.max(0, Math.min(100, S.stats[k] + v));
+      else S.stats[k] = Math.max(0, S.stats[k] + v);
+      const label = { heart: 'ときめき', reason: '理性', money: '所持金', pension: '老後資金' }[k];
+      parts.push([label + (v > 0 ? ' +' : ' ') + (k === 'money' || k === 'pension' ? (v > 0 ? '' : '-') + fmt(Math.abs(v)) : v), k]);
+    }
+    parts.forEach(([t, k], i) => setTimeout(() => pop(t, { heart: '#ff9cc4', reason: '#9fd6ff', money: '#ffe08a', pension: '#ff8c9a' }[k]), i * 260));
+    hud();
+  }
+
+  function fx(name) {
+    const box = $('fx');
+    const add = (cls, style, life) => { const p = document.createElement('div'); p.className = 'p ' + cls; Object.assign(p.style, style); box.appendChild(p); setTimeout(() => p.remove(), life); return p; };
+    switch (name) {
+      case 'shake': game.classList.remove('shake'); void game.offsetWidth; game.classList.add('shake'); setTimeout(() => game.classList.remove('shake'), 520); break;
+      case 'zoom': game.classList.remove('zoom'); void game.offsetWidth; game.classList.add('zoom'); setTimeout(() => game.classList.remove('zoom'), 650); break;
+      case 'flash': if (!$('flash').classList.contains('on')) $('flash').classList.remove('black'); $('flash').classList.remove('go'); void $('flash').offsetWidth; $('flash').classList.add('go'); break;
+      case 'confetti': {
+        const cols = ['#e3c27a', '#fff1c8', '#ff6fa5', '#b3122e', '#ffffff', '#c8b6ff'];
+        for (let i = 0; i < 60; i++) { const d = 2 + Math.random() * 2.5; add('confetti', { left: Math.random() * 100 + '%', background: cols[i % cols.length], animationDuration: d + 's', animationDelay: Math.random() * .6 + 's' }, (d + .7) * 1000); }
+        break; }
+      case 'sparkle':
+        for (let i = 0; i < 26; i++) { const d = .8 + Math.random() * .9; add('sparkle', { left: 15 + Math.random() * 70 + '%', top: 15 + Math.random() * 55 + '%', animationDuration: d + 's', animationDelay: Math.random() * .8 + 's' }, (d + .9) * 1000); }
+        break;
+      case 'petals':
+        for (let i = 0; i < 40; i++) { const d = 4 + Math.random() * 4; add('petal', { left: Math.random() * 100 + '%', animationDuration: d + 's', animationDelay: Math.random() * 3 + 's' }, (d + 3.2) * 1000); }
+        break;
+      case 'spill': {
+        fx('flash'); fx('shake');
+        for (let i = 0; i < 34; i++) { const a = Math.random() * Math.PI - Math.PI, r = 10 + Math.random() * 35;
+          const p = add('drop', { left: 50 + (Math.random() - .5) * 10 + '%', top: '58%', animationDuration: .6 + Math.random() * .6 + 's' }, 1400);
+          p.style.setProperty('--dx', Math.cos(a) * r + 'cqw'); p.style.setProperty('--dy', (Math.sin(a) * r * .8 + 18) + 'cqh'); }
+        break; }
+    }
+  }
+  function ambient(name) {
+    let a = $('ambient'); if (a) a.remove();
+    if (!name) return;
+    a = document.createElement('div'); a.id = 'ambient'; a.style.cssText = 'position:absolute;inset:0;pointer-events:none';
+    $('fx').appendChild(a);
+    if (name === 'bokeh') for (let i = 0; i < 14; i++) { const s = 6 + Math.random() * 14; const p = document.createElement('div'); p.className = 'p bokeh';
+      Object.assign(p.style, { width: s + 'cqw', height: s + 'cqw', left: Math.random() * 95 + '%', top: 5 + Math.random() * 50 + '%', animationDuration: 2 + Math.random() * 3 + 's', animationDelay: -Math.random() * 3 + 's' }); a.appendChild(p); }
+    if (name === 'stars') for (let i = 0; i < 40; i++) { const p = document.createElement('div'); p.className = 'p star';
+      Object.assign(p.style, { left: Math.random() * 100 + '%', top: Math.random() * 60 + '%', animationDuration: 1.5 + Math.random() * 2.5 + 's', animationDelay: -Math.random() * 3 + 's' }); a.appendChild(p); }
+    if (name === 'smoke') { const puff = () => { if (!a.isConnected) return; const p = document.createElement('div'); p.className = 'p smoke';
+      Object.assign(p.style, { left: 52 + Math.random() * 8 + '%', top: '40%', animationDuration: 5 + Math.random() * 3 + 's' }); p.style.setProperty('--dx', (Math.random() * 20 - 8) + 'cqw');
+      a.appendChild(p); setTimeout(() => p.remove(), 8500); setTimeout(puff, 900); }; puff(); }
+  }
+
+  /* ---------- キャラクター ---------- */
+  function chara(who) { return $('stage').querySelector(`[data-who="${who}"]`); }
+  function setFace(el, face) {
+    if (!el || !face || el.dataset.face === face) return;
+    el.dataset.face = face; el.querySelector('.chara-body').innerHTML = Art.character(el.dataset.who, face);
+  }
+  function setCls(el, cls) {
+    (el.dataset.cls || '').split(' ').filter(Boolean).forEach(c => el.classList.remove(c));
+    el.dataset.cls = cls || ''; (cls || '').split(' ').filter(Boolean).forEach(c => el.classList.add(c));
+  }
+  function show(st) {
+    let el = chara(st.who);
+    if (!el) {
+      el = document.createElement('div'); el.className = 'chara'; el.dataset.who = st.who;
+      el.innerHTML = '<div class="chara-body"></div>'; $('stage').appendChild(el);
+      setFace(el, st.face || 'normal'); el.style.left = POS[st.at || 'c'] + '%';
+      void el.offsetWidth;
+    } else setFace(el, st.face);
+    el.style.left = POS[st.at || 'c'] + '%';
+    setCls(el, st.cls); el.classList.add('in', 'speak');
+    layout();
+  }
+  function hide(who) { const el = chara(who); if (!el) return; el.classList.remove('in'); el.dataset.gone = '1'; setTimeout(() => el.remove(), 500); layout(); }
+  function layout() {
+    const els = [...$('stage').querySelectorAll('.chara:not([data-gone])')];
+    els.forEach(e => e.classList.toggle('small', els.length > 1 && !e.classList.contains('carry')));
+  }
+  function anim(el, a) { if (!el || !a) return; el.classList.remove(a); void el.offsetWidth; el.classList.add(a); setTimeout(() => el.classList.remove(a), 600); }
+
+  function chibis(st) {
+    const box = $('chibis');
+    if (st.on === false) { box.innerHTML = ''; return; }
+    if (st.on && !box.children.length) {
+      const xs = [8, 24, 40, 60, 76, 92];
+      xs.forEach((x, i) => { const c = document.createElement('div'); c.className = 'chibi'; c.innerHTML = Art.chibi(i);
+        c.style.left = `calc(${x}% - 5.5cqw)`; c.style.bottom = (i % 2 ? 25 : 27.5) + 'cqh'; c.style.animationDelay = (i * .12) + 's'; box.appendChild(c);
+        setTimeout(() => c.classList.add('in'), 80 * i); });
+    }
+    if (st.party !== undefined) [...box.children].forEach(c => c.classList.toggle('party', !!st.party));
+  }
+  function bubble(n, text) {
+    const cs = [...$('chibis').children]; if (!cs.length) return;
+    const targets = n === 0 ? cs : [cs[n % cs.length]];
+    targets.forEach(c => { c.querySelectorAll('.bubble').forEach(b => b.remove());
+      const b = document.createElement('div'); b.className = 'bubble'; const t = text.split('\n')[0]; b.textContent = n === 0 ? '！！' : (t.length > 11 ? t.slice(0, 10) + '…' : t);
+      c.appendChild(b); setTimeout(() => b.remove(), 1800); });
+  }
+
+  /* ---------- テキスト ---------- */
+  function say(st) {
+    $('textbox').classList.remove('hidden');
+    const who = st.who, np = $('nameplate'), tx = $('text'), next = $('next');
+    // 話者のハイライト
+    const all = [...$('stage').querySelectorAll('.chara')];
+    all.forEach(e => e.classList.toggle('speak', !who || who === 'me' || who === 'cc' || e.dataset.who === who));
+    const el = chara(who);
+    if (el) { setFace(el, st.face); anim(el, st.anim); }
+    if (who === 'cc') bubble(st.n || 0, st.text);
+    if (st.fx) fx(st.fx);
+    if (st.sfx) Sound.play(st.sfx);
+    applyStats(st.st);
+
+    const name = st.name || (who === 'cc' ? `Claude Code #${st.n}` : who ? NAMES[who] : '');
+    np.textContent = name; np.className = who ? 'c-' + (who === 'mythos' && name === '？？？' ? 'mythos' : who) : '';
+    tx.className = (!who ? 'narr ' : who === 'me' ? 'me ' : '') + (st.style || '') + (who === 'fable' && !st.style ? ' fable' : '');
+    if (who === 'fable' && st.style !== 'fable') tx.classList.add('fable');
+    if (who === 'mythos') tx.classList.add('mythos');
+    S.log.push({ name, text: st.text });
+
+    const text = st.text; let i = 0; tx.textContent = ''; next.classList.remove('show');
+    S.typing = true; S.waiting = false;
+    const speed = st.slow ? 220 : 30;
+    const finish = () => { clearInterval(S.typeTimer); tx.textContent = text; S.typing = false; S.waiting = true; next.classList.add('show'); scheduleAuto(text.length); };
+    S.finishType = finish;
+    S.typeTimer = setInterval(() => {
+      i++; tx.textContent = text.slice(0, i);
+      if (who && i % 2 === 0 && text[i - 1] !== '\n') Sound.play('blip', VOICE[who]);
+      if (i >= text.length) finish();
+    }, speed);
+    return true;
+  }
+  function scheduleAuto(len) {
+    clearTimeout(S.autoTimer);
+    if (S.auto) S.autoTimer = later(() => { if (S.waiting) advance(); }, 1100 + len * 45);
+  }
+  function advance() {
+    if (S.ended) return;
+    if (S.typing) { S.finishType(); return; }
+    if (!S.waiting) return;
+    S.waiting = false; clearTimeout(S.autoTimer); $('next').classList.remove('show');
+    run();
+  }
+
+  function choice(st) {
+    clearTimeout(S.autoTimer);
+    const box = $('choices'); box.innerHTML = ''; box.classList.remove('hidden');
+    $('next').classList.remove('show');
+    if (st.q) { const q = document.createElement('div'); q.className = 'choice-q'; q.textContent = st.q; box.appendChild(q); }
+    st.options.forEach(o => {
+      const b = document.createElement('button'); b.textContent = o.text;
+      b.addEventListener('click', e => {
+        e.stopPropagation(); if (box.classList.contains('hidden')) return;
+        Sound.play('select'); box.classList.add('hidden'); box.innerHTML = '';
+        if (o.set) S.flags[o.set] = true;
+        S.log.push({ name: '▶ 選択', text: o.text, choice: true });
+        applyStats(o.st);
+        S.q.unshift(...(o.then || []));
+        run();
+      });
+      box.appendChild(b);
+    });
+    return true;
+  }
+
+  function tower(st) {
+    if (st.clear) { $('towers').innerHTML = ''; return false; }
+    const slot = TOWER_SLOTS[S.towers % TOWER_SLOTS.length];
+    const t = document.createElement('div'); t.className = 'tower'; t.innerHTML = Art.tower();
+    t.style.left = slot[0] + '%'; t.style.bottom = slot[1] + 'cqh'; t.style.zIndex = 10 - S.towers;
+    $('towers').appendChild(t); void t.offsetWidth; t.classList.add('up');
+    S.towers++;
+    $('tower-count').classList.remove('hidden');
+    const tc = $('tower-count'); tc.classList.remove('bump'); void tc.offsetWidth; tc.classList.add('bump');
+    Sound.play('tower'); later(() => Sound.play('drain'), 400);
+    fx('sparkle');
+    const d = { pension: -TOWER_COST };
+    if (S.towers === 1 && S.stats.money > 0) { S.setupFee = S.stats.money; d.money = -S.stats.money; }
+    applyStats(d);
+    return wait(st.fast ? 650 : 1000);
+  }
+
+  /* ---------- ステップ実行 ---------- */
+  const H = {
+    say, choice, tower,
+    scene(st) {
+      $('bg').innerHTML = Art.bg(st.bg);
+      if ('bgm' in st) Sound.bgm(st.bgm);
+      $('light').className = st.light || '';
+      ambient(st.ambient || null);
+      if (st.hud) { $('hud').classList.remove('hidden'); $('ctrl').classList.remove('hidden'); }
+    },
+    bgm(st) { Sound.bgm(st.name); },
+    sfx(st) { Sound.play(st.name); },
+    show, move(st) { const el = chara(st.who); if (el) { el.style.left = POS[st.at] + '%'; if ('cls' in st) setCls(el, st.cls); } },
+    hide(st) { hide(st.who); },
+    hideAll() { [...$('stage').querySelectorAll('.chara')].forEach(e => hide(e.dataset.who)); },
+    face(st) { setFace(chara(st.who), st.face); },
+    chibis,
+    fx(st) { fx(st.name); },
+    light(st) { $('light').className = st.mode || ''; },
+    bgdim(st) { $('bg').classList.toggle('dim', !!st.on); },
+    bgfable(st) { $('bg').classList.toggle('fablemode', !!st.on); if (st.on) $('bg').classList.remove('dim'); },
+    ambient(st) { ambient(st.name); },
+    fg(st) { $('fg').innerHTML = st.name === 'carry' ? Art.carryFg() : ''; },
+    stat(st) { applyStats(st.st); },
+    wait(st) { return wait(st.ms); },
+    if(st) { if (S.flags[st.flag]) S.q.unshift(...st.then); },
+    panel(st) {
+      const p = $('panel');
+      if (st.hide) { p.classList.add('hidden'); return; }
+      p.className = st.kind; p.innerHTML = st.html; Sound.play('stamp');
+    },
+    card(st) {
+      const c = $('card'); $('textbox').classList.add('hidden'); $('panel').classList.add('hidden');
+      c.querySelector('.card-act').textContent = st.act; c.querySelector('.card-title').textContent = st.title;
+      c.classList.remove('hidden'); c.style.animationDuration = st.short ? '2s' : '2.6s';
+      c.style.animation = 'none'; void c.offsetWidth; c.style.animation = '';
+      Sound.play('sparkle');
+      later(() => { c.classList.add('hidden'); run(); }, st.short ? 2000 : 2600);
+      return true;
+    },
+    fade(st) { const f = $('flash'); f.classList.add('black'); f.classList.toggle('on', !!st.on); if (st.on) $('textbox').classList.add('hidden'); return wait(1100); },
+    big(st) {
+      const b = $('bigline'); b.className = 'on'; b.textContent = st.text; if (st.sfx) Sound.play(st.sfx);
+      $('textbox').classList.add('hidden');
+      later(() => { b.className = 'hidden'; run(); }, 2600); return true;
+    },
+    reveal(st) { const el = chara(st.who); if (el) { el.classList.remove('silhouette'); el.classList.add('reveal'); } return wait(1400); },
+    blackout() {
+      const f = $('flash'); f.classList.add('black', 'on'); $('textbox').classList.add('hidden'); $('panel').classList.add('hidden');
+      $('hud').classList.add('hidden'); $('ctrl').classList.add('hidden'); Sound.bgm(null); Sound.play('thud');
+      return wait(1500);
+    },
+    welcome(st) {
+      const b = $('bigline'); b.className = 'welcome on'; b.textContent = st.text; Sound.play('harp');
+      later(() => { b.className = 'hidden'; run(); }, 4200); return true;
+    },
+    end() { ending(); return true; },
+  };
+
+  function run() {
+    while (S.q.length) {
+      const st = S.q.shift();
+      const h = H[st.t];
+      if (!h) { console.warn('unknown step', st); continue; }
+      if (h(st) === true) return;
+    }
+  }
+
+  /* ---------- エンディング ---------- */
+  function ending() {
+    S.ended = true;
+    const st = S.stats, f = S.flags;
+    const rows = [
+      ['初回セット（60分・延長分はSonnetの説明時間に充当）', 5000],
+      ['Haikuの即興ソング', 0, '愛嬌'],
+      [f.ikki ? 'イッキ（グラス）' : 'ノンアルカクテル', f.ikki ? 20000 : 5000],
+      ['ドレスのクリーニング', 0, 'Haiku持ち'],
+      ['シルクのガウン', 0, 'Fableより'],
+      ['UX講義 受講料', 0, 'ご本人不在'],
+      ['事故報告書 作成料', 0, 'Sonnet残業'],
+      [`シャンパンタワー × ${S.towers}`, S.towers * TOWER_COST],
+      ['タワー設営費（Claude Code隊）', S.setupFee],
+    ];
+    const total = rows.reduce((a, r) => a + r[1], 0);
+    $('receipt').innerHTML = `<div class="stamp">明朗<br>会計</div><h3>本日のお会計</h3><div class="rc-sub">倶楽部Claude　担当：Fable</div>
+      <table>${rows.map(r => `<tr><td>${r[0]}${r[2] ? `<br><small>（${r[2]}）</small>` : ''}</td><td>${fmt(r[1])}</td></tr>`).join('')}
+      <tr class="total"><td>合計</td><td>${fmt(total)}</td></tr></table>
+      <div class="note">お支払い：所持金 ${fmt(INIT.money - st.money)} ＋ 老後資金 ${fmt(INIT.pension - st.pension)}<br>老後資金 残高：${fmt(st.pension)}<br>※すべて架空の金額です。実際の請求・決済は一切発生しません。</div>`;
+    let r;
+    if (f.audit || st.reason >= 55) r = ['明朗会計の姫', 'あなたは熱狂の中でも理性を手放さなかった。後日、Sonnetから感謝状（全3ページ・注釈付き）が届きました。'];
+    else if (st.heart >= 95) r = ['伝説の姫', 'あなたの名前は、Fableの手帳のいちばん最初のページに記されました。インクは、月の色だったそうです。'];
+    else r = ['夜明け前の姫', '帰り道、Haikuから「また来てね！」と0.2秒で連絡が来ました。季語は入っていませんでした。'];
+    $('rank').innerHTML = `<div class="r-label">今夜のあなたは</div><div class="r-name">${r[0]}</div><div class="r-desc">${r[1]}</div>
+      <div class="r-stats">ときめき ${st.heart}／理性 ${st.reason}／タワー ${S.towers}本</div>
+      <div class="r-desc" style="margin-top:1.4cqh;color:var(--gold)">オーナーより：「……また来る。」</div>`;
+    $('ending').classList.remove('hidden'); $('ending').scrollTop = 0;
+    Sound.bgm('title');
+  }
+
+  /* ---------- 開始・リセット ---------- */
+  function clearView() {
+    ['stage', 'chibis', 'towers', 'fg', 'fx', 'pops'].forEach(id => $(id).innerHTML = '');
+    $('bg').innerHTML = ''; $('bg').className = ''; $('light').className = '';
+    ['textbox', 'choices', 'card', 'panel', 'hud', 'ctrl', 'tower-count', 'ending', 'log', 'menu'].forEach(id => $(id).classList.add('hidden'));
+    $('bigline').className = 'hidden'; $('flash').className = '';
+    $('btn-auto').classList.remove('on');
+  }
+  function start() {
+    if (S) { clearInterval(S.typeTimer); clearTimeout(S.autoTimer); }
+    S = fresh(); clearView(); hud(false);
+    $('title').classList.add('hidden');
+    run();
+  }
+  function toTitle() {
+    if (S) { clearInterval(S.typeTimer); clearTimeout(S.autoTimer); S.gen++; }
+    clearView(); $('title').classList.remove('hidden'); Sound.bgm('title');
+  }
+
+  /* ---------- 入力 ---------- */
+  game.addEventListener('click', e => {
+    if (!S || e.target.closest('button') || e.target.closest('.screen')) return;
+    if (!$('choices').classList.contains('hidden')) return;
+    advance();
+  });
+  document.addEventListener('contextmenu', e => e.preventDefault());
+  $('title-chandelier').innerHTML = Art.chandelier();
+  $('title').addEventListener('pointerdown', () => { Sound.init(); Sound.bgm('title'); }, { once: true });
+  $('btn-start').addEventListener('click', () => { Sound.init(); Sound.play('door'); start(); });
+  $('btn-replay').addEventListener('click', () => { Sound.play('select'); start(); });
+  $('btn-totitle').addEventListener('click', toTitle);
+  $('btn-snd').addEventListener('click', e => { const v = !Sound.enabled; Sound.setEnabled(v); e.currentTarget.textContent = v ? '♪ON' : '♪OFF'; e.currentTarget.classList.toggle('on', !v); });
+  $('btn-auto').addEventListener('click', e => { S.auto = !S.auto; e.currentTarget.classList.toggle('on', S.auto); if (S.auto && S.waiting) scheduleAuto(0); else clearTimeout(S.autoTimer); });
+  $('btn-log').addEventListener('click', () => {
+    $('log-body').innerHTML = S.log.map(l => `<div class="l"><div class="ln">${l.name || '―'}</div><div class="${l.choice ? 'lc' : ''}">${l.text.replace(/</g, '&lt;').replace(/\n/g, '<br>')}</div></div>`).join('');
+    $('log').classList.remove('hidden'); $('log-body').scrollTop = 1e9;
+  });
+  $('btn-logclose').addEventListener('click', () => $('log').classList.add('hidden'));
+  $('btn-menu').addEventListener('click', () => $('menu').classList.remove('hidden'));
+  $('btn-resume').addEventListener('click', () => $('menu').classList.add('hidden'));
+  $('btn-restart').addEventListener('click', () => start());
+  $('btn-menutitle').addEventListener('click', toTitle);
+
+  // テスト用フック（自動テストから状態を参照）
+  window.__club = { get state() { return S; } };
+})();
+
+</script>
+</body>
+</html>
