@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>星空マートのイブ</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; background: #0a0f1f; overflow: hidden; }
+  body {
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", "Noto Sans JP", "Yu Gothic", "Meiryo", sans-serif;
+    -webkit-user-select: none; user-select: none; touch-action: manipulation;
+  }
+  /* 9:16 のステージ。--u は「ステージ幅360を1とした単位」 */
+  #stage {
+    position: relative; overflow: hidden; background: #000;
+    width: var(--w, 360px); height: calc(var(--w, 360px) * 16 / 9);
+    --u: calc(var(--w, 360px) / 360);
+    color: #2a2a2a;
+  }
+  .layer { position: absolute; inset: 0; width: 100%; height: 100%; }
+  svg.layer { display: block; }
+  #chars g.ch { transition: opacity .25s, filter .25s; }
+  #chars g.ch.dim { filter: brightness(.72); }
+  #chars g.ch.enter { animation: chIn .35s ease-out; }
+  @keyframes chIn { from { opacity: 0; transform: translateY(12px); } }
+  #chars.shake { animation: shake .4s; }
+  @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+
+  /* 上部ボタン */
+  #topbar {
+    position: absolute; top: calc(var(--u) * 8); right: calc(var(--u) * 8);
+    display: flex; gap: calc(var(--u) * 6); z-index: 20;
+  }
+  .tbtn {
+    font: inherit; font-size: calc(var(--u) * 12); font-weight: bold;
+    padding: calc(var(--u) * 6) calc(var(--u) * 10); border-radius: calc(var(--u) * 14);
+    border: calc(var(--u) * 2) solid rgba(255,255,255,.85); background: rgba(20,32,64,.72); color: #fff;
+    cursor: pointer; white-space: nowrap;
+  }
+  .tbtn.off { opacity: .6; }
+
+  /* 受け取りまでの時計 */
+  #clock {
+    position: absolute; top: calc(var(--u) * 8); left: calc(var(--u) * 8); z-index: 19;
+    background: rgba(255,255,255,.94); border: calc(var(--u) * 3) solid #c0392b; border-radius: calc(var(--u) * 10);
+    padding: calc(var(--u) * 4) calc(var(--u) * 10); text-align: center; display: none;
+    box-shadow: 0 calc(var(--u) * 3) calc(var(--u) * 8) rgba(0,0,0,.35);
+  }
+  #clock .now { font-size: calc(var(--u) * 22); font-weight: bold; color: #222; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  #clock .left { font-size: calc(var(--u) * 11); color: #c0392b; font-weight: bold; white-space: nowrap; }
+  #clock.tick { animation: tick .5s; }
+  @keyframes tick { 50% { transform: scale(1.12); } }
+  #clock.urgent { animation: urgent 1s infinite; }
+  @keyframes urgent { 50% { background: #ffe1dc; } }
+
+  /* テキストボックス */
+  #textbox {
+    position: absolute; left: calc(var(--u) * 10); right: calc(var(--u) * 10); bottom: calc(var(--u) * 12);
+    height: calc(var(--u) * 168); z-index: 10;
+    background: rgba(255,253,247,.96); border: calc(var(--u) * 3) solid #1f3b6e; border-radius: calc(var(--u) * 14);
+    padding: calc(var(--u) * 22) calc(var(--u) * 16) calc(var(--u) * 12);
+    box-shadow: 0 calc(var(--u) * 4) calc(var(--u) * 12) rgba(0,0,0,.35);
+  }
+  #name {
+    position: absolute; top: calc(var(--u) * -16); left: calc(var(--u) * 12);
+    background: #1f3b6e; color: #fff; font-weight: bold; font-size: calc(var(--u) * 14);
+    padding: calc(var(--u) * 4) calc(var(--u) * 14); border-radius: calc(var(--u) * 10);
+    max-width: calc(var(--u) * 300); white-space: nowrap; overflow: hidden;
+  }
+  #name:empty { display: none; }
+  #text {
+    font-size: calc(var(--u) * 15.5); line-height: 1.68; height: 100%; overflow: hidden;
+    line-break: strict; overflow-wrap: anywhere; white-space: pre-wrap;
+  }
+  #text.narr { color: #3a3f55; }
+  #next {
+    position: absolute; right: calc(var(--u) * 12); bottom: calc(var(--u) * 8);
+    width: 0; height: 0; border-left: calc(var(--u) * 7) solid transparent; border-right: calc(var(--u) * 7) solid transparent;
+    border-top: calc(var(--u) * 10) solid #1f3b6e; animation: bob 1s infinite; display: none;
+  }
+  @keyframes bob { 50% { transform: translateY(calc(var(--u) * 4)); } }
+
+  /* 選択肢 */
+  #choices {
+    position: absolute; inset: 0; z-index: 15; display: none;
+    flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--u) * 16);
+    background: rgba(10,15,31,.45); padding-bottom: calc(var(--u) * 150);
+  }
+  .choice {
+    font: inherit; font-size: calc(var(--u) * 16); font-weight: bold; width: calc(var(--u) * 290);
+    padding: calc(var(--u) * 14) calc(var(--u) * 12); border-radius: calc(var(--u) * 14);
+    background: #fffdf7; color: #1f3b6e; border: calc(var(--u) * 3) solid #1f3b6e; cursor: pointer;
+    box-shadow: 0 calc(var(--u) * 4) 0 #1f3b6e;
+  }
+  .choice:active { transform: translateY(calc(var(--u) * 3)); box-shadow: 0 calc(var(--u) * 1) 0 #1f3b6e; }
+  .choice-q {
+    color: #fff; font-size: calc(var(--u) * 14); font-weight: bold; text-shadow: 0 1px 3px #000;
+    width: calc(var(--u) * 300); text-align: center;
+  }
+
+  /* 幕タイトル・エンド */
+  #card {
+    position: absolute; inset: 0; z-index: 16; display: none;
+    flex-direction: column; align-items: center; justify-content: center; text-align: center;
+    background: radial-gradient(circle at 50% 40%, #22345f, #0a0f1f 75%); color: #fff;
+  }
+  #card .act { font-size: calc(var(--u) * 30); font-weight: bold; letter-spacing: .2em; }
+  #card .sub { margin-top: calc(var(--u) * 14); font-size: calc(var(--u) * 16); color: #ffe39a; width: calc(var(--u) * 320); }
+  #card .hint { position: absolute; bottom: calc(var(--u) * 40); font-size: calc(var(--u) * 12); color: #aab; }
+  #card .star { font-size: calc(var(--u) * 26); color: #ffd84d; margin-bottom: calc(var(--u) * 12); }
+  #card .btn { margin-top: calc(var(--u) * 30); }
+
+  /* タイトル画面 */
+  #title { position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center; }
+  #title .logo {
+    margin-top: calc(var(--u) * 70); text-align: center; color: #fff;
+    text-shadow: 0 calc(var(--u) * 2) calc(var(--u) * 6) rgba(0,0,0,.7);
+  }
+  #title .logo .small { font-size: calc(var(--u) * 15); color: #ffe39a; letter-spacing: .1em; }
+  #title .logo .big { font-size: calc(var(--u) * 38); font-weight: bold; margin-top: calc(var(--u) * 6); letter-spacing: .06em; }
+  #title .logo .tag { font-size: calc(var(--u) * 13); margin-top: calc(var(--u) * 8); }
+  #title .menu { position: absolute; bottom: calc(var(--u) * 92); display: flex; flex-direction: column; gap: calc(var(--u) * 12); align-items: center; }
+  .btn {
+    font: inherit; font-size: calc(var(--u) * 18); font-weight: bold; width: calc(var(--u) * 220);
+    padding: calc(var(--u) * 12); border-radius: calc(var(--u) * 26);
+    background: #ffd84d; color: #1f3b6e; border: calc(var(--u) * 3) solid #fff; cursor: pointer;
+    box-shadow: 0 calc(var(--u) * 4) calc(var(--u) * 10) rgba(0,0,0,.4);
+  }
+  .btn.sub { background: rgba(255,255,255,.9); font-size: calc(var(--u) * 15); padding: calc(var(--u) * 9); }
+  #title .notice {
+    position: absolute; bottom: calc(var(--u) * 28); left: 0; right: 0; text-align: center;
+    color: #fff; font-size: calc(var(--u) * 12); background: rgba(0,0,0,.45); padding: calc(var(--u) * 7) 0;
+  }
+
+  /* ログ・メニュー */
+  .overlay {
+    position: absolute; inset: 0; z-index: 40; display: none;
+    background: rgba(10,15,31,.98); color: #fff; flex-direction: column;
+  }
+  .overlay.show { display: flex; }
+  .ov-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: calc(var(--u) * 14) calc(var(--u) * 16); font-size: calc(var(--u) * 17); font-weight: bold;
+    border-bottom: 1px solid rgba(255,255,255,.25);
+  }
+  #logList { flex: 1; overflow-y: auto; padding: calc(var(--u) * 10) calc(var(--u) * 16) calc(var(--u) * 30); -webkit-overflow-scrolling: touch; }
+  .log-item { padding: calc(var(--u) * 8) 0; border-bottom: 1px dashed rgba(255,255,255,.15); font-size: calc(var(--u) * 14); line-height: 1.6; overflow-wrap: anywhere; }
+  .log-item .who { color: #ffd84d; font-weight: bold; font-size: calc(var(--u) * 12); }
+  .log-item.narr { color: #c9d0e6; }
+  .log-item.pick { color: #8fe3b0; font-weight: bold; }
+  #menuBox { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--u) * 18); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <svg id="bg" class="layer" viewBox="0 0 360 640" preserveAspectRatio="xMidYMid slice"></svg>
+  <svg id="chars" class="layer" viewBox="0 0 360 640" preserveAspectRatio="xMidYMid slice"></svg>
+
+  <div id="clock"><div class="now">--:--</div><div class="left">受け取り 19:00 まで</div></div>
+
+  <div id="topbar">
+    <button class="tbtn" id="btnLog">ログ</button>
+    <button class="tbtn" id="btnMenu">メニュー</button>
+    <button class="tbtn" id="btnSound">音 ON</button>
+  </div>
+
+  <div id="textbox"><div id="name"></div><div id="text"></div><div id="next"></div></div>
+  <div id="choices"></div>
+  <div id="card"></div>
+
+  <div id="title">
+    <div class="logo">
+      <div class="small">★ 星空マート ★</div>
+      <div class="big">イブの<br>ケーキ</div>
+      <div class="tag">— ある日のコンビニの、ちいさな物語 —</div>
+    </div>
+    <div class="menu">
+      <button class="btn" id="btnStart">はじめる</button>
+      <button class="btn sub" id="btnSoundTitle">サウンド：ON</button>
+    </div>
+    <div class="notice">登場する店舗・人物はすべて架空です</div>
+  </div>
+
+  <div class="overlay" id="logView">
+    <div class="ov-head"><span>会話ログ</span><button class="tbtn" id="btnLogClose">閉じる</button></div>
+    <div id="logList"></div>
+  </div>
+  <div class="overlay" id="menuView">
+    <div class="ov-head"><span>メニュー</span><button class="tbtn" id="btnMenuClose">閉じる</button></div>
+    <div id="menuBox">
+      <button class="btn" id="btnRestart">最初から</button>
+      <button class="btn" id="btnToTitle">タイトルへ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* =========================================================
+   サウンド（WebAudio）。使えない環境では何もしない。
+   ========================================================= */
+const Sound = (() => {
+  let ctx = null, master = null, bgmBus = null, sfxBus = null;
+  let enabled = true, cur = null, timer = null, nextT = 0, step = 0;
+  const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+
+  function init() {
+    try {
+      if (!ctx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        ctx = new AC();
+        master = ctx.createGain(); master.gain.value = enabled ? 0.8 : 0; master.connect(ctx.destination);
+        bgmBus = ctx.createGain(); bgmBus.gain.value = 0.32; bgmBus.connect(master);
+        sfxBus = ctx.createGain(); sfxBus.gain.value = 0.6; sfxBus.connect(master);
+      }
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    } catch (e) { ctx = null; }
+  }
+  function tone(f, t, dur, type, vol, bus, slide) {
+    if (!ctx) return;
+    try {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = type || 'sine'; o.frequency.setValueAtTime(f, t);
+      if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, f * slide), t + dur);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol || 0.2, t + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(bus || sfxBus); o.start(t); o.stop(t + dur + 0.05);
+    } catch (e) {}
+  }
+  // ベル風の音（基音＋倍音）
+  function bell(m, t, dur, vol, bus) {
+    tone(mtof(m), t, dur, 'sine', vol, bus);
+    tone(mtof(m) * 2.01, t, dur * 0.5, 'sine', vol * 0.35, bus);
+  }
+
+  /* BGM：8分音符単位のループ。mel=メロディ, bass=ベース（MIDI番号, null=休符） */
+  const C = 60;
+  const BGM = {
+    title: { bpm: 84, inst: 'bell',
+      mel:  [76,79,84,79, 76,79,84,79, 76,81,84,81, 76,81,84,81, 77,81,84,81, 74,77,81,77, 74,79,83,79, 71,74,79,74],
+      bass: [48,null,null,null,55,null,null,null, 45,null,null,null,52,null,null,null, 41,null,null,null,50,null,null,null, 43,null,null,null,47,null,null,null] },
+    shop: { bpm: 112, inst: 'pluck',
+      mel:  [72,null,76,79, 77,76,74,null, 72,null,76,79, 81,null,79,null, 77,null,81,84, 83,81,79,null, 77,76,74,72, 74,null,null,null],
+      bass: [48,null,55,null,48,null,55,null, 45,null,52,null,45,null,52,null, 41,null,48,null,41,null,48,null, 43,null,50,null,43,null,47,null] },
+    busy: { bpm: 140, inst: 'pluck',
+      mel:  [79,77,76,77, 79,null,79,null, 77,76,74,76, 77,null,77,null, 76,74,72,74, 76,79,84,null, 83,81,79,77, 76,74,72,null],
+      bass: [48,55,48,55,48,55,48,55, 43,50,43,50,43,50,43,50, 45,52,45,52,41,48,41,48, 43,50,43,50,48,55,48,null] },
+    tense: { bpm: 96, inst: 'tick',
+      mel:  [81,null,null,null,null,null,80,null, 81,null,null,null,null,null,76,null, 77,null,null,null,null,null,76,null, 74,null,null,null,76,null,null,null],
+      bass: [45,45,45,45,45,45,45,45, 41,41,41,41,41,41,41,41, 38,38,38,38,38,38,38,38, 40,40,40,40,40,40,40,40] },
+    eve: { bpm: 76, inst: 'bell',
+      mel:  [76,null,79,81, 79,null,76,null, 74,null,72,74, 76,null,null,null, 77,null,81,84, 83,null,81,79, 77,null,74,76, 72,null,null,null],
+      bass: [48,null,55,null,52,null,55,null, 43,null,50,null,48,null,55,null, 41,null,48,null,45,null,52,null, 43,null,50,null,48,null,55,null] }
+  };
+  function playStep(b, i, t, len) {
+    const m = b.mel[i % b.mel.length], ba = b.bass[i % b.bass.length];
+    if (m != null) {
+      if (b.inst === 'bell') bell(m, t, len * 3, 0.16, bgmBus);
+      else if (b.inst === 'tick') tone(mtof(m), t, len * 1.5, 'triangle', 0.10, bgmBus);
+      else tone(mtof(m), t, len * 1.2, 'triangle', 0.16, bgmBus);
+    }
+    if (ba != null) {
+      if (b.inst === 'tick') tone(mtof(ba), t, len * 0.6, 'square', 0.05, bgmBus);
+      else tone(mtof(ba), t, len * 1.8, 'sine', 0.22, bgmBus);
+    }
+  }
+  function sched() {
+    if (!ctx || !cur) return;
+    const b = BGM[cur], len = 60 / b.bpm / 2;
+    while (nextT < ctx.currentTime + 0.2) { playStep(b, step, nextT, len); step++; nextT += len; }
+  }
+  function bgm(name) {
+    if (name === cur) return;
+    cur = name || null; step = 0;
+    if (timer) { clearInterval(timer); timer = null; }
+    if (!ctx || !cur) return;
+    nextT = ctx.currentTime + 0.1;
+    timer = setInterval(sched, 40);
+  }
+  function se(name) {
+    if (!ctx || !enabled) return;
+    const t = ctx.currentTime + 0.01;
+    switch (name) {
+      case 'click': tone(1046, t, 0.06, 'sine', 0.15); break;
+      case 'door': bell(88, t, 0.6, 0.22); bell(84, t + 0.32, 0.9, 0.22); break;
+      case 'beep': tone(1760, t, 0.08, 'square', 0.06); break;
+      case 'ok': tone(1318, t, 0.09, 'square', 0.06); tone(1760, t + 0.11, 0.16, 'square', 0.06); break;
+      case 'phone':
+        for (let r = 0; r < 2; r++) for (let k = 0; k < 10; k++)
+          tone(k % 2 ? 1320 : 1100, t + r * 0.7 + k * 0.045, 0.045, 'triangle', 0.10);
+        break;
+      case 'shock': tone(220, t, 0.6, 'sawtooth', 0.12, null, 0.35); tone(110, t, 0.7, 'sine', 0.25, null, 0.5); break;
+      case 'bell': [84, 88, 91, 96].forEach((m, k) => bell(m, t + k * 0.09, 0.8, 0.14)); break;
+      case 'car': tone(90, t, 0.9, 'sawtooth', 0.06, null, 1.6); break;
+    }
+  }
+  function setEnabled(v) {
+    enabled = v;
+    if (master) try { master.gain.setTargetAtTime(v ? 0.8 : 0, ctx.currentTime, 0.05); } catch (e) {}
+  }
+  return { init, bgm, se, setEnabled, get enabled() { return enabled; } };
+})();
+
+/* =========================================================
+   絵（SVG）。キャラクターは丸い頭＋丸みのある胴体の人形。
+   ========================================================= */
+const ART = (() => {
+  const INK = '#2b2b2b';
+  // 表情：目と口だけ。（焦りのみ汗のしずくを添える）
+  function face(f) {
+    const E = (x, r) => `<circle cx="${x}" cy="-6" r="${r}" fill="${INK}"/>`;
+    const W = (x, r, p) => `<circle cx="${x}" cy="-6" r="${r}" fill="#fff" stroke="${INK}" stroke-width="2.5"/><circle cx="${x}" cy="-5" r="${p}" fill="${INK}"/>`;
+    switch (f) {
+      case 'smile': return `<path d="M-26,-4 Q-18,-14 -10,-4 M10,-4 Q18,-14 26,-4" fill="none" stroke="${INK}" stroke-width="4" stroke-linecap="round"/>
+        <path d="M-13,11 Q0,30 13,11 Z" fill="#c4544c" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/>`;
+      case 'aseri': return W(-18, 8, 3) + W(18, 8, 3) +
+        `<path d="M-12,18 l4,-4 l4,4 l4,-4 l4,4 l4,-4 l4,4" fill="none" stroke="${INK}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+         <path d="M44,-30 q-8,12 -6,16 a6,6 0 0 0 12,0 q2,-4 -6,-16 Z" fill="#8fd3ff" stroke="#3b8fc4" stroke-width="1.5"/>`;
+      case 'komari': return `<ellipse cx="-18" cy="-3" rx="5" ry="4.5" fill="${INK}"/><ellipse cx="18" cy="-3" rx="5" ry="4.5" fill="${INK}"/>
+        <path d="M-10,20 Q0,12 10,20" fill="none" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>`;
+      case 'naki': return `<path d="M-26,-8 Q-18,0 -10,-8 M10,-8 Q18,0 26,-8" fill="none" stroke="${INK}" stroke-width="4" stroke-linecap="round"/>
+        <rect x="-21" y="-3" width="6" height="22" rx="3" fill="#7cc6f2"/><rect x="15" y="-3" width="6" height="22" rx="3" fill="#7cc6f2"/>
+        <path d="M-11,22 Q0,8 11,22 Z" fill="#c4544c" stroke="${INK}" stroke-width="2.5" stroke-linejoin="round"/>`;
+      case 'odoroki': return W(-18, 9, 3.5) + W(18, 9, 3.5) +
+        `<ellipse cx="0" cy="17" rx="6.5" ry="8.5" fill="#c4544c" stroke="${INK}" stroke-width="2.5"/>`;
+      default: return E(-18, 5.5) + E(18, 5.5) +
+        `<path d="M-8,14 Q0,20 8,14" fill="none" stroke="${INK}" stroke-width="3.5" stroke-linecap="round"/>`;
+    }
+  }
+  const UNI = '#2b7f8e', UNI_D = '#1f6170';
+  // 制服（星空マートのベスト）
+  const uniform = (tag) => `<rect x="-55" y="-215" width="110" height="138" rx="30" fill="#fdfdfd"/>
+    <path d="M-55,-185 Q-55,-215 -25,-215 L-12,-215 L-6,-150 L6,-150 L12,-215 L25,-215 Q55,-215 55,-185 L55,-107 Q55,-77 25,-77 L-25,-77 Q-55,-77 -55,-107 Z" fill="${UNI}"/>
+    <path d="M-34,-176 l3,6 6,1 -4.5,4 1,6 -5.5,-3 -5.5,3 1,-6 -4.5,-4 6,-1 Z" fill="#ffd84d"/>
+    ${tag ? `<rect x="10" y="-182" width="34" height="16" rx="4" fill="#fff"/><text x="27" y="-170" font-size="11" text-anchor="middle" font-weight="bold" fill="${UNI_D}">${tag}</text>` : ''}`;
+  const C = {
+    senpai: { skin: '#f1c7a0', name: '先輩',
+      body: () => uniform(''), sleeve: UNI, pants: '#3b3f4a',
+      hair: `<path d="M-57,-266 C-62,-334 62,-334 57,-266 C50,-290 30,-300 4,-296 C-20,-300 -46,-292 -57,-266 Z" fill="#4a3426"/>
+             <path d="M4,-296 C12,-286 30,-282 48,-284" fill="none" stroke="#33231a" stroke-width="3" stroke-linecap="round"/>` },
+    min: { skin: '#e2b48a', name: 'ミン',
+      body: () => uniform('ミン'), sleeve: UNI, pants: '#3b3f4a',
+      hair: `<path d="M-58,-262 C-64,-338 64,-338 58,-262 C54,-276 50,-284 44,-288 C36,-280 28,-282 22,-292 C14,-282 4,-284 -2,-294 C-10,-282 -22,-284 -28,-292 C-34,-282 -46,-282 -58,-262 Z" fill="#1d1d24"/>` },
+    tencho: { skin: '#efc196', name: '店長',
+      body: () => uniform('店長'), sleeve: UNI, pants: '#2f333c',
+      hair: `<path d="M-57,-268 C-60,-322 60,-322 57,-268 C52,-284 44,-294 30,-300 C10,-306 -10,-306 -30,-300 C-44,-294 -52,-284 -57,-268 Z" fill="#8a8d93"/>` },
+    chiku: { skin: '#eabf98', name: '地区担当',
+      body: () => `<rect x="-55" y="-215" width="110" height="138" rx="30" fill="#2c3e66"/>
+        <path d="M-16,-215 L0,-170 L16,-215 Z" fill="#fff"/><path d="M-4,-205 L4,-205 L6,-160 L0,-152 L-6,-160 Z" fill="#c0392b"/>
+        <rect x="18" y="-190" width="22" height="5" rx="2" fill="#dfe6f2"/>`,
+      sleeve: '#2c3e66', pants: '#24324f',
+      hair: `<path d="M-57,-266 C-60,-330 60,-330 57,-266 C50,-292 20,-304 -10,-300 C-34,-296 -50,-286 -57,-266 Z" fill="#2a221d"/>` },
+    owner: { skin: '#f3cfae', name: 'オーナー',
+      body: () => `<rect x="-58" y="-215" width="116" height="140" rx="32" fill="#d23a3a"/>
+        <rect x="-8" y="-215" width="16" height="140" fill="#fff" opacity=".95"/>
+        <rect x="-58" y="-112" width="116" height="16" fill="#2b2b2b"/><rect x="-12" y="-114" width="24" height="20" rx="3" fill="#ffd84d"/>`,
+      sleeve: '#d23a3a', cuff: '#fff', pants: '#d23a3a',
+      // 白いひげは口の下（あご）だけ
+      under: `<path d="M-50,-250 C-52,-200 -20,-188 0,-188 C20,-188 52,-200 50,-250 C40,-226 20,-222 0,-222 C-20,-222 -40,-226 -50,-250 Z" fill="#fafafa" stroke="#ddd" stroke-width="2"/>`,
+      hair: `<path d="M-60,-292 C-50,-350 30,-366 70,-330 C80,-322 84,-306 82,-290 L60,-298 Z" fill="#d23a3a"/>
+             <circle cx="84" cy="-288" r="11" fill="#fff"/>
+             <rect x="-62" y="-306" width="124" height="22" rx="11" fill="#fff"/>` },
+    parent: { skin: '#f2c8a4', name: 'お客さん',
+      body: () => `<rect x="-55" y="-215" width="110" height="138" rx="30" fill="#c9a77c"/>
+        <rect x="-40" y="-222" width="80" height="22" rx="11" fill="#b8423e"/><rect x="18" y="-206" width="16" height="40" rx="7" fill="#b8423e"/>
+        <circle cx="0" cy="-160" r="4" fill="#8a6a45"/><circle cx="0" cy="-130" r="4" fill="#8a6a45"/>`,
+      sleeve: '#c9a77c', pants: '#55505a',
+      hair: `<path d="M-60,-240 C-70,-340 70,-340 60,-240 C58,-262 54,-282 44,-292 C20,-300 -20,-300 -44,-292 C-54,-282 -58,-262 -60,-240 Z" fill="#6b4630"/>` },
+    child: { skin: '#f6d2b0', name: '子ども', scale: 0.74,
+      body: () => `<rect x="-55" y="-215" width="110" height="138" rx="30" fill="#f2b632"/>
+        <circle cx="-2" cy="-170" r="5" fill="#fff"/><circle cx="-2" cy="-140" r="5" fill="#fff"/>`,
+      sleeve: '#f2b632', pants: '#4f6fa8',
+      hair: `<path d="M-58,-276 C-58,-342 58,-342 58,-276 Z" fill="#3e9b6a"/>
+             <rect x="-60" y="-288" width="120" height="18" rx="9" fill="#fff" opacity=".9"/>
+             <circle cx="0" cy="-334" r="13" fill="#fff"/>` }
+  };
+  function doll(id, f) {
+    const c = C[id];
+    const cuff = c.cuff ? `<rect x="-80" y="-128" width="30" height="12" rx="6" fill="${c.cuff}"/><rect x="50" y="-128" width="30" height="12" rx="6" fill="${c.cuff}"/>` : '';
+    return `
+      <rect x="-40" y="-92" width="34" height="92" rx="16" fill="${c.pants}"/>
+      <rect x="6" y="-92" width="34" height="92" rx="16" fill="${c.pants}"/>
+      <rect x="-80" y="-206" width="30" height="96" rx="15" fill="${c.sleeve}"/>
+      <rect x="50" y="-206" width="30" height="96" rx="15" fill="${c.sleeve}"/>
+      ${cuff}
+      <circle cx="-65" cy="-106" r="16" fill="${c.skin}"/><circle cx="65" cy="-106" r="16" fill="${c.skin}"/>
+      ${c.body()}
+      <ellipse cx="0" cy="-266" rx="57" ry="53" fill="${c.skin}"/>
+      ${c.under || ''}
+      <g transform="translate(0,-262)">${face(f)}</g>
+      ${c.hair}`;
+  }
+
+  /* ---------- 背景 ---------- */
+  const deco = `<path d="M0,72 Q45,96 90,72 T180,72 T270,72 T360,72" fill="none" stroke="#2f8a4e" stroke-width="9" stroke-linecap="round"/>
+    ${[20, 70, 120, 170, 220, 270, 320].map((x, i) => `<circle cx="${x}" cy="${78 + (i % 2) * 8}" r="6" fill="${['#e74c3c', '#ffd84d', '#ffffff'][i % 3]}"/>`).join('')}`;
+  const banner = `<rect x="0" y="0" width="360" height="58" fill="#1f3b6e"/>
+    <path d="M22,18 l4,8 9,1 -6.5,6 1.5,9 -8,-4.5 -8,4.5 1.5,-9 -6.5,-6 9,-1 Z" fill="#ffd84d"/>
+    <text x="40" y="37" font-size="17" font-weight="bold" fill="#fff" letter-spacing="1">星空マート</text>`;
+  function products(y) {
+    let s = '', x = 22, k = 0;
+    const cols = ['#e86a5a', '#f2b632', '#5aa9e6', '#7cc47c', '#c88fd8', '#f5f0e6', '#ff9f6b'];
+    while (x < 330) { const w = 18 + (k * 7) % 14, h = 26 + (k * 11) % 20; s += `<rect x="${x}" y="${y - h}" width="${w}" height="${h}" rx="3" fill="${cols[k % cols.length]}"/>`; x += w + 4; k++; }
+    return s;
+  }
+  const BG = {
+    register: () => `<rect width="360" height="640" fill="#f3ede2"/>${banner}
+      <rect x="0" y="110" width="360" height="250" fill="#e4dacb"/>
+      ${[170, 240, 310].map(y => products(y) + `<rect x="14" y="${y}" width="332" height="7" fill="#a8957a"/>`).join('')}
+      ${deco}
+      <rect x="20" y="96" width="98" height="64" rx="6" fill="#fff" stroke="#c0392b" stroke-width="3"/>
+      <text x="69" y="118" font-size="11" font-weight="bold" fill="#c0392b" text-anchor="middle">クリスマスケーキ</text>
+      <text x="69" y="134" font-size="11" font-weight="bold" fill="#1f3b6e" text-anchor="middle">ご予約受付中</text>
+      <rect x="54" y="140" width="30" height="14" rx="3" fill="#f7e1e1"/><rect x="66" y="134" width="6" height="7" fill="#e74c3c"/>
+      <rect x="0" y="360" width="360" height="280" fill="#d8cfc0"/>
+      ${[0, 60, 120, 180, 240, 300].map(x => `<line x1="${x}" y1="360" x2="${x}" y2="640" stroke="#cbc1b0" stroke-width="2"/>`).join('')}
+      <rect x="0" y="418" width="360" height="222" fill="#3a5683"/><rect x="0" y="406" width="360" height="18" rx="4" fill="#cdb894"/>
+      <rect x="230" y="352" width="96" height="56" rx="8" fill="#5b6270"/><rect x="240" y="360" width="56" height="30" rx="4" fill="#9fe0c8"/>
+      <rect x="302" y="362" width="16" height="36" rx="4" fill="#3d434f"/>`,
+    shelf: () => `<rect width="360" height="640" fill="#efe7d8"/>${banner}${deco}
+      <rect x="40" y="104" width="280" height="40" rx="8" fill="#c0392b"/>
+      <text x="180" y="131" font-size="18" font-weight="bold" fill="#fff" text-anchor="middle">ご予約品 お渡し棚</text>
+      <rect x="30" y="150" width="300" height="300" rx="6" fill="#b48c62"/><rect x="40" y="160" width="280" height="280" fill="#f7f1e6"/>
+      ${[240, 330, 420].map(y => `<rect x="36" y="${y}" width="288" height="10" fill="#b48c62"/>`).join('')}
+      ${[[50, 240], [140, 240], [230, 240], [50, 330], [230, 330], [50, 420], [140, 420], [230, 420]].map(([x, y], i) =>
+        `<rect x="${x + 4}" y="${y - 64}" width="78" height="62" rx="4" fill="#fff" stroke="#d7cdbd" stroke-width="2"/>
+         <rect x="${x + 39}" y="${y - 64}" width="8" height="62" fill="#e74c3c"/><rect x="${x + 4}" y="${y - 38}" width="78" height="8" fill="#e74c3c"/>
+         <rect x="${x + 10}" y="${y - 16}" width="30" height="11" fill="#ffd84d"/><text x="${x + 25}" y="${y - 7}" font-size="8" text-anchor="middle" fill="#333">No.${12 + i}</text>`).join('')}
+      <rect x="146" y="268" width="74" height="58" rx="4" fill="none" stroke="#c0392b" stroke-width="3" stroke-dasharray="7 5"/>
+      <rect x="150" y="300" width="66" height="22" rx="3" fill="#fff" stroke="#c0392b" stroke-width="2"/>
+      <text x="183" y="315" font-size="8.5" font-weight="bold" text-anchor="middle" fill="#c0392b">アレルギー対応</text>
+      <rect x="0" y="450" width="360" height="190" fill="#d8cfc0"/>`,
+    backyard: () => `<rect width="360" height="640" fill="#cfd6df"/>
+      <rect x="0" y="0" width="360" height="40" fill="#b5bfcb"/>
+      <rect x="18" y="70" width="120" height="84" rx="4" fill="#fff" stroke="#8a95a3" stroke-width="3"/>
+      <text x="78" y="92" font-size="12" font-weight="bold" fill="#1f3b6e" text-anchor="middle">シフト表</text>
+      ${[104, 118, 132, 146].map(y => `<line x1="30" y1="${y}" x2="126" y2="${y}" stroke="#c3cbd5" stroke-width="2"/>`).join('')}
+      <rect x="250" y="70" width="40" height="64" rx="6" fill="#eef1f4" stroke="#8a95a3" stroke-width="2"/><rect x="258" y="80" width="24" height="20" rx="3" fill="#9fb3c8"/>
+      <path d="M262,108 h16 v8 h-16 Z" fill="#5b6270"/><path d="M262,134 q-10,30 6,60" fill="none" stroke="#5b6270" stroke-width="3"/>
+      <rect x="160" y="180" width="190" height="200" fill="#9aa5b2"/>
+      ${[230, 300, 370].map(y => `<rect x="160" y="${y}" width="190" height="8" fill="#6f7b88"/>`).join('')}
+      ${[[170, 230, 60, 44], [236, 230, 50, 36], [292, 230, 52, 48], [170, 300, 80, 52], [256, 300, 86, 40], [176, 370, 66, 50], [250, 370, 90, 44]].map(([x, y, w, h]) =>
+        `<rect x="${x}" y="${y - h}" width="${w}" height="${h}" rx="2" fill="#d4a86a"/><rect x="${x + w / 2 - 6}" y="${y - h}" width="12" height="${h}" fill="#c2965a"/>`).join('')}
+      <rect x="0" y="390" width="360" height="250" fill="#a7b0ba"/>
+      <rect x="10" y="300" width="150" height="16" rx="4" fill="#8b6a48"/><rect x="20" y="316" width="10" height="90" fill="#6f533a"/><rect x="140" y="316" width="10" height="90" fill="#6f533a"/>
+      <rect x="40" y="238" width="78" height="54" rx="5" fill="#3d434f"/><rect x="46" y="244" width="66" height="40" rx="3" fill="#9fe0c8"/><rect x="72" y="292" width="14" height="8" fill="#3d434f"/>
+      <rect x="20" y="284" width="40" height="16" rx="2" fill="#e85d4f"/><text x="40" y="296" font-size="7" fill="#fff" text-anchor="middle">カタログ</text>`,
+    storefront: () => `<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#081128"/><stop offset="1" stop-color="#26386a"/></linearGradient></defs>
+      <rect width="360" height="640" fill="url(#sky)"/>
+      ${Array.from({ length: 34 }, (_, i) => `<circle cx="${(i * 97) % 360}" cy="${(i * 53) % 190 + 8}" r="${1 + (i % 3) * 0.6}" fill="#fff" opacity="${0.5 + (i % 4) * 0.12}"/>`).join('')}
+      <path d="M300,40 l5,10 11,1.5 -8,7.5 2,11 -10,-5.5 -10,5.5 2,-11 -8,-7.5 11,-1.5 Z" fill="#ffe680"/>
+      <rect x="18" y="214" width="324" height="356" fill="#ece5d8"/>
+      <rect x="18" y="214" width="324" height="56" fill="#1f3b6e"/>
+      <path d="M96,232 l4.5,9 10,1.5 -7,7 1.5,10 -9,-4.8 -9,4.8 1.5,-10 -7,-7 10,-1.5 Z" fill="#ffd84d"/>
+      <text x="190" y="253" font-size="24" font-weight="bold" fill="#fff" text-anchor="middle" letter-spacing="3">星空マート</text>
+      <rect x="34" y="290" width="104" height="186" fill="#ffe9b0"/><rect x="222" y="290" width="104" height="186" fill="#ffe9b0"/>
+      ${[340, 400, 450].map(y => `<rect x="38" y="${y}" width="96" height="6" fill="#d9b978"/><rect x="226" y="${y}" width="96" height="6" fill="#d9b978"/>`).join('')}
+      <rect x="148" y="300" width="64" height="176" fill="#fff4cf" stroke="#8a95a3" stroke-width="4"/><line x1="180" y1="300" x2="180" y2="476" stroke="#8a95a3" stroke-width="3"/>
+      <circle cx="180" cy="284" r="14" fill="none" stroke="#2f8a4e" stroke-width="7"/><circle cx="180" cy="272" r="4" fill="#e74c3c"/>
+      ${[[40, 284], [70, 280], [100, 284], [130, 280], [230, 280], [260, 284], [290, 280], [320, 284]].map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="4" fill="${['#ff6b6b', '#ffd84d', '#7cf0a8', '#7cc6f2'][i % 4]}"/>`).join('')}
+      <path d="M-6,640 L-6,560 Q180,540 366,560 L366,640 Z" fill="#f4f7fb"/>
+      <rect x="0" y="476" width="360" height="94" fill="#c8ccd6"/><path d="M0,560 Q180,546 360,560 L360,640 L0,640 Z" fill="#f4f7fb"/>
+      <g><path d="M0,476 L30,476 L15,400 Z" fill="#2f8a4e"/></g>
+      <g fill="#fff">${Array.from({ length: 26 }, (_, i) => {
+        const x = (i * 41) % 360, d = 6 + (i % 5) * 1.5, b = -((i * 0.7) % d);
+        return `<circle cx="${x}" cy="-10" r="${1.6 + (i % 3) * 0.8}" opacity=".85"><animate attributeName="cy" from="-10" to="650" dur="${d}s" begin="${b}s" repeatCount="indefinite"/><animate attributeName="cx" values="${x};${x + 12};${x}" dur="${d / 2}s" begin="${b}s" repeatCount="indefinite"/></circle>`;
+      }).join('')}</g>`,
+    black: () => `<rect width="360" height="640" fill="#0a0f1f"/>`
+  };
+  return { doll, chars: C, bg: id => (BG[id] || BG.black)() };
+})();
+
+/* =========================================================
+   シナリオ
+   N(text)         地の文（一人称視点）
+   T(who, text, f) せりふ（f=話し手の表情）
+   c: 'a1=help'    条件つき（選択肢の結果で出し分け）
+   ========================================================= */
+const N = (text, o) => Object.assign({ text }, o);
+const T = (who, text, f, o) => Object.assign({ who, text, f }, o);
+const NAME2ID = { '先輩': 'senpai', 'ミン': 'min', '店長': 'tencho', '地区担当': 'chiku', 'オーナー': 'owner', 'お客さん': 'parent', '子ども': 'child' };
+
+const SCRIPT = [
+  // ---------------- 第一幕 ----------------
+  { bg: 'black', show: [], bgm: null, clock: null },
+  { act: '第一幕', sub: '12月上旬・予約できない客' },
+  { bg: 'register', bgm: 'shop' },
+  N('十二月のはじめ。\n星空マートの店内にも、クリスマスケーキのポスターが貼られはじめた。'),
+  N('ところが数日前から、ネットでのケーキ予約が止まっている。'),
+  N('原因は、企業への不正アクセス。\nいつ再開するのかは、まだ分からないらしい。'),
+  { se: 'door', show: ['parent'] },
+  T('お客さん', 'すみません。クリスマスケーキの予約って、お店でもできますか？'),
+  T('お客さん', 'ネットで申し込もうとしたら、止まっていて……。', 'komari'),
+  T('あなた', 'はい、店頭でも受け付けています。'),
+  T('お客さん', 'よかった。紙の申込書があるって聞いたんですけど。', 'normal'),
+  T('あなた', 'こちらです。どうぞ。'),
+  N('レジ横の棚から申込書を一枚取って、お客さんに渡す。'),
+  T('お客さん', 'ありがとうございます。……あの。', 'normal'),
+  T('お客さん', 'アレルギー対応のケーキがいいんです。'),
+  T('お客さん', 'アレルギーの子に、初めてケーキを食べさせたくて。', 'smile'),
+  N('申込書に目を落とす。\nアレルギー対応の欄は、どこにも見当たらない。'),
+  T('あなた', 'えっと……やったことないので、分からなくて……。'),
+  T('お客さん', 'そう、ですよね……。', 'komari'),
+  N('気まずい沈黙が流れる。\nそのとき、バックヤードの扉が開いた。'),
+  { show: ['senpai', 'parent'] },
+  T('先輩', '大丈夫、調べます。'),
+  T('先輩', '少しだけお時間をいただけますか。カタログを確認してきます。'),
+  T('お客さん', 'はい、お願いします。', 'smile'),
+  { bg: 'backyard', show: ['senpai'] },
+  N('先輩は棚から分厚いカタログを取り出して、机に広げた。'),
+  N('ページをめくる音だけが、バックヤードに響く。'),
+  { choice: [
+      { t: '後ろから見ている', set: ['a1', 'watch'] },
+      { t: '一緒に調べる', set: ['a1', 'help'] }
+    ], q: '先輩が調べはじめた。どうする？' },
+  N('邪魔をしないように、少し後ろから先輩の手元を見つめる。', { c: 'a1=watch' }),
+  T('先輩', '季節の商品は、後ろの特集ページにまとまってることが多いんだ。', 'normal', { c: 'a1=watch' }),
+  T('あなた', '自分も探します！', null, { c: 'a1=help' }),
+  T('先輩', '助かる。じゃあ、後ろ半分をお願い。', 'smile', { c: 'a1=help' }),
+  N('二人で手分けして、ページをめくっていく。', { c: 'a1=help' }),
+
+  // ---------------- 第二幕 ----------------
+  { act: '第二幕', sub: '残りわずか' },
+  { bg: 'backyard', show: ['senpai'], bgm: 'shop' },
+  N('カタログの最後のほうに、小さな特集ページがあった。'),
+  T('先輩', '「アレルギー対応 クリスマスケーキ」。卵・乳・小麦を使っていないケーキだ。', 'normal'),
+  T('あなた', 'あ、ここです！ 見つけました！', null, { c: 'a1=help' }),
+  T('先輩', 'これだね。……待って、在庫の表示を見て。', 'odoroki'),
+  N('端末の画面には、赤い文字で「残りわずか」。'),
+  T('先輩', '作れる数が決まってるんだ。急ごう。', 'aseri'),
+  { bg: 'register', show: ['senpai'] },
+  N('レジの発注画面に、申込書の内容を打ちこんでいく。'),
+  { se: 'beep' },
+  N('商品番号。受け取り日。受け取り時間。\n指先が少し震える。'),
+  T('先輩', '受け取りは十二月二十四日の十九時。……よし、送信。', 'normal'),
+  { se: 'ok' },
+  N('画面に「受付完了」の文字が出た。'),
+  T('あなた', '……取れた！'),
+  T('先輩', '一緒に探してくれたから間に合ったよ。ありがとう。', 'smile', { c: 'a1=help' }),
+  T('先輩', 'ちゃんと見てたね。次は君が、お客さんに説明できるよ。', 'smile', { c: 'a1=watch' }),
+  { show: ['senpai', 'parent'] },
+  T('お客さん', '予約、できたんですか？', 'odoroki'),
+  T('あなた', 'はい。十二月二十四日の十九時に、お渡しできます。'),
+  T('お客さん', 'よかった……！ 子どもに話したら、きっと大喜びします。', 'smile'),
+  T('お客さん', 'イブの夜、受け取りに来ますね。本当にありがとうございました！', 'smile'),
+  { se: 'door', show: ['senpai'] },
+  N('控えの用紙を大事そうにバッグにしまって、お客さんは帰っていった。'),
+  N('先輩はしばらくのあいだ、閉まったドアのほうを見ていた。'),
+  T('あなた', '先輩、アレルギーのケーキに詳しいんですね。'),
+  T('先輩', '……うん。ちょっとね。', 'smile'),
+
+  // ---------------- 第三幕 ----------------
+  { act: '第三幕', sub: 'イブ当日・ケーキがない' },
+  { bg: 'register', show: ['min'], bgm: 'busy' },
+  N('十二月二十四日。クリスマスイブ。'),
+  N('朝からレジの列が途切れない。\nチキン、ケーキ、飲みもの、また、チキン。'),
+  T('ミン', 'いらっしゃいませ。袋は、おつけしますか？', 'smile'),
+  N('隣のレジには、ミンくん。\nベトナム出身のバイトで、いつも真面目で一生懸命だ。'),
+  N('入ったばかりのミンくんと、今日はまともに話す時間もない。'),
+  { bg: 'black', show: [], bgm: null },
+  N('——夕方、十六時。'),
+  { bg: 'shelf', se: 'shock' },
+  N('予約棚を確かめていて、手が止まった。'),
+  N('アレルギー対応ケーキの箱が、ない。'),
+  T('あなた', '……え？'),
+  N('棚の端から端まで見る。バックヤードの冷蔵庫も開ける。\nどこにもない。'),
+  { show: ['min'] },
+  T('あなた', 'ミンくん。予約棚のここにあった箱、知らない？'),
+  T('ミン', '白い箱、ですか。はい。さっき、お客さまに「ケーキはありますか」と聞かれました。', 'normal'),
+  T('ミン', 'ケーキの棚にあったので、お売りしました。', 'smile'),
+  { fx: 'shake', se: 'shock' },
+  N('背中を、冷たい汗がつたう。'),
+  T('ミン', '……あの。だめ、でしたか？', 'odoroki'),
+  N('ミンくんは、知らなかったんだ。\n予約棚の品は、予約したお客さんのもの。ほかのお客さんには売らない。'),
+  N('そのルールを、ミンくんに伝えていなかった。'),
+  N('忙しさを理由に、教えるのを後回しにしていたのは——自分だ。'),
+  T('あなた', 'ミンくん、聞いて。あれは予約品なんだ。今夜、予約したお客さんが受け取りに来る。'),
+  T('あなた', 'しかもアレルギー対応のケーキで、代わりがない。……ヤバいんだよ。'),
+  T('ミン', '……！ ぼく、知りませんでした。すみません……。', 'aseri'),
+  T('あなた', 'ミンくんのせいじゃない。予約棚のことを伝えていなかったのは、自分だから。'),
+  T('ミン', 'でも……どうしたら、いいですか。', 'komari'),
+  N('普通のケーキでは、代わりにならない。\n卵も、乳も、小麦も入っている。'),
+  N('受け取りは十九時。あと、三時間しかない。'),
+  { show: ['tencho', 'min'] },
+  T('店長', 'どうした、二人とも。顔が真っ青だぞ。', 'odoroki'),
+  N('事情を話すと、店長はすぐに上着をつかんだ。'),
+  T('店長', '分かった。探そう。', 'normal'),
+
+  // ---------------- 第四幕 ----------------
+  { act: '第四幕', sub: '店で待つ' },
+  { bg: 'register', show: ['tencho', 'chiku'], bgm: 'tense', clock: '16:15' },
+  T('地区担当', 'ちょうど巡回で来ていてよかった。私も一緒に回ります。', 'normal'),
+  T('店長', '近くの店と配送センターに当たってみる。君は店に残って、連絡を待っててくれ。', 'normal'),
+  T('店長', 'お客さんが早めに来たら、すぐ電話をくれ。'),
+  T('あなた', '……はい。'),
+  { se: 'door', show: ['min'] },
+  N('二人は車で飛び出していった。\n店には、自分とミンくんが残された。'),
+  N('レジを打ちながら、何度も時計を見てしまう。'),
+  { clock: '16:50', se: 'phone' },
+  N('電話が鳴った。'),
+  T('店長（電話）', '一軒目、だめだった。売り切れだ。次を当たる。'),
+  T('あなた', '……分かりました。'),
+  T('ミン', '……。', 'komari'),
+  { clock: '17:25', se: 'phone' },
+  T('店長（電話）', '配送センターも、もう在庫がないそうだ。'),
+  T('あなた', 'そんな……。'),
+  N('レジの「ピッ」という音が、やけに耳にさわる。'),
+  { clock: '17:40', se: 'phone' },
+  T('店長（電話）', '工場に直接電話してみた。——予備が残ってるって！'),
+  T('あなた', '本当ですか！'),
+  T('店長（電話）', '今から車で取りに行く。もう少し待っててくれ！'),
+  T('ミン', 'よかった……！', 'smile'),
+  { clock: '18:10', se: 'phone' },
+  T('店長（電話）', '……すまん。渋滞にはまった。イブの夜は、どこも車だらけだ。'),
+  T('あなた', '間に合いそうですか？'),
+  T('店長（電話）', '……分からない。でも、必ず持って帰る。'),
+  N('電話が切れる。\n時計の針は、待ってくれない。', { f: { min: 'komari' } }),
+  { clock: '18:25' },
+  N('お客さんが来たら、なんて言えばいい。\n胸の中で、イライラがぐるぐる回る。'),
+  T('ミン', 'あの……ぼくに、なにか、手伝えることはありますか。', 'komari'),
+  { choice: [
+      { t: 'ミンくんに当たってしまう', set: ['a4', 'snap'] },
+      { t: 'ミンくんと一緒に待つ', set: ['a4', 'wait'] }
+    ], q: 'イライラが止まらない。' },
+  T('あなた', '……今はいいから！ 余計なこと、しないで！', null, { c: 'a4=snap' }),
+  T('ミン', '……はい。すみません。', 'naki', { c: 'a4=snap' }),
+  N('言ってしまってから、はっとした。\nミンくんの肩が、小さく下がっている。', { c: 'a4=snap' }),
+  N('悪いのは、教えていなかった自分なのに。', { c: 'a4=snap' }),
+  N('大きく息を吐く。\n焦っているのは、ミンくんも同じだ。', { c: 'a4=wait' }),
+  T('あなた', 'ありがとう。……じゃあ、ここで一緒に待とう。お客さんが来たら、二人で迎えよう。', null, { c: 'a4=wait' }),
+  T('ミン', 'はい。一緒に、待ちます。', 'smile', { c: 'a4=wait' }),
+  { clock: '18:45', se: 'phone' },
+  T('店長（電話）', '抜けた！ あと五分で着く！'),
+
+  // ---------------- 第五幕 ----------------
+  { act: '第五幕', sub: 'ギリギリのイブ' },
+  { bg: 'storefront', show: [], bgm: null, clock: '18:52', se: 'car' },
+  N('十八時五十二分。\n店の前に、一台の車がすべりこんだ。'),
+  { show: ['tencho', 'chiku'] },
+  T('店長', 'お待たせ！ アレルギー対応ケーキ、確保だ！', 'smile'),
+  T('地区担当', '工場の方が、予備をすぐに出してくれました。', 'smile'),
+  T('あなた', 'ありがとうございます……！'),
+  { bg: 'register', show: [], clock: '19:00', bgm: 'eve' },
+  { se: 'door', show: ['parent', 'child'] },
+  N('十九時ちょうど。入店のチャイムが鳴った。'),
+  T('子ども', 'ケーキ、とりにきました！', 'smile'),
+  T('お客さん', '予約していた者です。今日はよろしくお願いします。', 'smile'),
+  T('あなた', 'お待ちしていました。……用意しますので、サンタさんとお話ししててください。'),
+  { show: ['owner', 'parent', 'child'], clock: null },
+  T('オーナー', 'メリークリスマス！ さあ、こっちにおいで。', 'smile'),
+  T('子ども', 'わあ、サンタさんだ！', 'odoroki'),
+  N('サンタの格好をしたオーナーが、子どもの相手をしてくれている。\nそのあいだに、バックヤードへ急ぐ。'),
+  { bg: 'backyard', show: ['min'] },
+  T('ミン', '……さっきは、すみませんでした。', 'komari', { c: 'a4=snap' }),
+  T('あなた', '謝るのはこっちだよ。教えていなかったのも、当たったのも、自分だ。ごめん。', null, { c: 'a4=snap' }),
+  T('ミン', '……ぼく、ちゃんと覚えたいです。教えてください。', 'normal', { c: 'a4=snap' }),
+  T('ミン', '一緒に待ってくれて、ありがとうございました。ぼくにも、教えてください。', 'smile', { c: 'a4=wait' }),
+  T('あなた', 'うん。一つずつ、いこう。'),
+  T('あなた', 'まずは、ギフト用のクリスマスパッケージ。箱を傾けないように、両手で底を持って入れる。'),
+  T('ミン', '両手で、底を持つ……。はい。', 'normal'),
+  N('ミンくんは、ゆっくり、慎重に箱をパッケージに収めた。'),
+  T('あなた', '次は付属品の確認。ローソクは入ってる？ いちごのパックは付いてる？'),
+  T('ミン', 'ローソク、あります。いちごも、あります。', 'normal'),
+  T('あなた', '最後に、セットのドリンク。予約の控えと同じものか、照らし合わせて。'),
+  { se: 'beep' },
+  T('ミン', '控えには、ジュースが二本。……合っています。', 'normal'),
+  T('あなた', 'それと、一番大事なこと。予約棚にあるものは、予約したお客さんのもの。ほかのお客さんには売らない。'),
+  T('ミン', '予約棚の品は、売らない。……覚えました。', 'smile'),
+  T('ミン', '次からは、ぼくも気をつけます。', 'normal', { c: 'a4=snap' }),
+  T('ミン', '次は、ぼくがほかの人にも教えます。', 'smile', { c: 'a4=wait' }),
+  { bg: 'register', show: ['owner', 'parent', 'child'] },
+  N('準備できたケーキを、サンタ姿のオーナーにそっと手渡す。'),
+  T('オーナー', 'さあ、きみのケーキだよ。メリークリスマス！', 'smile'),
+  { se: 'bell' },
+  T('子ども', 'わああ！ ケーキだ！ ほんとに、たべていいの！？', 'smile'),
+  T('お客さん', 'いいんだよ。これはね、食べても大丈夫なケーキなの。', 'smile'),
+  T('子ども', 'やったー！ サンタさん、ありがとう！', 'smile'),
+  { show: ['senpai', 'min', 'parent', 'child'] },
+  T('お客さん', 'みなさん、本当にありがとうございました。', 'smile'),
+  T('お客さん', 'この子、ずっとケーキを我慢してきたんです。今年は、家族みんなで食べられます。', 'naki'),
+  T('先輩', '……僕もアレルギーがあって、子どもの時にケーキを我慢しました。', 'normal'),
+  T('先輩', 'お役に立てて、嬉しいです。', 'smile'),
+  N('——あの日。\n「大丈夫、調べます」と言った先輩の声を、思い出す。'),
+  N('あれは、ケーキを我慢していた子どもの頃の自分に、かけてあげたかった言葉だったのかもしれない。'),
+  { bg: 'storefront', show: [] },
+  N('親子は何度も頭を下げて、雪のちらつく夜へ帰っていった。'),
+  N('星空マートの前に、子どもの笑い声が、いつまでも残っていた。'),
+  { end: true }
+];
+
+/* =========================================================
+   エンジン
+   ========================================================= */
+const $ = id => document.getElementById(id);
+const st = { i: 0, flags: {}, log: [], shown: [], faces: {}, typing: null, full: '', busy: false, mode: 'title', clock: null };
+
+function fit() {
+  const w = Math.min(window.innerWidth, window.innerHeight * 9 / 16);
+  $('stage').style.setProperty('--w', Math.floor(w) + 'px');
+}
+window.addEventListener('resize', fit); fit();
+
+function check(c) { if (!c) return true; const [k, v] = c.split('='); return st.flags[k] === v; }
+
+function drawChars(enterIds) {
+  const ids = st.shown, n = ids.length;
+  const scale = n <= 2 ? 1 : n === 3 ? 0.84 : 0.64;
+  const baseY = n <= 2 ? 545 : 520;
+  const xs = n === 1 ? [180] : n === 2 ? [105, 255] : n === 3 ? [66, 180, 294] : [48, 136, 224, 312];
+  const speakerId = st.speaker;
+  $('chars').innerHTML = ids.map((id, k) => {
+    const c = ART.chars[id], s = scale * (c.scale || 1);
+    const dim = speakerId && speakerId !== id ? ' dim' : '';
+    const enter = enterIds && enterIds.includes(id) ? ' enter' : '';
+    return `<g class="ch${dim}${enter}"><g transform="translate(${xs[k]},${baseY}) scale(${s})">${ART.doll(id, st.faces[id] || 'normal')}</g></g>`;
+  }).join('');
+}
+
+function setClock(v) {
+  const el = $('clock');
+  if (!v) { el.style.display = 'none'; st.clock = null; return; }
+  st.clock = v;
+  const [h, m] = v.split(':').map(Number);
+  const left = 19 * 60 - (h * 60 + m);
+  el.style.display = 'block';
+  el.querySelector('.now').textContent = v;
+  el.querySelector('.left').textContent = left > 0 ? `受け取りまで あと ${Math.floor(left / 60)}:${String(left % 60).padStart(2, '0')}` : '受け取りの時間';
+  el.classList.toggle('urgent', left <= 30);
+  el.classList.remove('tick'); void el.offsetWidth; el.classList.add('tick');
+}
+
+function addLog(entry) { st.log.push(entry); }
+
+function showText(step) {
+  const who = step.who || '';
+  const id = NAME2ID[who];
+  if (id && step.f) st.faces[id] = step.f;
+  if (step.f && typeof step.f === 'object') Object.assign(st.faces, step.f);
+  st.speaker = id || null;
+  drawChars();
+  $('name').textContent = who;
+  const t = $('text');
+  t.classList.toggle('narr', !who);
+  st.full = step.text;
+  addLog({ who, text: step.text });
+  $('next').style.display = 'none';
+  let k = 0;
+  t.textContent = '';
+  clearInterval(st.typing);
+  st.typing = setInterval(() => {
+    k += 1; t.textContent = st.full.slice(0, k);
+    if (k >= st.full.length) finishTyping();
+  }, 28);
+}
+function finishTyping() {
+  clearInterval(st.typing); st.typing = null;
+  $('text').textContent = st.full; $('next').style.display = 'block';
+}
+
+function run() {
+  while (st.i < SCRIPT.length) {
+    const s = SCRIPT[st.i];
+    if (!check(s.c)) { st.i++; continue; }
+    if ('bg' in s) $('bg').innerHTML = ART.bg(s.bg);
+    if ('bgm' in s) Sound.bgm(s.bgm);
+    if ('clock' in s) setClock(s.clock);
+    if (s.show) {
+      const entering = s.show.filter(id => !st.shown.includes(id));
+      s.show.forEach(id => { if (!st.shown.includes(id)) st.faces[id] = 'normal'; });
+      st.shown = s.show.slice(); st.speaker = null; drawChars(entering);
+    }
+    if (s.se) Sound.se(s.se);
+    if (s.fx === 'shake') { const c = $('chars'); c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake'); }
+    if (s.act) { st.i++; showCard(s); return; }
+    if (s.choice) { st.i++; showChoice(s); return; }
+    if (s.end) { st.i++; showEnd(); return; }
+    if (s.text) { st.i++; st.mode = 'text'; showText(s); return; }
+    st.i++;
+  }
+}
+
+function showCard(s) {
+  st.mode = 'card';
+  $('textbox').style.visibility = 'hidden';
+  const c = $('card');
+  c.innerHTML = `<div class="star">★</div><div class="act">${s.act}</div><div class="sub">${s.sub}</div><div class="hint">タップで進む</div>`;
+  c.style.display = 'flex';
+  addLog({ who: '', text: `── ${s.act}　${s.sub} ──` });
+}
+function closeCard() {
+  $('card').style.display = 'none';
+  $('textbox').style.visibility = 'visible';
+  $('name').textContent = ''; $('text').textContent = '';
+  run();
+}
+
+function showChoice(s) {
+  st.mode = 'choice';
+  $('next').style.display = 'none';
+  const box = $('choices');
+  box.innerHTML = (s.q ? `<div class="choice-q">${s.q}</div>` : '') +
+    s.choice.map((o, k) => `<button class="choice" data-k="${k}">${o.t}</button>`).join('');
+  box.style.display = 'flex';
+  box.querySelectorAll('.choice').forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
+    const o = s.choice[+b.dataset.k];
+    st.flags[o.set[0]] = o.set[1];
+    addLog({ pick: true, text: `▶ ${o.t}` });
+    Sound.se('click');
+    box.style.display = 'none';
+    run();
+  }));
+}
+
+function showEnd() {
+  st.mode = 'end';
+  Sound.bgm('title');
+  $('textbox').style.visibility = 'hidden';
+  const c = $('card');
+  c.innerHTML = `<div class="star">★ Merry Christmas ★</div><div class="act">おわり</div>
+    <div class="sub">遊んでくれて、ありがとうございました。</div>
+    <button class="btn" id="btnEndTitle">タイトルへ</button>`;
+  c.style.display = 'flex';
+  $('btnEndTitle').addEventListener('click', e => { e.stopPropagation(); Sound.se('click'); toTitle(); });
+}
+
+function advance() {
+  if (st.mode === 'text') { if (st.typing) finishTyping(); else run(); }
+  else if (st.mode === 'card') closeCard();
+}
+
+function newGame() {
+  Object.assign(st, { i: 0, flags: {}, log: [], shown: [], faces: {}, speaker: null });
+  clearInterval(st.typing); st.typing = null;
+  $('chars').innerHTML = ''; $('choices').style.display = 'none'; $('card').style.display = 'none';
+  $('textbox').style.visibility = 'visible'; $('name').textContent = ''; $('text').textContent = '';
+  setClock(null);
+  $('title').style.display = 'none'; $('topbar').style.display = 'flex';
+  run();
+}
+function toTitle() {
+  clearInterval(st.typing); st.typing = null;
+  st.mode = 'title';
+  closeOverlays();
+  $('bg').innerHTML = ART.bg('storefront'); $('chars').innerHTML = '';
+  $('choices').style.display = 'none'; $('card').style.display = 'none';
+  $('textbox').style.visibility = 'hidden'; setClock(null);
+  $('topbar').style.display = 'none'; $('title').style.display = 'flex';
+  Sound.bgm('title');
+}
+
+function renderSoundBtns() {
+  const on = Sound.enabled;
+  $('btnSound').textContent = on ? '音 ON' : '音 OFF';
+  $('btnSound').classList.toggle('off', !on);
+  $('btnSoundTitle').textContent = on ? 'サウンド：ON' : 'サウンド：OFF';
+}
+function toggleSound(e) {
+  e.stopPropagation(); Sound.init();
+  Sound.setEnabled(!Sound.enabled); renderSoundBtns(); Sound.se('click');
+}
+function closeOverlays() { $('logView').classList.remove('show'); $('menuView').classList.remove('show'); }
+function esc(s) { return s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])); }
+function openLog(e) {
+  e.stopPropagation(); Sound.se('click');
+  $('logList').innerHTML = st.log.map(l => l.pick
+    ? `<div class="log-item pick">${esc(l.text)}</div>`
+    : `<div class="log-item${l.who ? '' : ' narr'}">${l.who ? `<div class="who">${esc(l.who)}</div>` : ''}${esc(l.text).replace(/\n/g, '<br>')}</div>`).join('');
+  $('logView').classList.add('show');
+  const L = $('logList'); L.scrollTop = L.scrollHeight;
+}
+
+// 入力
+$('stage').addEventListener('click', () => { Sound.init(); if (st.mode !== 'title') advance(); });
+$('btnStart').addEventListener('click', e => { e.stopPropagation(); Sound.init(); Sound.se('click'); newGame(); });
+$('btnSound').addEventListener('click', toggleSound);
+$('btnSoundTitle').addEventListener('click', toggleSound);
+$('btnLog').addEventListener('click', openLog);
+$('btnMenu').addEventListener('click', e => { e.stopPropagation(); Sound.se('click'); $('menuView').classList.add('show'); });
+$('btnLogClose').addEventListener('click', e => { e.stopPropagation(); closeOverlays(); });
+$('btnMenuClose').addEventListener('click', e => { e.stopPropagation(); closeOverlays(); });
+$('logView').addEventListener('click', e => e.stopPropagation());
+$('menuView').addEventListener('click', e => e.stopPropagation());
+$('btnRestart').addEventListener('click', e => { e.stopPropagation(); Sound.se('click'); closeOverlays(); newGame(); });
+$('btnToTitle').addEventListener('click', e => { e.stopPropagation(); Sound.se('click'); toTitle(); });
+
+// 起動：タイトル画面
+renderSoundBtns();
+$('bg').innerHTML = ART.bg('storefront');
+$('textbox').style.visibility = 'hidden';
+$('topbar').style.display = 'none';
+</script>
+</body>
+</html>
