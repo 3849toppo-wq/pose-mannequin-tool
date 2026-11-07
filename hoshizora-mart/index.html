@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>星空マートのイブ</title>
+<title>星空マートのクリスマス</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; height: 100%; background: #0a0f1f; overflow: hidden; }
@@ -111,6 +111,10 @@
   #card .hint { position: absolute; bottom: calc(var(--u) * 40); font-size: calc(var(--u) * 12); color: #aab; }
   #card .star { font-size: calc(var(--u) * 26); color: #ffd84d; margin-bottom: calc(var(--u) * 12); }
   #card .btn { margin-top: calc(var(--u) * 30); }
+  #card .tag { width: calc(var(--u) * 220); margin-bottom: calc(var(--u) * 26); }
+  #card .intro { font-size: calc(var(--u) * 19); font-weight: bold; width: calc(var(--u) * 320); line-height: 1.6; }
+  #view.enter { animation: viewIn .3s ease-out; }
+  @keyframes viewIn { from { opacity: 0; transform: scale(.96); } }
 
   /* タイトル画面 */
   #title { position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center; }
@@ -119,7 +123,7 @@
     text-shadow: 0 calc(var(--u) * 2) calc(var(--u) * 6) rgba(0,0,0,.7);
   }
   #title .logo .small { font-size: calc(var(--u) * 15); color: #ffe39a; letter-spacing: .1em; }
-  #title .logo .big { font-size: calc(var(--u) * 38); font-weight: bold; margin-top: calc(var(--u) * 6); letter-spacing: .06em; }
+  #title .logo .big { font-size: calc(var(--u) * 34); font-weight: bold; margin-top: calc(var(--u) * 6); letter-spacing: .06em; }
   #title .logo .tag { font-size: calc(var(--u) * 13); margin-top: calc(var(--u) * 8); }
   #title .menu { position: absolute; bottom: calc(var(--u) * 92); display: flex; flex-direction: column; gap: calc(var(--u) * 12); align-items: center; }
   .btn {
@@ -157,6 +161,7 @@
 <div id="stage">
   <svg id="bg" class="layer" viewBox="0 0 360 640" preserveAspectRatio="xMidYMid slice"></svg>
   <svg id="chars" class="layer" viewBox="0 0 360 640" preserveAspectRatio="xMidYMid slice"></svg>
+  <svg id="view" class="layer" viewBox="0 0 360 640" preserveAspectRatio="xMidYMid slice" style="display:none"></svg>
 
   <div id="clock"><div class="now">--:--</div><div class="left">受け取り 19:00 まで</div></div>
 
@@ -172,8 +177,7 @@
 
   <div id="title">
     <div class="logo">
-      <div class="small">★ 星空マート ★</div>
-      <div class="big">イブの<br>ケーキ</div>
+      <div class="big">星空マートの<br>クリスマス</div>
       <div class="tag">— ある日のコンビニの、ちいさな物語 —</div>
     </div>
     <div class="menu">
@@ -343,7 +347,7 @@ const ART = (() => {
       hair: `<path d="M-57,-266 C-62,-334 62,-334 57,-266 C50,-290 30,-300 4,-296 C-20,-300 -46,-292 -57,-266 Z" fill="#4a3426"/>
              <path d="M4,-296 C12,-286 30,-282 48,-284" fill="none" stroke="#33231a" stroke-width="3" stroke-linecap="round"/>` },
     min: { skin: '#e2b48a', name: 'ミン',
-      body: () => uniform('ミン'), sleeve: UNI, pants: '#3b3f4a',
+      body: () => uniform('ミン') + `<rect x="14" y="-162" width="26" height="12" rx="3" fill="#ffd84d"/><text x="27" y="-153" font-size="7.5" text-anchor="middle" font-weight="bold" fill="#5a4a00">研修中</text>`, sleeve: UNI, pants: '#3b3f4a',
       hair: `<path d="M-58,-262 C-64,-338 64,-338 58,-262 C54,-276 50,-284 44,-288 C36,-280 28,-282 22,-292 C14,-282 4,-284 -2,-294 C-10,-282 -22,-284 -28,-292 C-34,-282 -46,-282 -58,-262 Z" fill="#1d1d24"/>` },
     tencho: { skin: '#efc196', name: '店長',
       body: () => uniform('店長'), sleeve: UNI, pants: '#2f333c',
@@ -471,7 +475,62 @@ const ART = (() => {
       }).join('')}</g>`,
     black: () => `<rect width="360" height="640" fill="#0a0f1f"/>`
   };
-  return { doll, chars: C, bg: id => (BG[id] || BG.black)() };
+  /* ---------- 名札（導入カード） ---------- */
+  const nameTag = `<rect x="6" y="6" width="208" height="98" rx="14" fill="#fff" stroke="${UNI}" stroke-width="4"/>
+    <path d="M6,20 Q6,6 20,6 L200,6 Q214,6 214,20 L214,44 L6,44 Z" fill="${UNI}"/>
+    <path d="M44,13 l4,8 9,1.2 -6.5,6.3 1.5,9 -8,-4.3 -8,4.3 1.5,-9 -6.5,-6.3 9,-1.2 Z" fill="#ffd84d"/>
+    <text x="122" y="33" font-size="20" font-weight="bold" fill="#fff" text-anchor="middle" letter-spacing="2">星空マート</text>
+    <line x1="30" y1="82" x2="190" y2="82" stroke="#c9d3d6" stroke-width="2"/>`;
+
+  /* ---------- 大きく見せる画面（申込書・レジの予約入力） ---------- */
+  const desk = `<defs><linearGradient id="desk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c79a68"/><stop offset="1" stop-color="#a8794a"/></linearGradient></defs>
+    <rect width="360" height="640" fill="url(#desk)"/>
+    ${[110, 230, 350, 470].map(y => `<path d="M0,${y} Q180,${y - 10} 360,${y + 6}" fill="none" stroke="#b5875a" stroke-width="2" opacity=".6"/>`).join('')}`;
+  const formRows = ['商品番号', '商品名', '受け取り日', '受け取り時間', 'お名前', 'お電話番号'];
+  const posFrame = inner => `<rect width="360" height="640" fill="#2a3040"/>
+    <rect x="16" y="58" width="328" height="392" rx="20" fill="#4a5163"/>
+    <rect x="30" y="72" width="300" height="350" rx="8" fill="#f4f8f7"/>
+    <circle cx="180" cy="436" r="6" fill="#6d7488"/>${inner}`;
+  const VIEW = {
+    form: () => `${desk}
+      <g transform="rotate(-2 180 260)">
+        <rect x="34" y="74" width="296" height="378" rx="4" fill="#000" opacity=".18"/>
+        <rect x="28" y="66" width="296" height="378" rx="4" fill="#fffef9"/>
+        <path d="M40,82 l3,6 6.5,1 -4.7,4.5 1.1,6.5 -5.9,-3 -5.9,3 1.1,-6.5 -4.7,-4.5 6.5,-1 Z" fill="#e0b400"/>
+        <text x="54" y="96" font-size="11" font-weight="bold" fill="${UNI_D}">星空マート</text>
+        <text x="176" y="128" font-size="17" font-weight="bold" fill="#333" text-anchor="middle">クリスマスケーキ</text>
+        <text x="176" y="150" font-size="17" font-weight="bold" fill="#333" text-anchor="middle">ご予約申込書</text>
+        ${formRows.map((t, i) => {
+          const y = 170 + i * 44;
+          return `<rect x="44" y="${y}" width="96" height="44" fill="#f2ede2" stroke="#9a9180" stroke-width="1.5"/>
+            <rect x="140" y="${y}" width="168" height="44" fill="#fff" stroke="#9a9180" stroke-width="1.5"/>
+            <text x="92" y="${y + 27}" font-size="12.5" font-weight="bold" fill="#444" text-anchor="middle">${t}</text>`;
+        }).join('')}
+      </g>`,
+    pos: () => posFrame(`
+      <rect x="30" y="72" width="300" height="40" rx="8" fill="#3d6f8c"/><rect x="30" y="100" width="300" height="12" fill="#3d6f8c"/>
+      <text x="180" y="98" font-size="16" font-weight="bold" fill="#fff" text-anchor="middle">ケーキ予約 入力</text>
+      <text x="46" y="140" font-size="12" fill="#5d6675">商品名</text>
+      <rect x="44" y="148" width="272" height="56" rx="6" fill="#fff" stroke="#b8c4cc" stroke-width="2"/>
+      <text x="56" y="171" font-size="14" font-weight="bold" fill="#222">アレルギー対応クリスマスケーキ</text>
+      <text x="56" y="193" font-size="12.5" fill="#333">（卵・乳・小麦不使用）</text>
+      <text x="46" y="230" font-size="12" fill="#5d6675">受け取り日</text>
+      <rect x="44" y="238" width="128" height="40" rx="6" fill="#fff" stroke="#b8c4cc" stroke-width="2"/>
+      <text x="108" y="265" font-size="17" font-weight="bold" fill="#222" text-anchor="middle">12月24日</text>
+      <text x="190" y="230" font-size="12" fill="#5d6675">受け取り時間</text>
+      <rect x="188" y="238" width="128" height="40" rx="6" fill="#fff" stroke="#b8c4cc" stroke-width="2"/>
+      <text x="252" y="265" font-size="17" font-weight="bold" fill="#222" text-anchor="middle">19:00</text>
+      <text x="46" y="304" font-size="12" fill="#5d6675">予約残数</text>
+      <rect x="44" y="312" width="272" height="50" rx="6" fill="#fff0ee" stroke="#d0392b" stroke-width="2.5"/>
+      <text x="180" y="347" font-size="26" font-weight="bold" fill="#d0392b" text-anchor="middle">残り 2</text>
+      <rect x="110" y="374" width="140" height="36" rx="18" fill="#3d6f8c"/>
+      <text x="180" y="398" font-size="15" font-weight="bold" fill="#fff" text-anchor="middle">送信</text>`),
+    posDone: () => posFrame(`
+      <circle cx="180" cy="200" r="54" fill="#3d9b6a"/>
+      <path d="M152,200 l20,20 38,-40" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="180" y="300" font-size="21" font-weight="bold" fill="#222" text-anchor="middle">予約を受け付けました</text>`)
+  };
+  return { doll, chars: C, nameTag, view: id => VIEW[id](), bg: id => (BG[id] || BG.black)() };
 })();
 
 /* =========================================================
@@ -485,8 +544,10 @@ const T = (who, text, f, o) => Object.assign({ who, text, f }, o);
 const NAME2ID = { '先輩': 'senpai', 'ミン': 'min', '店長': 'tencho', '地区担当': 'chiku', 'オーナー': 'owner', 'お客さん': 'parent', '子ども': 'child' };
 
 const SCRIPT = [
+  // ---------------- 導入 ----------------
+  { bg: 'black', show: [], bgm: null, clock: null, view: null },
+  { intro: 'あなたは、星空マートのアルバイト店員。' },
   // ---------------- 第一幕 ----------------
-  { bg: 'black', show: [], bgm: null, clock: null },
   { act: '第一幕', sub: '12月上旬・予約できない客' },
   { bg: 'register', bgm: 'shop' },
   N('十二月のはじめ。\n星空マートの店内にも、クリスマスケーキのポスターが貼られはじめた。'),
@@ -502,12 +563,14 @@ const SCRIPT = [
   T('お客さん', 'ありがとうございます。……あの。', 'normal'),
   T('お客さん', 'アレルギー対応のケーキがいいんです。'),
   T('お客さん', 'アレルギーの子に、初めてケーキを食べさせたくて。', 'smile'),
+  { view: 'form' },
   N('申込書に目を落とす。\nアレルギー対応の欄は、どこにも見当たらない。'),
+  { view: null },
   T('あなた', 'えっと……やったことないので、分からなくて……。'),
   T('お客さん', 'そう、ですよね……。', 'komari'),
-  N('気まずい沈黙が流れる。\nそのとき、バックヤードの扉が開いた。'),
+  N('気まずい沈黙が流れる。\nそのとき、バックヤードの扉が開いた。', { r: { parent: 'komari' } }),
   { show: ['senpai', 'parent'] },
-  T('先輩', '大丈夫、調べます。'),
+  T('先輩', '大丈夫、調べます。', null, { r: { parent: 'odoroki' } }),
   T('先輩', '少しだけお時間をいただけますか。カタログを確認してきます。'),
   T('お客さん', 'はい、お願いします。', 'smile'),
   { bg: 'backyard', show: ['senpai'] },
@@ -519,7 +582,7 @@ const SCRIPT = [
     ], q: '先輩が調べはじめた。どうする？' },
   N('邪魔をしないように、少し後ろから先輩の手元を見つめる。', { c: 'a1=watch' }),
   T('先輩', '季節の商品は、後ろの特集ページにまとまってることが多いんだ。', 'normal', { c: 'a1=watch' }),
-  T('あなた', '自分も探します！', null, { c: 'a1=help' }),
+  T('あなた', '自分も探します！', null, { c: 'a1=help', r: { senpai: 'smile' } }),
   T('先輩', '助かる。じゃあ、後ろ半分をお願い。', 'smile', { c: 'a1=help' }),
   N('二人で手分けして、ページをめくっていく。', { c: 'a1=help' }),
 
@@ -528,25 +591,26 @@ const SCRIPT = [
   { bg: 'backyard', show: ['senpai'], bgm: 'shop' },
   N('カタログの最後のほうに、小さな特集ページがあった。'),
   T('先輩', '「アレルギー対応 クリスマスケーキ」。卵・乳・小麦を使っていないケーキだ。', 'normal'),
-  T('あなた', 'あ、ここです！ 見つけました！', null, { c: 'a1=help' }),
+  T('あなた', 'あ、ここです！ 見つけました！', null, { c: 'a1=help', r: { senpai: 'smile' } }),
   T('先輩', 'これだね。……待って、在庫の表示を見て。', 'odoroki'),
-  N('端末の画面には、赤い文字で「残りわずか」。'),
+  N('端末の画面には、赤い文字で「残りわずか」。', { r: { senpai: 'odoroki' } }),
   T('先輩', '作れる数が決まってるんだ。急ごう。', 'aseri'),
   { bg: 'register', show: ['senpai'] },
   N('レジの発注画面に、申込書の内容を打ちこんでいく。'),
-  { se: 'beep' },
+  { se: 'beep', view: 'pos' },
   N('商品番号。受け取り日。受け取り時間。\n指先が少し震える。'),
   T('先輩', '受け取りは十二月二十四日の十九時。……よし、送信。', 'normal'),
-  { se: 'ok' },
+  { se: 'ok', view: 'posDone' },
   N('画面に「受付完了」の文字が出た。'),
-  T('あなた', '……取れた！'),
+  { view: null },
+  T('あなた', '……取れた！', null, { r: { senpai: 'smile' } }),
   T('先輩', '一緒に探してくれたから間に合ったよ。ありがとう。', 'smile', { c: 'a1=help' }),
   T('先輩', 'ちゃんと見てたね。次は君が、お客さんに説明できるよ。', 'smile', { c: 'a1=watch' }),
   { show: ['senpai', 'parent'] },
-  T('お客さん', '予約、できたんですか？', 'odoroki'),
-  T('あなた', 'はい。十二月二十四日の十九時に、お渡しできます。'),
-  T('お客さん', 'よかった……！ 子どもに話したら、きっと大喜びします。', 'smile'),
-  T('お客さん', 'イブの夜、受け取りに来ますね。本当にありがとうございました！', 'smile'),
+  T('お客さん', '予約、できたんですか？', 'odoroki', { r: { senpai: 'smile' } }),
+  T('あなた', 'はい。十二月二十四日の十九時に、お渡しできます。', null, { r: { parent: 'smile', senpai: 'smile' } }),
+  T('お客さん', 'よかった……！ 子どもに話したら、きっと大喜びします。', 'smile', { r: { senpai: 'smile' } }),
+  T('お客さん', 'イブの夜、受け取りに来ますね。本当にありがとうございました！', 'smile', { r: { senpai: 'smile' } }),
   { se: 'door', show: ['senpai'] },
   N('控えの用紙を大事そうにバッグにしまって、お客さんは帰っていった。'),
   N('先輩はしばらくのあいだ、閉まったドアのほうを見ていた。'),
@@ -559,7 +623,7 @@ const SCRIPT = [
   N('十二月二十四日。クリスマスイブ。'),
   N('朝からレジの列が途切れない。\nチキン、ケーキ、飲みもの、また、チキン。'),
   T('ミン', 'いらっしゃいませ。袋は、おつけしますか？', 'smile'),
-  N('隣のレジには、ミンくん。\nベトナム出身のバイトで、いつも真面目で一生懸命だ。'),
+  N('隣のレジには、ミンくん。\nベトナム出身のバイトで、いつも真面目で一生懸命だ。', { r: { min: 'smile' } }),
   N('入ったばかりのミンくんと、今日はまともに話す時間もない。'),
   { bg: 'black', show: [], bgm: null },
   N('——夕方、十六時。'),
@@ -575,20 +639,20 @@ const SCRIPT = [
   { fx: 'shake', se: 'shock' },
   N('背中を、冷たい汗がつたう。'),
   T('ミン', '……あの。だめ、でしたか？', 'odoroki'),
-  N('ミンくんは、知らなかったんだ。\n予約棚の品は、予約したお客さんのもの。ほかのお客さんには売らない。'),
-  N('そのルールを、ミンくんに伝えていなかった。'),
-  N('忙しさを理由に、教えるのを後回しにしていたのは——自分だ。'),
-  T('あなた', 'ミンくん、聞いて。あれは予約品なんだ。今夜、予約したお客さんが受け取りに来る。'),
-  T('あなた', 'しかもアレルギー対応のケーキで、代わりがない。……ヤバいんだよ。'),
+  N('ミンくんは、知らなかったんだ。\n予約棚の品は、予約したお客さんのもの。ほかのお客さんには売らない。', { r: { min: 'komari' } }),
+  N('そのルールを、ミンくんに伝えていなかった。', { r: { min: 'komari' } }),
+  N('忙しさを理由に、教えるのを後回しにしていたのは——自分だ。', { r: { min: 'komari' } }),
+  T('あなた', 'ミンくん、聞いて。あれは予約品なんだ。今夜、予約したお客さんが受け取りに来る。', null, { r: { min: 'odoroki' } }),
+  T('あなた', 'しかもアレルギー対応のケーキで、代わりがない。……ヤバいんだよ。', null, { r: { min: 'aseri' } }),
   T('ミン', '……！ ぼく、知りませんでした。すみません……。', 'aseri'),
-  T('あなた', 'ミンくんのせいじゃない。予約棚のことを伝えていなかったのは、自分だから。'),
+  T('あなた', 'ミンくんのせいじゃない。予約棚のことを伝えていなかったのは、自分だから。', null, { r: { min: 'komari' } }),
   T('ミン', 'でも……どうしたら、いいですか。', 'komari'),
-  N('普通のケーキでは、代わりにならない。\n卵も、乳も、小麦も入っている。'),
-  N('受け取りは十九時。あと、三時間しかない。'),
+  N('普通のケーキでは、代わりにならない。\n卵も、乳も、小麦も入っている。', { r: { min: 'komari' } }),
+  N('受け取りは十九時。あと、三時間しかない。', { r: { min: 'komari' } }),
   { show: ['tencho', 'min'] },
-  T('店長', 'どうした、二人とも。顔が真っ青だぞ。', 'odoroki'),
-  N('事情を話すと、店長はすぐに上着をつかんだ。'),
-  T('店長', '分かった。探そう。', 'normal'),
+  T('店長', 'どうした、二人とも。顔が真っ青だぞ。', 'odoroki', { r: { min: 'komari' } }),
+  N('事情を話すと、店長はすぐに上着をつかんだ。', { r: { min: 'komari' } }),
+  T('店長', '分かった。探そう。', 'normal', { r: { min: 'komari' } }),
 
   // ---------------- 第四幕 ----------------
   { act: '第四幕', sub: '店で待つ' },
@@ -598,65 +662,65 @@ const SCRIPT = [
   T('店長', 'お客さんが早めに来たら、すぐ電話をくれ。'),
   T('あなた', '……はい。'),
   { se: 'door', show: ['min'] },
-  N('二人は車で飛び出していった。\n店には、自分とミンくんが残された。'),
-  N('レジを打ちながら、何度も時計を見てしまう。'),
+  N('二人は車で飛び出していった。\n店には、自分とミンくんが残された。', { r: { min: 'komari' } }),
+  N('レジを打ちながら、何度も時計を見てしまう。', { r: { min: 'komari' } }),
   { clock: '16:50', se: 'phone' },
-  N('電話が鳴った。'),
-  T('店長（電話）', '一軒目、だめだった。売り切れだ。次を当たる。'),
-  T('あなた', '……分かりました。'),
+  N('電話が鳴った。', { r: { min: 'odoroki' } }),
+  T('店長（電話）', '一軒目、だめだった。売り切れだ。次を当たる。', null, { r: { min: 'komari' } }),
+  T('あなた', '……分かりました。', null, { r: { min: 'komari' } }),
   T('ミン', '……。', 'komari'),
   { clock: '17:25', se: 'phone' },
-  T('店長（電話）', '配送センターも、もう在庫がないそうだ。'),
-  T('あなた', 'そんな……。'),
-  N('レジの「ピッ」という音が、やけに耳にさわる。'),
+  T('店長（電話）', '配送センターも、もう在庫がないそうだ。', null, { r: { min: 'komari' } }),
+  T('あなた', 'そんな……。', null, { r: { min: 'komari' } }),
+  N('レジの「ピッ」という音が、やけに耳にさわる。', { r: { min: 'komari' } }),
   { clock: '17:40', se: 'phone' },
-  T('店長（電話）', '工場に直接電話してみた。——予備が残ってるって！'),
-  T('あなた', '本当ですか！'),
-  T('店長（電話）', '今から車で取りに行く。もう少し待っててくれ！'),
+  T('店長（電話）', '工場に直接電話してみた。——予備が残ってるって！', null, { r: { min: 'odoroki' } }),
+  T('あなた', '本当ですか！', null, { r: { min: 'odoroki' } }),
+  T('店長（電話）', '今から車で取りに行く。もう少し待っててくれ！', null, { r: { min: 'smile' } }),
   T('ミン', 'よかった……！', 'smile'),
   { clock: '18:10', se: 'phone' },
-  T('店長（電話）', '……すまん。渋滞にはまった。イブの夜は、どこも車だらけだ。'),
-  T('あなた', '間に合いそうですか？'),
-  T('店長（電話）', '……分からない。でも、必ず持って帰る。'),
-  N('電話が切れる。\n時計の針は、待ってくれない。', { f: { min: 'komari' } }),
+  T('店長（電話）', '……すまん。渋滞にはまった。イブの夜は、どこも車だらけだ。', null, { r: { min: 'aseri' } }),
+  T('あなた', '間に合いそうですか？', null, { r: { min: 'komari' } }),
+  T('店長（電話）', '……分からない。でも、必ず持って帰る。', null, { r: { min: 'komari' } }),
+  N('電話が切れる。\n時計の針は、待ってくれない。', { r: { min: 'komari' } }),
   { clock: '18:25' },
-  N('お客さんが来たら、なんて言えばいい。\n胸の中で、イライラがぐるぐる回る。'),
+  N('お客さんが来たら、なんて言えばいい。\n胸の中で、イライラがぐるぐる回る。', { r: { min: 'komari' } }),
   T('ミン', 'あの……ぼくに、なにか、手伝えることはありますか。', 'komari'),
   { choice: [
       { t: 'ミンくんに当たってしまう', set: ['a4', 'snap'] },
       { t: 'ミンくんと一緒に待つ', set: ['a4', 'wait'] }
     ], q: 'イライラが止まらない。' },
-  T('あなた', '……今はいいから！ 余計なこと、しないで！', null, { c: 'a4=snap' }),
+  T('あなた', '……今はいいから！ 余計なこと、しないで！', null, { c: 'a4=snap', r: { min: 'odoroki' } }),
   T('ミン', '……はい。すみません。', 'naki', { c: 'a4=snap' }),
-  N('言ってしまってから、はっとした。\nミンくんの肩が、小さく下がっている。', { c: 'a4=snap' }),
-  N('悪いのは、教えていなかった自分なのに。', { c: 'a4=snap' }),
-  N('大きく息を吐く。\n焦っているのは、ミンくんも同じだ。', { c: 'a4=wait' }),
-  T('あなた', 'ありがとう。……じゃあ、ここで一緒に待とう。お客さんが来たら、二人で迎えよう。', null, { c: 'a4=wait' }),
+  N('言ってしまってから、はっとした。\nミンくんの肩が、小さく下がっている。', { c: 'a4=snap', r: { min: 'naki' } }),
+  N('悪いのは、教えていなかった自分なのに。', { c: 'a4=snap', r: { min: 'komari' } }),
+  N('大きく息を吐く。\n焦っているのは、ミンくんも同じだ。', { c: 'a4=wait', r: { min: 'komari' } }),
+  T('あなた', 'ありがとう。……じゃあ、ここで一緒に待とう。お客さんが来たら、二人で迎えよう。', null, { c: 'a4=wait', r: { min: 'smile' } }),
   T('ミン', 'はい。一緒に、待ちます。', 'smile', { c: 'a4=wait' }),
   { clock: '18:45', se: 'phone' },
-  T('店長（電話）', '抜けた！ あと五分で着く！'),
+  T('店長（電話）', '抜けた！ あと五分で着く！', null, { r: { min: 'odoroki' } }),
 
   // ---------------- 第五幕 ----------------
   { act: '第五幕', sub: 'ギリギリのイブ' },
   { bg: 'storefront', show: [], bgm: null, clock: '18:52', se: 'car' },
   N('十八時五十二分。\n店の前に、一台の車がすべりこんだ。'),
   { show: ['tencho', 'chiku'] },
-  T('店長', 'お待たせ！ アレルギー対応ケーキ、確保だ！', 'smile'),
-  T('地区担当', '工場の方が、予備をすぐに出してくれました。', 'smile'),
-  T('あなた', 'ありがとうございます……！'),
+  T('店長', 'お待たせ！ アレルギー対応ケーキ、確保だ！', 'smile', { r: { chiku: 'smile' } }),
+  T('地区担当', '工場の方が、予備をすぐに出してくれました。', 'smile', { r: { tencho: 'smile' } }),
+  T('あなた', 'ありがとうございます……！', null, { r: { tencho: 'smile', chiku: 'smile' } }),
   { bg: 'register', show: [], clock: '19:00', bgm: 'eve' },
   { se: 'door', show: ['parent', 'child'] },
-  N('十九時ちょうど。入店のチャイムが鳴った。'),
-  T('子ども', 'ケーキ、とりにきました！', 'smile'),
-  T('お客さん', '予約していた者です。今日はよろしくお願いします。', 'smile'),
-  T('あなた', 'お待ちしていました。……用意しますので、サンタさんとお話ししててください。'),
+  N('十九時ちょうど。入店のチャイムが鳴った。', { r: { parent: 'smile', child: 'smile' } }),
+  T('子ども', 'ケーキ、とりにきました！', 'smile', { r: { parent: 'smile' } }),
+  T('お客さん', '予約していた者です。今日はよろしくお願いします。', 'smile', { r: { child: 'smile' } }),
+  T('あなた', 'お待ちしていました。……用意しますので、サンタさんとお話ししててください。', null, { r: { parent: 'smile', child: 'smile' } }),
   { show: ['owner', 'parent', 'child'], clock: null },
-  T('オーナー', 'メリークリスマス！ さあ、こっちにおいで。', 'smile'),
-  T('子ども', 'わあ、サンタさんだ！', 'odoroki'),
-  N('サンタの格好をしたオーナーが、子どもの相手をしてくれている。\nそのあいだに、バックヤードへ急ぐ。'),
+  T('オーナー', 'メリークリスマス！ さあ、こっちにおいで。', 'smile', { r: { parent: 'smile', child: 'odoroki' } }),
+  T('子ども', 'わあ、サンタさんだ！', 'odoroki', { r: { owner: 'smile', parent: 'smile' } }),
+  N('サンタの格好をしたオーナーが、子どもの相手をしてくれている。\nそのあいだに、バックヤードへ急ぐ。', { r: { owner: 'smile', parent: 'smile', child: 'smile' } }),
   { bg: 'backyard', show: ['min'] },
   T('ミン', '……さっきは、すみませんでした。', 'komari', { c: 'a4=snap' }),
-  T('あなた', '謝るのはこっちだよ。教えていなかったのも、当たったのも、自分だ。ごめん。', null, { c: 'a4=snap' }),
+  T('あなた', '謝るのはこっちだよ。教えていなかったのも、当たったのも、自分だ。ごめん。', null, { c: 'a4=snap', r: { min: 'odoroki' } }),
   T('ミン', '……ぼく、ちゃんと覚えたいです。教えてください。', 'normal', { c: 'a4=snap' }),
   T('ミン', '一緒に待ってくれて、ありがとうございました。ぼくにも、教えてください。', 'smile', { c: 'a4=wait' }),
   T('あなた', 'うん。一つずつ、いこう。'),
@@ -673,19 +737,19 @@ const SCRIPT = [
   T('ミン', '次からは、ぼくも気をつけます。', 'normal', { c: 'a4=snap' }),
   T('ミン', '次は、ぼくがほかの人にも教えます。', 'smile', { c: 'a4=wait' }),
   { bg: 'register', show: ['owner', 'parent', 'child'] },
-  N('準備できたケーキを、サンタ姿のオーナーにそっと手渡す。'),
-  T('オーナー', 'さあ、きみのケーキだよ。メリークリスマス！', 'smile'),
+  N('準備できたケーキを、サンタ姿のオーナーにそっと手渡す。', { r: { owner: 'smile', parent: 'smile', child: 'smile' } }),
+  T('オーナー', 'さあ、きみのケーキだよ。メリークリスマス！', 'smile', { r: { parent: 'smile', child: 'odoroki' } }),
   { se: 'bell' },
-  T('子ども', 'わああ！ ケーキだ！ ほんとに、たべていいの！？', 'smile'),
-  T('お客さん', 'いいんだよ。これはね、食べても大丈夫なケーキなの。', 'smile'),
-  T('子ども', 'やったー！ サンタさん、ありがとう！', 'smile'),
+  T('子ども', 'わああ！ ケーキだ！ ほんとに、たべていいの！？', 'smile', { r: { owner: 'smile', parent: 'smile' } }),
+  T('お客さん', 'いいんだよ。これはね、食べても大丈夫なケーキなの。', 'smile', { r: { owner: 'smile', child: 'smile' } }),
+  T('子ども', 'やったー！ サンタさん、ありがとう！', 'smile', { r: { owner: 'smile', parent: 'smile' } }),
   { show: ['senpai', 'min', 'parent', 'child'] },
-  T('お客さん', 'みなさん、本当にありがとうございました。', 'smile'),
-  T('お客さん', 'この子、ずっとケーキを我慢してきたんです。今年は、家族みんなで食べられます。', 'naki'),
-  T('先輩', '……僕もアレルギーがあって、子どもの時にケーキを我慢しました。', 'normal'),
-  T('先輩', 'お役に立てて、嬉しいです。', 'smile'),
-  N('——あの日。\n「大丈夫、調べます」と言った先輩の声を、思い出す。'),
-  N('あれは、ケーキを我慢していた子どもの頃の自分に、かけてあげたかった言葉だったのかもしれない。'),
+  T('お客さん', 'みなさん、本当にありがとうございました。', 'smile', { r: { senpai: 'smile', min: 'smile', child: 'smile' } }),
+  T('お客さん', 'この子、ずっとケーキを我慢してきたんです。今年は、家族みんなで食べられます。', 'naki', { r: { min: 'smile', child: 'smile' } }),
+  T('先輩', '……僕もアレルギーがあって、子どもの時にケーキを我慢しました。', 'normal', { r: { parent: 'odoroki', min: 'odoroki', child: 'smile' } }),
+  T('先輩', 'お役に立てて、嬉しいです。', 'smile', { r: { parent: 'smile', min: 'smile', child: 'smile' } }),
+  N('——あの日。\n「大丈夫、調べます」と言った先輩の声を、思い出す。', { r: { senpai: 'smile', parent: 'smile', min: 'smile', child: 'smile' } }),
+  N('あれは、ケーキを我慢していた子どもの頃の自分に、かけてあげたかった言葉だったのかもしれない。', { r: { senpai: 'smile', parent: 'smile', min: 'smile', child: 'smile' } }),
   { bg: 'storefront', show: [] },
   N('親子は何度も頭を下げて、雪のちらつく夜へ帰っていった。'),
   N('星空マートの前に、子どもの笑い声が、いつまでも残っていた。'),
@@ -720,6 +784,14 @@ function drawChars(enterIds) {
   }).join('');
 }
 
+function setView(v) {
+  const el = $('view');
+  if (!v) { el.style.display = 'none'; el.innerHTML = ''; return; }
+  el.innerHTML = ART.view(v);
+  el.style.display = 'block';
+  el.classList.remove('enter'); void el.offsetWidth; el.classList.add('enter');
+}
+
 function setClock(v) {
   const el = $('clock');
   if (!v) { el.style.display = 'none'; st.clock = null; return; }
@@ -738,8 +810,12 @@ function addLog(entry) { st.log.push(entry); }
 function showText(step) {
   const who = step.who || '';
   const id = NAME2ID[who];
+  // 表情は「本人が話す行」か「反応(r)の指定がある行」だけ。それ以外は普通に戻す
+  const keepOwn = id && !step.f && st.lastSpeaker === id;
+  st.shown.forEach(c => { if (!(keepOwn && c === id)) st.faces[c] = 'normal'; });
   if (id && step.f) st.faces[id] = step.f;
-  if (step.f && typeof step.f === 'object') Object.assign(st.faces, step.f);
+  if (step.r) Object.assign(st.faces, step.r);
+  st.lastSpeaker = id || null;
   st.speaker = id || null;
   drawChars();
   $('name').textContent = who;
@@ -773,9 +849,10 @@ function run() {
       s.show.forEach(id => { if (!st.shown.includes(id)) st.faces[id] = 'normal'; });
       st.shown = s.show.slice(); st.speaker = null; drawChars(entering);
     }
+    if ('view' in s) setView(s.view);
     if (s.se) Sound.se(s.se);
     if (s.fx === 'shake') { const c = $('chars'); c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake'); }
-    if (s.act) { st.i++; showCard(s); return; }
+    if (s.act || s.intro) { st.i++; showCard(s); return; }
     if (s.choice) { st.i++; showChoice(s); return; }
     if (s.end) { st.i++; showEnd(); return; }
     if (s.text) { st.i++; st.mode = 'text'; showText(s); return; }
@@ -787,9 +864,14 @@ function showCard(s) {
   st.mode = 'card';
   $('textbox').style.visibility = 'hidden';
   const c = $('card');
-  c.innerHTML = `<div class="star">★</div><div class="act">${s.act}</div><div class="sub">${s.sub}</div><div class="hint">タップで進む</div>`;
+  if (s.intro) {
+    c.innerHTML = `<svg class="tag" viewBox="0 0 220 110">${ART.nameTag}</svg><div class="intro">${s.intro}</div><div class="hint">タップで進む</div>`;
+    addLog({ who: '', text: s.intro });
+  } else {
+    c.innerHTML = `<div class="star">★</div><div class="act">${s.act}</div><div class="sub">${s.sub}</div><div class="hint">タップで進む</div>`;
+    addLog({ who: '', text: `── ${s.act}　${s.sub} ──` });
+  }
   c.style.display = 'flex';
-  addLog({ who: '', text: `── ${s.act}　${s.sub} ──` });
 }
 function closeCard() {
   $('card').style.display = 'none';
@@ -834,7 +916,8 @@ function advance() {
 }
 
 function newGame() {
-  Object.assign(st, { i: 0, flags: {}, log: [], shown: [], faces: {}, speaker: null });
+  Object.assign(st, { i: 0, flags: {}, log: [], shown: [], faces: {}, speaker: null, lastSpeaker: null });
+  setView(null);
   clearInterval(st.typing); st.typing = null;
   $('chars').innerHTML = ''; $('choices').style.display = 'none'; $('card').style.display = 'none';
   $('textbox').style.visibility = 'visible'; $('name').textContent = ''; $('text').textContent = '';
@@ -846,7 +929,7 @@ function toTitle() {
   clearInterval(st.typing); st.typing = null;
   st.mode = 'title';
   closeOverlays();
-  $('bg').innerHTML = ART.bg('storefront'); $('chars').innerHTML = '';
+  $('bg').innerHTML = ART.bg('storefront'); $('chars').innerHTML = ''; setView(null);
   $('choices').style.display = 'none'; $('card').style.display = 'none';
   $('textbox').style.visibility = 'hidden'; setClock(null);
   $('topbar').style.display = 'none'; $('title').style.display = 'flex';
