@@ -6,7 +6,7 @@
 <title>星空マートのクリスマス</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  html, body { margin: 0; height: 100%; background: #0a0f1f; overflow: hidden; }
+  html, body { margin: 0; height: 100%; background: #0a0f1f; overflow: hidden; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   body {
     display: flex; align-items: center; justify-content: center;
     font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", "Noto Sans JP", "Yu Gothic", "Meiryo", sans-serif;
@@ -17,6 +17,7 @@
     position: relative; overflow: hidden; background: #000;
     width: var(--w, 360px); height: calc(var(--w, 360px) * 16 / 9);
     --u: calc(var(--w, 360px) / 360);
+    --fu: calc(var(--u) * var(--fk, 1)); /* 文字用の単位（端末の文字拡大を打ち消す） */
     color: #2a2a2a;
   }
   .layer { position: absolute; inset: 0; width: 100%; height: 100%; }
@@ -34,7 +35,7 @@
     display: flex; gap: calc(var(--u) * 6); z-index: 20;
   }
   .tbtn {
-    font: inherit; font-size: calc(var(--u) * 12); font-weight: bold;
+    font: inherit; font-size: calc(var(--fu) * 12); font-weight: bold;
     padding: calc(var(--u) * 6) calc(var(--u) * 10); border-radius: calc(var(--u) * 14);
     border: calc(var(--u) * 2) solid rgba(255,255,255,.85); background: rgba(20,32,64,.72); color: #fff;
     cursor: pointer; white-space: nowrap;
@@ -51,7 +52,7 @@
   #tip {
     position: absolute; left: 50%; transform: translateX(-50%); top: calc(var(--u) * 166); z-index: 9;
     background: #fff; color: #1f3b6e; border: calc(var(--u) * 2.5) solid #1f3b6e; border-radius: calc(var(--u) * 10);
-    font-size: calc(var(--u) * 13); font-weight: bold; text-align: center; padding: calc(var(--u) * 6) calc(var(--u) * 12);
+    font-size: calc(var(--fu) * 13); font-weight: bold; text-align: center; padding: calc(var(--u) * 6) calc(var(--u) * 12);
     box-shadow: 0 calc(var(--u) * 3) calc(var(--u) * 6) rgba(0,0,0,.3); display: none; white-space: nowrap;
   }
   #tip::after {
@@ -59,8 +60,8 @@
     border-left: calc(var(--u) * 8) solid transparent; border-right: calc(var(--u) * 8) solid transparent;
     border-top: calc(var(--u) * 10) solid #1f3b6e;
   }
-  #clock .now { font-size: calc(var(--u) * 22); font-weight: bold; color: #222; line-height: 1.1; font-variant-numeric: tabular-nums; }
-  #clock .left { font-size: calc(var(--u) * 11); color: #c0392b; font-weight: bold; white-space: nowrap; }
+  #clock .now { font-size: calc(var(--fu) * 22); font-weight: bold; color: #222; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  #clock .left { font-size: calc(var(--fu) * 11); color: #c0392b; font-weight: bold; white-space: nowrap; }
   #clock.tick { animation: tick .5s; }
   @keyframes tick { 50% { transform: scale(1.12); } }
   #clock.urgent { animation: urgent 1s infinite; }
@@ -71,19 +72,19 @@
   #ui button { font-family: inherit; cursor: pointer; }
   .ui-pos { background: #2a3040; }
   .memo {
-    position: absolute; left: calc(var(--u) * 8); top: calc(var(--u) * 6); width: calc(var(--u) * 138);
+    position: absolute; left: calc(var(--u) * 8); top: calc(var(--u) * 5); width: calc(var(--u) * 150);
     background: #fff8c4; color: #333; border-radius: calc(var(--u) * 4); transform: rotate(-2deg);
-    font-size: calc(var(--u) * 10.5); line-height: 1.35; padding: calc(var(--u) * 4) calc(var(--u) * 8);
+    font-size: calc(var(--fu) * 10); line-height: 1.3; padding: calc(var(--u) * 3) calc(var(--u) * 7);
     box-shadow: 0 calc(var(--u) * 2) calc(var(--u) * 4) rgba(0,0,0,.4); white-space: nowrap;
   }
   .memo b { color: #8a5a00; }
   .pos {
-    position: absolute; left: calc(var(--u) * 12); right: calc(var(--u) * 12); top: calc(var(--u) * 66); bottom: calc(var(--u) * 4);
+    position: absolute; left: calc(var(--u) * 12); right: calc(var(--u) * 12); top: calc(var(--u) * 76); bottom: calc(var(--u) * 4);
     background: #f4f8f7; border: calc(var(--u) * 7) solid #4a5163; border-radius: calc(var(--u) * 16);
     display: flex; flex-direction: column; overflow: hidden;
   }
-  .pos-h { background: #3d6f8c; color: #fff; font-weight: bold; text-align: center; font-size: calc(var(--u) * 15); padding: calc(var(--u) * 3) 0; }
-  .pos-sum { padding: calc(var(--u) * 6) calc(var(--u) * 10) 0; font-size: calc(var(--u) * 11.5); }
+  .pos-h { background: #3d6f8c; color: #fff; font-weight: bold; text-align: center; font-size: calc(var(--fu) * 15); padding: calc(var(--u) * 3) 0; }
+  .pos-sum { padding: calc(var(--u) * 6) calc(var(--u) * 10) 0; font-size: calc(var(--fu) * 11.5); }
   .pos-sum .row { display: flex; gap: calc(var(--u) * 6); align-items: center; margin-bottom: calc(var(--u) * 4); }
   .pos-sum .lb { color: #5d6675; white-space: nowrap; }
   .pos-sum .val {
@@ -92,35 +93,37 @@
   }
   .pos-sum .val.empty { color: #b0b8bf; font-weight: normal; }
   .pos-step { flex: 1; padding: calc(var(--u) * 4) calc(var(--u) * 10); display: flex; flex-direction: column; gap: calc(var(--u) * 5); }
-  .pos-step .q { font-size: calc(var(--u) * 12.5); font-weight: bold; color: #3d6f8c; }
+  .pos-step .q { font-size: calc(var(--fu) * 12.5); font-weight: bold; color: #3d6f8c; }
   .pos-step .opts { display: flex; flex-direction: column; gap: calc(var(--u) * 4); }
   .pos-step .opts.row { flex-direction: row; }
   .opt {
     background: #fff; color: #222; border: calc(var(--u) * 2) solid #3d6f8c; border-radius: calc(var(--u) * 7);
-    font-size: calc(var(--u) * 12); font-weight: bold; padding: calc(var(--u) * 3) calc(var(--u) * 8); text-align: left; line-height: 1.3;
+    font-size: calc(var(--fu) * 12); font-weight: bold; padding: calc(var(--u) * 3) calc(var(--u) * 8); text-align: left; line-height: 1.3;
   }
-  .opts.row .opt { flex: 1; text-align: center; padding: calc(var(--u) * 7) 0; font-size: calc(var(--u) * 14); }
+  .opts.row .opt { flex: 1; text-align: center; padding: calc(var(--u) * 7) 0; font-size: calc(var(--fu) * 14); }
   .opt .no { color: #3d6f8c; margin-right: calc(var(--u) * 4); }
   .opt.ng { animation: ng .35s; border-color: #d0392b; }
   @keyframes ng { 25% { transform: translateX(calc(var(--u) * -5)); } 75% { transform: translateX(calc(var(--u) * 5)); } }
-  .pos-step .ok { font-size: calc(var(--u) * 14); font-weight: bold; color: #3d9b6a; text-align: center; margin-top: calc(var(--u) * 10); }
+  .pos-step .ok { font-size: calc(var(--fu) * 14); font-weight: bold; color: #3d9b6a; text-align: center; margin-top: calc(var(--u) * 10); }
   .pos-left {
     margin: 0 calc(var(--u) * 10) calc(var(--u) * 6); border: calc(var(--u) * 2) solid #d0392b; background: #fff0ee; border-radius: calc(var(--u) * 6);
-    text-align: center; color: #d0392b; font-size: calc(var(--u) * 12); padding: calc(var(--u) * 2) 0;
+    text-align: center; color: #d0392b; font-size: calc(var(--fu) * 12); padding: calc(var(--u) * 2) 0;
   }
-  .pos-left b { font-size: calc(var(--u) * 18); margin-left: calc(var(--u) * 6); }
+  .pos-left b { font-size: calc(var(--fu) * 18); margin-left: calc(var(--u) * 6); }
   .pos-send {
     margin: 0 auto calc(var(--u) * 8); width: calc(var(--u) * 150); border: none; border-radius: calc(var(--u) * 18);
-    background: #3d6f8c; color: #fff; font-size: calc(var(--u) * 15) !important; font-weight: bold; padding: calc(var(--u) * 6) 0;
+    background: #3d6f8c; color: #fff; font-size: calc(var(--fu) * 15) !important; font-weight: bold; padding: calc(var(--u) * 6) 0;
   }
   .pos-send:disabled { background: #b8c4cc; color: #eef2f4; cursor: default; }
   .ui-shelf { background: #efe7d8; }
+  .goal { background: #fff8c4; color: #6b4a00; font-weight: bold; text-align: center; font-size: calc(var(--fu) * 12); padding: calc(var(--u) * 3) 0; }
+  #text .guide { display: block; margin-top: calc(var(--u) * 4); color: #1f6f9a; font-weight: bold; font-size: calc(var(--fu) * 13.5); }
   .shelf-sign {
     position: absolute; left: calc(var(--u) * 40); right: calc(var(--u) * 40); top: calc(var(--u) * 52);
-    background: #c0392b; color: #fff; font-weight: bold; text-align: center; font-size: calc(var(--u) * 17);
+    background: #c0392b; color: #fff; font-weight: bold; text-align: center; font-size: calc(var(--fu) * 17);
     padding: calc(var(--u) * 6) 0; border-radius: calc(var(--u) * 8);
   }
-  .shelf-hint { position: absolute; left: 0; right: 0; top: calc(var(--u) * 96); text-align: center; font-size: calc(var(--u) * 12.5); color: #6b4a2a; font-weight: bold; }
+  .shelf-hint { position: absolute; left: 0; right: 0; top: calc(var(--u) * 96); text-align: center; font-size: calc(var(--fu) * 12.5); color: #6b4a2a; font-weight: bold; }
   .shelf {
     position: absolute; left: calc(var(--u) * 14); right: calc(var(--u) * 14); top: calc(var(--u) * 120); bottom: calc(var(--u) * 6);
     background: #f7f1e6; border: calc(var(--u) * 8) solid #b48c62; border-radius: calc(var(--u) * 6);
@@ -132,12 +135,12 @@
   .slot svg { width: calc(var(--u) * 80); height: calc(var(--u) * 70); display: block; }
   .ptag {
     width: calc(var(--u) * 86); background: #fffbe6; border: calc(var(--u) * 2) solid #b48c62; border-radius: calc(var(--u) * 6);
-    font-size: calc(var(--u) * 13); font-weight: bold; line-height: 1.3; color: #333; padding: calc(var(--u) * 3) 0;
+    font-size: calc(var(--fu) * 13); font-weight: bold; line-height: 1.3; color: #333; padding: calc(var(--u) * 3) 0;
   }
   .ptag.done { border-color: #3d9b6a; background: #eaf7ef; }
   .slot .mark {
     position: absolute; top: calc(var(--u) * 4); right: calc(var(--u) * 4); width: calc(var(--u) * 26); height: calc(var(--u) * 26);
-    border-radius: 50%; background: #3d9b6a; color: #fff; font-size: calc(var(--u) * 16); font-weight: bold;
+    border-radius: 50%; background: #3d9b6a; color: #fff; font-size: calc(var(--fu) * 16); font-weight: bold;
     display: flex; align-items: center; justify-content: center;
   }
   .slot .mark.miss { background: #d0392b; }
@@ -152,13 +155,13 @@
   }
   #name {
     position: absolute; top: calc(var(--u) * -16); left: calc(var(--u) * 12);
-    background: #1f3b6e; color: #fff; font-weight: bold; font-size: calc(var(--u) * 14);
+    background: #1f3b6e; color: #fff; font-weight: bold; font-size: calc(var(--fu) * 14);
     padding: calc(var(--u) * 4) calc(var(--u) * 14); border-radius: calc(var(--u) * 10);
     max-width: calc(var(--u) * 300); white-space: nowrap; overflow: hidden;
   }
   #name:empty { display: none; }
   #text {
-    font-size: calc(var(--u) * 15.5); line-height: 1.68; height: 100%; overflow: hidden;
+    font-size: calc(var(--fu) * 15.5); line-height: 1.68; height: 100%; overflow: hidden;
     line-break: strict; overflow-wrap: anywhere; white-space: pre-wrap;
   }
   #text.narr { color: #3a3f55; }
@@ -176,14 +179,14 @@
     background: rgba(10,15,31,.45); padding-bottom: calc(var(--u) * 150);
   }
   .choice {
-    font: inherit; font-size: calc(var(--u) * 16); font-weight: bold; width: calc(var(--u) * 290);
+    font: inherit; font-size: calc(var(--fu) * 16); font-weight: bold; width: calc(var(--u) * 290);
     padding: calc(var(--u) * 14) calc(var(--u) * 12); border-radius: calc(var(--u) * 14);
     background: #fffdf7; color: #1f3b6e; border: calc(var(--u) * 3) solid #1f3b6e; cursor: pointer;
     box-shadow: 0 calc(var(--u) * 4) 0 #1f3b6e;
   }
   .choice:active { transform: translateY(calc(var(--u) * 3)); box-shadow: 0 calc(var(--u) * 1) 0 #1f3b6e; }
   .choice-q {
-    color: #fff; font-size: calc(var(--u) * 14); font-weight: bold; text-shadow: 0 1px 3px #000;
+    color: #fff; font-size: calc(var(--fu) * 14); font-weight: bold; text-shadow: 0 1px 3px #000;
     width: calc(var(--u) * 300); text-align: center;
   }
 
@@ -193,13 +196,13 @@
     flex-direction: column; align-items: center; justify-content: center; text-align: center;
     background: radial-gradient(circle at 50% 40%, #22345f, #0a0f1f 75%); color: #fff;
   }
-  #card .act { font-size: calc(var(--u) * 30); font-weight: bold; letter-spacing: .2em; }
-  #card .sub { margin-top: calc(var(--u) * 14); font-size: calc(var(--u) * 16); color: #ffe39a; width: calc(var(--u) * 320); }
-  #card .hint { position: absolute; bottom: calc(var(--u) * 40); font-size: calc(var(--u) * 12); color: #aab; }
-  #card .star { font-size: calc(var(--u) * 26); color: #ffd84d; margin-bottom: calc(var(--u) * 12); }
+  #card .act { font-size: calc(var(--fu) * 30); font-weight: bold; letter-spacing: .2em; }
+  #card .sub { margin-top: calc(var(--u) * 14); font-size: calc(var(--fu) * 16); color: #ffe39a; width: calc(var(--u) * 320); }
+  #card .hint { position: absolute; bottom: calc(var(--u) * 40); font-size: calc(var(--fu) * 12); color: #aab; }
+  #card .star { font-size: calc(var(--fu) * 26); color: #ffd84d; margin-bottom: calc(var(--u) * 12); }
   #card .btn { margin-top: calc(var(--u) * 30); }
   #card .tag { width: calc(var(--u) * 220); margin-bottom: calc(var(--u) * 26); }
-  #card .intro { font-size: calc(var(--u) * 19); font-weight: bold; width: calc(var(--u) * 320); line-height: 1.6; }
+  #card .intro { font-size: calc(var(--fu) * 19); font-weight: bold; width: calc(var(--u) * 320); line-height: 1.6; }
   #view.enter { animation: viewIn .3s ease-out; }
   @keyframes viewIn { from { opacity: 0; transform: scale(.96); } }
 
@@ -209,20 +212,20 @@
     margin-top: calc(var(--u) * 70); text-align: center; color: #fff;
     text-shadow: 0 calc(var(--u) * 2) calc(var(--u) * 6) rgba(0,0,0,.7);
   }
-  #title .logo .small { font-size: calc(var(--u) * 15); color: #ffe39a; letter-spacing: .1em; }
-  #title .logo .big { font-size: calc(var(--u) * 34); font-weight: bold; margin-top: calc(var(--u) * 6); letter-spacing: .06em; }
-  #title .logo .tag { font-size: calc(var(--u) * 13); margin-top: calc(var(--u) * 8); }
+  #title .logo .small { font-size: calc(var(--fu) * 15); color: #ffe39a; letter-spacing: .1em; }
+  #title .logo .big { font-size: calc(var(--fu) * 34); font-weight: bold; margin-top: calc(var(--u) * 6); letter-spacing: .06em; }
+  #title .logo .tag { font-size: calc(var(--fu) * 13); margin-top: calc(var(--u) * 8); }
   #title .menu { position: absolute; bottom: calc(var(--u) * 92); display: flex; flex-direction: column; gap: calc(var(--u) * 12); align-items: center; }
   .btn {
-    font: inherit; font-size: calc(var(--u) * 18); font-weight: bold; width: calc(var(--u) * 220);
+    font: inherit; font-size: calc(var(--fu) * 18); font-weight: bold; width: calc(var(--u) * 220);
     padding: calc(var(--u) * 12); border-radius: calc(var(--u) * 26);
     background: #ffd84d; color: #1f3b6e; border: calc(var(--u) * 3) solid #fff; cursor: pointer;
     box-shadow: 0 calc(var(--u) * 4) calc(var(--u) * 10) rgba(0,0,0,.4);
   }
-  .btn.sub { background: rgba(255,255,255,.9); font-size: calc(var(--u) * 15); padding: calc(var(--u) * 9); }
+  .btn.sub { background: rgba(255,255,255,.9); font-size: calc(var(--fu) * 15); padding: calc(var(--u) * 9); }
   #title .notice {
     position: absolute; bottom: calc(var(--u) * 28); left: 0; right: 0; text-align: center;
-    color: #fff; font-size: calc(var(--u) * 12); background: rgba(0,0,0,.45); padding: calc(var(--u) * 7) 0;
+    color: #fff; font-size: calc(var(--fu) * 12); background: rgba(0,0,0,.45); padding: calc(var(--u) * 7) 0;
   }
 
   /* ログ・メニュー */
@@ -233,12 +236,12 @@
   .overlay.show { display: flex; }
   .ov-head {
     display: flex; justify-content: space-between; align-items: center;
-    padding: calc(var(--u) * 14) calc(var(--u) * 16); font-size: calc(var(--u) * 17); font-weight: bold;
+    padding: calc(var(--u) * 14) calc(var(--u) * 16); font-size: calc(var(--fu) * 17); font-weight: bold;
     border-bottom: 1px solid rgba(255,255,255,.25);
   }
   #logList { flex: 1; overflow-y: auto; padding: calc(var(--u) * 10) calc(var(--u) * 16) calc(var(--u) * 30); -webkit-overflow-scrolling: touch; }
-  .log-item { padding: calc(var(--u) * 8) 0; border-bottom: 1px dashed rgba(255,255,255,.15); font-size: calc(var(--u) * 14); line-height: 1.6; overflow-wrap: anywhere; }
-  .log-item .who { color: #ffd84d; font-weight: bold; font-size: calc(var(--u) * 12); }
+  .log-item { padding: calc(var(--u) * 8) 0; border-bottom: 1px dashed rgba(255,255,255,.15); font-size: calc(var(--fu) * 14); line-height: 1.6; overflow-wrap: anywhere; }
+  .log-item .who { color: #ffd84d; font-weight: bold; font-size: calc(var(--fu) * 12); }
   .log-item.narr { color: #c9d0e6; }
   .log-item.pick { color: #8fe3b0; font-weight: bold; }
   #menuBox { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--u) * 18); }
@@ -833,6 +836,16 @@ const st = { i: 0, flags: {}, log: [], shown: [], faces: {}, typing: null, full:
 function fit() {
   const w = Math.min(window.innerWidth, window.innerHeight * 9 / 16);
   $('stage').style.setProperty('--w', Math.floor(w) + 'px');
+  // 端末の文字サイズ設定で文字が拡大されていたら、その分を打ち消す
+  try {
+    const pr = document.createElement('span');
+    pr.textContent = 'あああああ';
+    pr.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden;white-space:nowrap;font-size:100px;line-height:1;';
+    $('stage').appendChild(pr);
+    const pw = pr.getBoundingClientRect().width; pr.remove();
+    const k = pw > 0 ? Math.min(1, 500 / pw) : 1;
+    $('stage').style.setProperty('--fk', k < 0.92 ? k.toFixed(3) : '1');
+  } catch (e) {}
 }
 window.addEventListener('resize', fit); fit();
 
@@ -974,29 +987,30 @@ function showChoice(s) {
 /* ---------- 操作画面 ---------- */
 function hideUi() { const u = $('ui'); u.style.display = 'none'; u.innerHTML = ''; u.className = ''; }
 // 操作中にテキストボックスへ出す一言（タイプ表示なし）
-function uiSay(who, text, log) {
+function uiSay(who, text, log, guide) {
   clearInterval(st.typing); st.typing = null;
   $('textbox').style.visibility = 'visible';
   $('name').textContent = who; $('text').classList.toggle('narr', !who);
   st.full = text; $('text').textContent = text; $('next').style.display = 'none';
+  if (guide) { const g = document.createElement('span'); g.className = 'guide'; g.textContent = guide; $('text').appendChild(g); }
   if (log) addLog({ who, text });
 }
 
 // 第二幕：レジの予約入力（プレイヤーが操作）
 const POS_STEPS = [
-  { key: 'item', q: '① 商品を選んでください', ng: 'それは、卵が入ってるよ。', ans: 'XM-0024',
+  { key: 'item', q: '① お客さんが希望したケーキをタップ', ng: 'それは、卵が入ってるよ。', ans: 'XM-0024',
     opts: [['XM-0021', 'いちごのショートケーキ'], ['XM-0022', 'チョコレートケーキ'], ['XM-0023', 'ブッシュ・ド・ノエル'],
            ['XM-0024', 'アレルギー対応クリスマスケーキ（卵・乳・小麦不使用）']] },
-  { key: 'date', q: '② 受け取り日を選んでください', ng: '申込書、もう一回見てみて。', ans: '12月24日',
+  { key: 'date', q: '② メモの受け取り日をタップ', ng: '申込書、もう一回見てみて。', ans: '12月24日',
     opts: [['12月23日'], ['12月24日'], ['12月25日']] },
-  { key: 'time', q: '③ 受け取り時間を選んでください', ng: '申込書、もう一回見てみて。', ans: '19:00',
+  { key: 'time', q: '③ メモの受け取り時間をタップ', ng: '申込書、もう一回見てみて。', ans: '19:00',
     opts: [['17:00'], ['18:00'], ['19:00']] }
 ];
 function showPos(s) {
   st.mode = 'interact'; $('tip').style.display = 'none';
   const u = $('ui'); u.className = 'ui-pos'; u.style.display = 'block';
-  u.innerHTML = `<div class="memo"><b>申込書メモ</b><br>受け取り日：12月24日<br>受け取り時間：19:00</div>
-    <div class="pos"><div class="pos-h">ケーキ予約 入力</div>
+  u.innerHTML = `<div class="memo"><b>お客さんの申込書メモ</b><br>ご希望：アレルギー対応ケーキ<br>受け取り日：12月24日<br>受け取り時間：19:00</div>
+    <div class="pos"><div class="pos-h">ケーキ予約 入力</div><div class="goal">申込書メモを見て、予約を入力しよう</div>
       <div class="pos-sum">
         <div class="row"><span class="lb">商品</span><span class="val empty" id="v-item">未選択</span></div>
         <div class="row"><span class="lb">受け取り日</span><span class="val empty" id="v-date">未選択</span>
@@ -1007,7 +1021,7 @@ function showPos(s) {
       <button class="pos-send" id="posSend" disabled>送信</button>
     </div>`;
   u.onclick = e => { e.stopPropagation(); Sound.init(); if (st.mode === 'text') advance(); };
-  uiSay('', s.lead, true);
+  uiSay('', s.lead, true, '↑ 上の画面をタップして入力しよう');
   let k = 0;
   const render = () => {
     const box = $('posStep');
@@ -1020,15 +1034,15 @@ function showPos(s) {
       if (b.dataset.v !== P.ans) {
         Sound.se('click');
         b.classList.remove('ng'); void b.offsetWidth; b.classList.add('ng');
-        uiSay('先輩', P.ng, true);
+        uiSay('先輩', P.ng, true, '↑ 上の画面をタップして入力しよう');
         return;
       }
       Sound.se('beep');
       const v = $('v-' + P.key); v.classList.remove('empty');
       v.textContent = P.opts.find(o => o[0] === P.ans).join(' ');
       k++; render();
-      if (k >= POS_STEPS.length) { uiSay('先輩', s.done, true); $('posSend').disabled = false; }
-      else uiSay('', s.lead, false);
+      if (k >= POS_STEPS.length) { uiSay('先輩', s.done, true, '↑ 「送信」をタップしよう'); $('posSend').disabled = false; }
+      else uiSay('', s.lead, false, '↑ 上の画面をタップして入力しよう');
     }));
   };
   render();
@@ -1043,13 +1057,13 @@ function showPos(s) {
 const SHELF_TAGS = [['XM-0021', '17:00', 1], ['XM-0022', '18:00', 1], ['XM-0023', '18:30', 1], ['XM-0021', '19:30', 1], ['XM-0024', '19:00', 0]];
 function showShelf() {
   st.mode = 'interact'; $('tip').style.display = 'none';
-  $('textbox').style.visibility = 'hidden';
+  uiSay('', '', false, '↑ 予約札をタップして、ひとつずつ確認しよう');
   const box = `<svg viewBox="0 0 80 70"><rect x="4" y="6" width="72" height="62" rx="4" fill="#fff" stroke="#d7cdbd" stroke-width="2"/>
     <rect x="36" y="6" width="8" height="62" fill="#e74c3c"/><rect x="4" y="30" width="72" height="8" fill="#e74c3c"/></svg>`;
   const none = `<svg viewBox="0 0 80 70"><rect x="4" y="6" width="72" height="62" rx="4" fill="none" stroke="#c9bba5" stroke-width="2.5" stroke-dasharray="6 5"/></svg>`;
   const slot = (t, i) => `<div class="slot" data-i="${i}">${t[2] ? box : none}<button class="ptag">${t[0]}<br>${t[1]}</button></div>`;
   const u = $('ui'); u.className = 'ui-shelf'; u.style.display = 'block';
-  u.innerHTML = `<div class="shelf-sign">ご予約品 お渡し棚</div><div class="shelf-hint">予約札をタップして、ひとつずつ確認しよう</div>
+  u.innerHTML = `<div class="shelf-sign">ご予約品 お渡し棚</div><div class="shelf-hint">お渡しの前に、予約の箱がそろっているか確認しよう</div>
     <div class="shelf"><div class="shelf-row">${SHELF_TAGS.slice(0, 3).map((t, i) => slot(t, i)).join('')}</div>
       <div class="shelf-row">${SHELF_TAGS.slice(3).map((t, i) => slot(t, i + 3)).join('')}</div></div>`;
   u.onclick = e => { e.stopPropagation(); Sound.init(); if (st.mode === 'text') advance(); };
@@ -1061,7 +1075,7 @@ function showShelf() {
       b.classList.add('done');
       el.insertAdjacentHTML('beforeend', `<div class="mark${t[2] ? '' : ' miss'}">${t[2] ? '✓' : '！'}</div>`);
     }
-    if (t[2]) { Sound.se('click'); uiSay('', 'ある。', false); return; }
+    if (t[2]) { Sound.se('click'); uiSay('', 'ある。', false, '↑ 予約札をタップして、ひとつずつ確認しよう'); return; }
     // XM-0024：箱がない → 次のタップで今の第三幕の流れへ
     Sound.se('shock');
     uiSay('', '……ない。', true);
