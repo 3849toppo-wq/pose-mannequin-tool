@@ -128,34 +128,72 @@
     background: #3c5a75; color: #fff; font-weight: bold; text-align: center; font-size: calc(var(--fu) * 17);
     padding: calc(var(--u) * 6) 0; border-radius: calc(var(--u) * 8); border: calc(var(--u) * 2) solid #9fb4c6;
   }
-  .shelf-hint { position: absolute; left: 0; right: 0; top: calc(var(--u) * 96); text-align: center; font-size: calc(var(--fu) * 12.5); color: #d6ecff; font-weight: bold; }
+  .shelf-hint { position: absolute; left: 0; right: 0; top: calc(var(--u) * 92); text-align: center; font-size: calc(var(--fu) * 13); color: #ffe39a; font-weight: bold; }
   .shelf {
-    position: absolute; left: calc(var(--u) * 14); right: calc(var(--u) * 14); top: calc(var(--u) * 120); bottom: calc(var(--u) * 6);
-    background: rgba(6,14,24,.35); border: calc(var(--u) * 8) solid #8d9aa7; border-radius: calc(var(--u) * 6);
+    position: absolute; left: calc(var(--u) * 12); right: calc(var(--u) * 12); top: calc(var(--u) * 114); bottom: calc(var(--u) * 4);
+    background: rgba(6,14,24,.35); border: calc(var(--u) * 6) solid #8d9aa7; border-radius: calc(var(--u) * 6);
     display: flex; flex-direction: column; justify-content: space-around;
   }
-  .shelf-row { display: flex; justify-content: center; gap: calc(var(--u) * 10); border-bottom: calc(var(--u) * 8) solid #8d9aa7; padding-bottom: calc(var(--u) * 4); }
+  .shelf-row { display: flex; justify-content: center; gap: calc(var(--u) * 8); border-bottom: calc(var(--u) * 6) solid #8d9aa7; padding: calc(var(--u) * 2) 0 calc(var(--u) * 3); }
   .shelf-row:last-child { border-bottom: none; }
-  .slot { width: calc(var(--u) * 94); display: flex; flex-direction: column; align-items: center; position: relative; }
-  .slot svg { width: calc(var(--u) * 80); height: calc(var(--u) * 70); display: block; }
+  .slot { width: calc(var(--u) * 96); display: flex; flex-direction: column; align-items: center; position: relative; }
+  .slot svg { width: 100%; height: 100%; display: block; }
   .spot {
-    width: calc(var(--u) * 80); height: calc(var(--u) * 70); border-radius: calc(var(--u) * 6);
+    width: calc(var(--u) * 84); height: calc(var(--u) * 30); border-radius: calc(var(--u) * 5);
     background: #0a1320; box-shadow: inset 0 0 calc(var(--u) * 10) rgba(0,0,0,.7); transition: background .35s, box-shadow .35s;
   }
   .spot.lit { background: radial-gradient(circle at 50% 35%, #f4fbff, #b9d3e6 80%); box-shadow: 0 0 calc(var(--u) * 16) rgba(190,230,255,.85); }
   .ptag {
-    width: calc(var(--u) * 86); background: #4a5867; border: calc(var(--u) * 2) solid #6d7d8d; border-radius: calc(var(--u) * 6);
-    font-size: calc(var(--fu) * 13); font-weight: bold; line-height: 1.3; color: #d5e0ea; padding: calc(var(--u) * 3) 0;
-    margin-top: calc(var(--u) * 3);
+    width: calc(var(--u) * 92); background: #4a5867; border: calc(var(--u) * 2) solid #6d7d8d; border-radius: calc(var(--u) * 6);
+    font-size: calc(var(--fu) * 12.5); font-weight: bold; line-height: 1.2; color: #e3ebf2; padding: calc(var(--u) * 2) 0;
+    margin-top: calc(var(--u) * 2); font-variant-numeric: tabular-nums;
   }
   .ptag.done { border-color: #3d9b6a; background: #fffbe6; color: #333; }
   .breath { position: absolute; right: calc(var(--u) * 4); bottom: calc(var(--u) * 4); width: calc(var(--u) * 70); height: calc(var(--u) * 90); pointer-events: none; }
   .slot .mark {
-    position: absolute; top: calc(var(--u) * 4); right: calc(var(--u) * 4); width: calc(var(--u) * 26); height: calc(var(--u) * 26);
-    border-radius: 50%; background: #3d9b6a; color: #fff; font-size: calc(var(--fu) * 16); font-weight: bold;
+    position: absolute; top: calc(var(--u) * -3); right: calc(var(--u) * 0); width: calc(var(--u) * 18); height: calc(var(--u) * 18);
+    border-radius: 50%; background: #3d9b6a; color: #fff; font-size: calc(var(--fu) * 11); font-weight: bold;
     display: flex; align-items: center; justify-content: center;
   }
   .slot .mark.miss { background: #d0392b; }
+  .ui-prep { background: linear-gradient(#b98a5a, #a37446); }
+  .prep-h {
+    position: absolute; left: calc(var(--u) * 8); right: calc(var(--u) * 8); top: calc(var(--u) * 46);
+    background: #1f3b6e; color: #fff; text-align: center; font-weight: bold; font-size: calc(var(--fu) * 15);
+    padding: calc(var(--u) * 6) 0; border-radius: calc(var(--u) * 10); border: calc(var(--u) * 2) solid #fff;
+  }
+  .item {
+    position: absolute; background: rgba(255,255,255,.18); border: calc(var(--u) * 2) solid rgba(255,255,255,.55);
+    border-radius: calc(var(--u) * 10); padding: calc(var(--u) * 2) 0 calc(var(--u) * 1); color: #fff; font-weight: bold;
+    font-size: calc(var(--fu) * 11); line-height: 1.2; text-shadow: 0 1px 2px rgba(0,0,0,.6); font-family: inherit;
+    transition: transform .45s, opacity .45s, left .45s, top .45s, box-shadow .2s;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+  }
+  .item svg { width: 100%; flex: 1; min-height: 0; display: block; }
+  .item.pick { box-shadow: 0 0 0 calc(var(--u) * 3) #ffd84d, 0 0 calc(var(--u) * 14) #ffd84d; z-index: 3; }
+  .item.front { transform: translateY(calc(var(--u) * -12)) scale(1.1); }
+  .item.gone { opacity: 0; pointer-events: none; }
+  .item .mark {
+    position: absolute; top: calc(var(--u) * -8); right: calc(var(--u) * -6); width: calc(var(--u) * 22); height: calc(var(--u) * 22);
+    border-radius: 50%; background: #3d9b6a; color: #fff; font-size: calc(var(--fu) * 13); display: flex; align-items: center; justify-content: center;
+    text-shadow: none; border: calc(var(--u) * 2) solid #fff;
+  }
+  .hikae {
+    position: absolute; left: calc(var(--u) * 14); top: calc(var(--u) * 320); width: calc(var(--u) * 196);
+    background: #fffef7; color: #333; border-radius: calc(var(--u) * 4); transform: rotate(-1.5deg);
+    box-shadow: 0 calc(var(--u) * 3) calc(var(--u) * 6) rgba(0,0,0,.35); padding: calc(var(--u) * 6) calc(var(--u) * 10);
+    font-size: calc(var(--fu) * 12); line-height: 1.5; white-space: nowrap;
+  }
+  .hikae b { display: block; color: #1f3b6e; font-size: calc(var(--fu) * 13); border-bottom: 1px dashed #bbb; margin-bottom: calc(var(--u) * 3); }
+  .hand {
+    position: absolute; width: calc(var(--u) * 32); height: calc(var(--u) * 32); margin: calc(var(--u) * -16) 0 0 calc(var(--u) * -16);
+    border-radius: 50%; background: #e2b48a; border: calc(var(--u) * 2) solid #b88a62; z-index: 5; pointer-events: none;
+    transition: left .45s ease-in-out, top .45s ease-in-out;
+  }
+  .hand::after {
+    content: ""; position: absolute; left: calc(var(--u) * 3); top: calc(var(--u) * -14); width: calc(var(--u) * 22); height: calc(var(--u) * 15);
+    background: #2b7f8e; border-radius: calc(var(--u) * 7) calc(var(--u) * 7) calc(var(--u) * 3) calc(var(--u) * 3);
+  }
 
   /* テキストボックス */
   #textbox {
@@ -740,7 +778,7 @@ const SCRIPT = [
   { bg: 'case' },
   N('売り場の冷蔵の棚を見に行く。\nアレルギー対応のケーキは、もう売れてしまっていた。', { r: { min: 'odoroki' } }),
   { fx: 'shake', se: 'shock' },
-  N('背中を、冷たい汗がつたう。'),
+  N('背中を、冷たい汗がつたう。', { r: { min: 'komari' } }),
   T('ミン', '……あの。だめ、でしたか？', 'odoroki'),
   N('忙しさを理由に、教えるのを後回しにしていたのは——自分だ。', { r: { min: 'komari' } }),
   T('あなた', 'ミンくん、聞いて。あれは予約品なんだ。今夜、予約したお客さんが受け取りに来る。', null, { r: { min: 'odoroki' } }),
@@ -826,14 +864,12 @@ const SCRIPT = [
   T('ミン', '一緒に待ってくれて、ありがとうございました。ぼくにも、教えてください。', 'smile', { c: 'a4=wait' }),
   T('あなた', 'うん。一つずつ、いこう。'),
   T('あなた', '普通に売るものと、取り置きする予約のケーキの、2種類があるんだよ', null, { r: { min: 'smile' }, nod: 'min' }),
-  T('あなた', 'まずは、ギフト用のクリスマスパッケージ。箱を傾けないように、両手で底を持って入れる。'),
-  T('ミン', '両手で、底を持つ……。はい。', 'normal'),
-  N('ミンくんは、ゆっくり、慎重に箱をパッケージに収めた。'),
-  T('あなた', '次は付属品の確認。ローソクは入ってる？ いちごのパックは付いてる？'),
-  T('ミン', 'ローソク、あります。いちごも、あります。', 'normal'),
-  T('あなた', '最後に、セットのドリンク。予約の控えと同じものか、照らし合わせて。'),
-  { se: 'beep' },
-  T('ミン', '控えには、ジュースが二本。……合っています。', 'normal'),
+  { interact: 'prep', part: 1 },
+  N('ミンくんは、ゆっくり、慎重に箱をパッケージに収めた。', { keepUi: true }),
+  T('あなた', '最後に、セットのドリンク。予約の控えと同じものか、照らし合わせて。', null, { keepUi: true }),
+  { interact: 'prep', part: 2, keepUi: true },
+  { se: 'beep', keepUi: true },
+  T('ミン', '控えには、麦茶。……合っています。', 'normal', { keepUi: true }),
   T('あなた', 'それと、一番大事なこと。ウォークの予約のケーキは、予約したお客さんのもの。ほかのお客さんには売らない。'),
   T('ミン', 'ウォークの予約のケーキは、売らない。……覚えました。', 'smile'),
   T('ミン', '次からは、ぼくも気をつけます。', 'normal', { c: 'a4=snap' }),
@@ -974,7 +1010,7 @@ function run() {
     if (s.act || s.intro) { st.i++; showCard(s); return; }
     if (s.choice) { st.i++; showChoice(s); return; }
     if (s.end) { st.i++; showEnd(); return; }
-    if (s.interact) { st.i++; (s.interact === 'pos' ? showPos : showShelf)(s); return; }
+    if (s.interact) { st.i++; ({ pos: showPos, shelf: showShelf, prep: showPrep })[s.interact](s); return; }
     if (s.text) { st.i++; st.mode = 'text'; showText(s); return; }
     st.i++;
   }
@@ -1019,7 +1055,7 @@ function showChoice(s) {
 }
 
 /* ---------- 操作画面 ---------- */
-function hideUi() { const u = $('ui'); u.style.display = 'none'; u.innerHTML = ''; u.className = ''; }
+function hideUi() { const u = $('ui'); u.style.display = 'none'; u.innerHTML = ''; u.className = ''; st.prep = null; }
 // 操作中にテキストボックスへ出す一言（タイプ表示なし）
 function uiSay(who, text, log, guide) {
   clearInterval(st.typing); st.typing = null;
@@ -1102,18 +1138,21 @@ function showPos(s) {
 }
 
 // 第三幕：予約棚の確認（プレイヤーが操作）
-const SHELF_TAGS = [['XM-0021', '17:00', 1], ['XM-0022', '18:00', 1], ['XM-0023', '18:30', 1], ['XM-0021', '19:30', 1], ['XM-0024', '19:00', 0]];
+// 並びはばらばら。XM-0024 はこの1枚だけ（箱がない）
+const SHELF_TAGS = [['XM-0042', '19:00', 1], ['XM-0021', '19:30', 1], ['XM-0012', '18:00', 1],
+  ['XM-0023', '20:00', 1], ['XM-0022', '19:00', 1], ['XM-0204', '19:00', 1],
+  ['XM-0021', '17:00', 1], ['XM-0024', '19:00', 0], ['XM-0042', '17:30', 1],
+  ['XM-0023', '18:30', 1], ['XM-0021', '19:00', 1], ['XM-0022', '18:00', 1]];
 function showShelf() {
   st.mode = 'interact'; $('tip').style.display = 'none';
-  uiSay('', '', false, '↑ 予約票をタップして、ひとつずつ確認しよう');
-  const box = `<svg viewBox="0 0 80 70"><rect x="4" y="6" width="72" height="62" rx="4" fill="#fff" stroke="#c9d6df" stroke-width="2"/>
-    <rect x="36" y="6" width="8" height="62" fill="#e74c3c"/><rect x="4" y="30" width="72" height="8" fill="#e74c3c"/></svg>`;
-  // 確認する前は、5か所とも同じ暗い枠（中身は描かない）
+  uiSay('', '', false, '↑ 予約票をタップして探そう');
+  const box = `<svg viewBox="0 0 84 30"><rect x="20" y="3" width="44" height="26" rx="3" fill="#fff" stroke="#c9d6df" stroke-width="1.5"/>
+    <rect x="39" y="3" width="6" height="26" fill="#e74c3c"/><rect x="20" y="13" width="44" height="5" fill="#e74c3c"/></svg>`;
+  // 確認する前は、12か所とも同じ暗い枠（中身は描かない）
   const slot = (t, i) => `<div class="slot" data-i="${i}"><div class="spot"></div><button class="ptag">${t[0]}<br>${t[1]}</button></div>`;
   const u = $('ui'); u.className = 'ui-shelf'; u.style.display = 'block';
-  u.innerHTML = `<div class="shelf-sign">ウォーク（予約品）</div><div class="shelf-hint">予約票と箱を、ひとつずつ照らし合わせよう</div>
-    <div class="shelf"><div class="shelf-row">${SHELF_TAGS.slice(0, 3).map((t, i) => slot(t, i)).join('')}</div>
-      <div class="shelf-row">${SHELF_TAGS.slice(3).map((t, i) => slot(t, i + 3)).join('')}</div></div>
+  u.innerHTML = `<div class="shelf-sign">ウォーク（予約品）</div><div class="shelf-hint">XM-0024、19:00の予約を探そう</div>
+    <div class="shelf">${[0, 3, 6, 9].map(r => `<div class="shelf-row">${SHELF_TAGS.slice(r, r + 3).map((t, i) => slot(t, r + i)).join('')}</div>`).join('')}</div>
     <svg class="breath" viewBox="0 0 70 90"><defs><filter id="bl" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3"/></filter></defs>
       <g filter="url(#bl)">${[0, 1, 2].map(k => `<ellipse cx="${28 + k * 6}" cy="80" rx="${13 + k * 5}" ry="${8 + k * 3}" fill="#ffffff" opacity="0">
       <animate attributeName="cy" values="82;24" dur="3s" begin="-${k}s" repeatCount="indefinite"/>
@@ -1128,12 +1167,107 @@ function showShelf() {
       spot.classList.add('lit'); if (t[2]) spot.innerHTML = box;   // 明るくなって中身が見える
       el.insertAdjacentHTML('beforeend', `<div class="mark${t[2] ? '' : ' miss'}">${t[2] ? '✓' : '！'}</div>`);
     }
-    if (t[2]) { Sound.se('click'); uiSay('', 'ある。', false, '↑ 予約票をタップして、ひとつずつ確認しよう'); return; }
+    if (t[2]) { Sound.se('click'); uiSay('', 'これじゃない。', false, '↑ 予約票をタップして探そう'); return; }
     // XM-0024：予約票だけで箱がない → 次のタップで「……え？」
     Sound.se('shock');
     uiSay('', '……ない。', true);
     st.mode = 'text'; $('next').style.display = 'block';
   }));
+}
+
+// 第五幕：ケーキの準備（プレイヤーがミンくんに指示する）
+const PREP_ITEMS = {
+  cake:   { x: 14,  y: 104, w: 108, h: 88, label: 'ケーキの箱',
+    svg: `<svg viewBox="0 0 100 70"><rect x="14" y="8" width="72" height="56" rx="4" fill="#fff" stroke="#c9d6df" stroke-width="2"/><rect x="47" y="8" width="7" height="56" fill="#e74c3c"/><rect x="14" y="30" width="72" height="7" fill="#e74c3c"/><rect x="20" y="46" width="42" height="13" rx="2" fill="#ffd84d"/><text x="41" y="56" font-size="9" font-weight="bold" text-anchor="middle" fill="#333">XM-0024</text></svg>` },
+  pkg:    { x: 128, y: 104, w: 108, h: 88, label: 'ギフト用パッケージ',
+    svg: `<svg viewBox="0 0 100 70"><path d="M38,18 Q50,2 62,18" fill="none" stroke="#2f8a4e" stroke-width="4"/><rect x="18" y="18" width="64" height="48" rx="4" fill="#c0392b"/><rect x="46" y="18" width="8" height="48" fill="#2f8a4e"/><path d="M50,32 l-10,-8 0,16 Z M50,32 l10,-8 0,16 Z" fill="#ffd84d"/><circle cx="30" cy="54" r="3" fill="#fff"/><circle cx="70" cy="44" r="2.5" fill="#fff"/></svg>` },
+  candle: { x: 242, y: 104, w: 104, h: 88, label: 'ローソク',
+    svg: `<svg viewBox="0 0 100 70"><rect x="22" y="40" width="56" height="24" rx="3" fill="#f2e6d0" stroke="#c9b48f" stroke-width="2"/>${[34, 50, 66].map((x, i) => `<rect x="${x - 3}" y="14" width="6" height="28" rx="2" fill="${['#e86a5a', '#5aa9e6', '#7cc47c'][i]}"/><path d="M${x},6 q4,5 0,9 q-4,-4 0,-9 Z" fill="#ffb400"/>`).join('')}</svg>` },
+  ichigo2:{ x: 14,  y: 206, w: 92,  h: 90, label: 'いちご 2個パック',
+    svg: `<svg viewBox="0 0 100 70"><rect x="16" y="22" width="68" height="40" rx="6" fill="#eaf6ff" stroke="#9fc3dc" stroke-width="2"/>${[38, 62].map(x => `<path d="M${x},32 q-11,2 -9,14 q3,10 9,12 q6,-2 9,-12 q2,-12 -9,-14 Z" fill="#e23b3b"/><path d="M${x - 6},31 l6,-5 6,5 Z" fill="#2f8a4e"/>`).join('')}</svg>` },
+  ichigo3:{ x: 112, y: 206, w: 92,  h: 90, label: 'いちご 3個パック',
+    svg: `<svg viewBox="0 0 100 70"><rect x="10" y="22" width="80" height="40" rx="6" fill="#eaf6ff" stroke="#9fc3dc" stroke-width="2"/>${[28, 50, 72].map(x => `<path d="M${x},32 q-10,2 -8,13 q3,9 8,11 q5,-2 8,-11 q2,-11 -8,-13 Z" fill="#e23b3b"/><path d="M${x - 5},31 l5,-5 5,5 Z" fill="#2f8a4e"/>`).join('')}</svg>` },
+  mugicha:{ x: 212, y: 206, w: 44,  h: 100, label: '麦茶',
+    svg: `<svg viewBox="0 0 40 80"><rect x="14" y="4" width="12" height="8" rx="2" fill="#e8e8e8"/><path d="M12,12 h16 l4,10 v52 q0,4 -4,4 h-16 q-4,0 -4,-4 v-52 Z" fill="#d9a441" opacity=".9"/><rect x="8" y="38" width="24" height="16" fill="#fff"/><text x="20" y="49" font-size="7.5" font-weight="bold" text-anchor="middle" fill="#7a5410">麦茶</text></svg>` },
+  cola:   { x: 258, y: 206, w: 44,  h: 100, label: 'コーラ',
+    svg: `<svg viewBox="0 0 40 80"><rect x="14" y="4" width="12" height="8" rx="2" fill="#c0392b"/><path d="M12,12 h16 l4,10 v52 q0,4 -4,4 h-16 q-4,0 -4,-4 v-52 Z" fill="#3a1d12"/><rect x="8" y="38" width="24" height="16" fill="#c0392b"/></svg>` },
+  cocoa:  { x: 304, y: 206, w: 44,  h: 100, label: 'ココア',
+    svg: `<svg viewBox="0 0 40 80"><rect x="9" y="20" width="22" height="56" rx="4" fill="#8a5a2b"/><rect x="9" y="20" width="22" height="6" rx="2" fill="#c9c9c9"/><rect x="9" y="70" width="22" height="6" rx="2" fill="#c9c9c9"/><path d="M14,46 q6,-8 12,0 q-6,8 -12,0 Z" fill="#f2e6d0"/></svg>` }
+};
+const HAND_REST = [[150, 90], [210, 90]];
+function showPrep(s) {
+  st.mode = 'interact'; $('tip').style.display = 'none';
+  const u = $('ui');
+  const guide = '↑ 机の上のものをタップしよう';
+  if (s.part === 1 || !st.prep) {
+    u.className = 'ui-prep'; u.style.display = 'block';
+    u.innerHTML = `<div class="prep-h">次は何をする？ ミンくんに指示しよう</div>` +
+      Object.entries(PREP_ITEMS).map(([id, it]) => `<button class="item" data-id="${id}" style="left:calc(var(--u)*${it.x});top:calc(var(--u)*${it.y});width:calc(var(--u)*${it.w});height:calc(var(--u)*${it.h})">${it.svg}<span>${it.label}</span></button>`).join('') +
+      `<div class="hikae"><b>予約の控え</b>ケーキ　XM-0024<br>いちご　2個パック<br>ギフトドリンク　麦茶</div>
+       <div class="hand" id="handL"></div><div class="hand" id="handR"></div>`;
+    st.prep = { step: 0, sub: null, busy: false };
+    const P = st.prep;
+    const item = id => u.querySelector(`.item[data-id="${id}"]`);
+    const center = id => { const it = PREP_ITEMS[id]; return [it.x + it.w / 2, it.y + it.h / 2]; };
+    const hands = (l, r) => {
+      $('handL').style.left = `calc(var(--u)*${l[0]})`; $('handL').style.top = `calc(var(--u)*${l[1]})`;
+      $('handR').style.left = `calc(var(--u)*${r[0]})`; $('handR').style.top = `calc(var(--u)*${r[1]})`;
+    };
+    const rest = () => hands(HAND_REST[0], HAND_REST[1]);
+    const toItem = id => { const [x, y] = center(id); hands([x - 16, y], [x + 16, y]); };
+    const mark = id => { if (!item(id).querySelector('.mark')) item(id).insertAdjacentHTML('beforeend', '<div class="mark">✓</div>'); };
+    const clearPick = () => u.querySelectorAll('.item.pick, .item.front').forEach(e => e.classList.remove('pick', 'front'));
+    const ask = (text) => uiSay('ミン', text, true, guide);
+    const later = (ms, fn) => { P.busy = true; setTimeout(() => { if (st.prep === P) { P.busy = false; fn(); } }, ms); };
+    const wrong = id => { Sound.se('click'); toItem(id); ask('これは、どうしますか？'); later(500, rest); };
+    P.tap = id => {
+      if (P.busy) return;
+      if (P.sub === 'ichigo') {
+        if (id === 'ichigo2') { Sound.se('beep'); clearPick(); toItem('ichigo2'); P.sub = null; later(550, () => { mark('ichigo2'); rest(); P.step = 2; uiSay('', '', false, guide); }); }
+        else if (id === 'ichigo3') { Sound.se('click'); ask('控えと、ちがいます'); }
+        else wrong(id);
+        return;
+      }
+      if (P.sub === 'drink') {
+        if (id === 'mugicha') { Sound.se('beep'); clearPick(); toItem('mugicha'); P.sub = null;
+          later(550, () => { mark('mugicha'); rest(); P.step = 4; st.mode = 'text'; run(); }); }
+        else if (id === 'cola' || id === 'cocoa') { Sound.se('click'); ask('控えと、ちがいます'); }
+        else wrong(id);
+        return;
+      }
+      if (P.step === 0 && id === 'candle') {
+        Sound.se('beep'); toItem('candle'); later(550, () => { mark('candle'); rest(); P.step = 1; uiSay('', '', false, guide); });
+      } else if (P.step === 1 && (id === 'ichigo2' || id === 'ichigo3')) {
+        // ミンくんが2個パックと3個パックを両手に持つ
+        Sound.se('click'); P.sub = 'ichigo';
+        hands(center('ichigo2'), center('ichigo3')); item('ichigo2').classList.add('pick'); item('ichigo3').classList.add('pick');
+        ask('これはどっちですか？');
+      } else if (P.step === 2 && (id === 'cake' || id === 'pkg')) {
+        // ケーキの箱をギフト用パッケージへ
+        Sound.se('beep'); toItem('cake');
+        later(500, () => {
+          const c = item('cake'), it = PREP_ITEMS.pkg;
+          c.style.left = `calc(var(--u)*${it.x})`; c.style.top = `calc(var(--u)*${it.y})`; c.style.transform = 'scale(.5)';
+          toItem('pkg');
+          later(550, () => { c.classList.add('gone'); mark('pkg'); rest(); P.step = 3; st.mode = 'text'; run(); });
+        });
+      } else if (P.step === 3 && st.mode === 'interact' && (id === 'mugicha' || id === 'cola' || id === 'cocoa')) {
+        // ミンくんが麦茶・コーラ・ココアを前に並べる
+        Sound.se('click'); P.sub = 'drink';
+        ['mugicha', 'cola', 'cocoa'].forEach(d => item(d).classList.add('pick', 'front'));
+        hands([center('mugicha')[0], 150], [center('cocoa')[0], 150]);
+        ask('これはどっちですか？');
+      } else wrong(id);
+    };
+    u.onclick = e => { e.stopPropagation(); Sound.init(); if (st.mode === 'text') advance(); };
+    u.querySelectorAll('.item').forEach(b => b.addEventListener('click', e => {
+      e.stopPropagation();
+      if (st.mode === 'text') { advance(); return; }
+      if (st.mode === 'interact') st.prep.tap(b.dataset.id);
+    }));
+    rest();
+  }
+  uiSay('', '', false, guide);
 }
 
 function showEnd() {
