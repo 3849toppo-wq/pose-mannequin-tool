@@ -43,10 +43,21 @@
 
   /* 受け取りまでの時計 */
   #clock {
-    position: absolute; top: calc(var(--u) * 8); left: calc(var(--u) * 8); z-index: 19;
+    position: absolute; top: calc(var(--u) * 64); left: calc(var(--u) * 8); z-index: 19;
     background: rgba(255,255,255,.94); border: calc(var(--u) * 3) solid #c0392b; border-radius: calc(var(--u) * 10);
     padding: calc(var(--u) * 4) calc(var(--u) * 10); text-align: center; display: none;
     box-shadow: 0 calc(var(--u) * 3) calc(var(--u) * 8) rgba(0,0,0,.35);
+  }
+  #tip {
+    position: absolute; left: calc(var(--u) * 105); top: calc(var(--u) * 166); width: calc(var(--u) * 150); z-index: 9;
+    background: #fff; color: #1f3b6e; border: calc(var(--u) * 2.5) solid #1f3b6e; border-radius: calc(var(--u) * 10);
+    font-size: calc(var(--u) * 13); font-weight: bold; text-align: center; padding: calc(var(--u) * 6) 0;
+    box-shadow: 0 calc(var(--u) * 3) calc(var(--u) * 6) rgba(0,0,0,.3); display: none; white-space: nowrap;
+  }
+  #tip::after {
+    content: ""; position: absolute; left: 50%; bottom: calc(var(--u) * -10); margin-left: calc(var(--u) * -8);
+    border-left: calc(var(--u) * 8) solid transparent; border-right: calc(var(--u) * 8) solid transparent;
+    border-top: calc(var(--u) * 10) solid #1f3b6e;
   }
   #clock .now { font-size: calc(var(--u) * 22); font-weight: bold; color: #222; line-height: 1.1; font-variant-numeric: tabular-nums; }
   #clock .left { font-size: calc(var(--u) * 11); color: #c0392b; font-weight: bold; white-space: nowrap; }
@@ -163,6 +174,7 @@
   <svg id="chars" class="layer" viewBox="0 0 360 640" preserveAspectRatio="xMidYMid slice"></svg>
   <svg id="view" class="layer" viewBox="0 0 360 640" preserveAspectRatio="xMidYMid slice" style="display:none"></svg>
 
+  <div id="tip">新人バイトのミンくん</div>
   <div id="clock"><div class="now">--:--</div><div class="left">受け取り 19:00 まで</div></div>
 
   <div id="topbar">
@@ -510,25 +522,28 @@ const ART = (() => {
     pos: () => posFrame(`
       <rect x="30" y="72" width="300" height="40" rx="8" fill="#3d6f8c"/><rect x="30" y="100" width="300" height="12" fill="#3d6f8c"/>
       <text x="180" y="98" font-size="16" font-weight="bold" fill="#fff" text-anchor="middle">ケーキ予約 入力</text>
-      <text x="46" y="140" font-size="12" fill="#5d6675">商品名</text>
-      <rect x="44" y="148" width="272" height="56" rx="6" fill="#fff" stroke="#b8c4cc" stroke-width="2"/>
-      <text x="56" y="171" font-size="14" font-weight="bold" fill="#222">アレルギー対応クリスマスケーキ</text>
-      <text x="56" y="193" font-size="12.5" fill="#333">（卵・乳・小麦不使用）</text>
-      <text x="46" y="230" font-size="12" fill="#5d6675">受け取り日</text>
-      <rect x="44" y="238" width="128" height="40" rx="6" fill="#fff" stroke="#b8c4cc" stroke-width="2"/>
-      <text x="108" y="265" font-size="17" font-weight="bold" fill="#222" text-anchor="middle">12月24日</text>
-      <text x="190" y="230" font-size="12" fill="#5d6675">受け取り時間</text>
-      <rect x="188" y="238" width="128" height="40" rx="6" fill="#fff" stroke="#b8c4cc" stroke-width="2"/>
-      <text x="252" y="265" font-size="17" font-weight="bold" fill="#222" text-anchor="middle">19:00</text>
-      <text x="46" y="304" font-size="12" fill="#5d6675">予約残数</text>
-      <rect x="44" y="312" width="272" height="50" rx="6" fill="#fff0ee" stroke="#d0392b" stroke-width="2.5"/>
-      <text x="180" y="347" font-size="26" font-weight="bold" fill="#d0392b" text-anchor="middle">残り 2</text>
-      <rect x="110" y="374" width="140" height="36" rx="18" fill="#3d6f8c"/>
-      <text x="180" y="398" font-size="15" font-weight="bold" fill="#fff" text-anchor="middle">送信</text>`),
+      <text x="46" y="132" font-size="12" fill="#5d6675">商品番号</text>
+      <rect x="44" y="138" width="272" height="30" rx="6" fill="#fff" stroke="#b8c4cc" stroke-width="2"/>
+      <text x="56" y="159" font-size="15" font-weight="bold" fill="#222" letter-spacing="1">XM-0024</text>
+      <text x="46" y="186" font-size="12" fill="#5d6675">商品名</text>
+      <rect x="44" y="192" width="272" height="52" rx="6" fill="#fff" stroke="#b8c4cc" stroke-width="2"/>
+      <text x="56" y="214" font-size="14" font-weight="bold" fill="#222">アレルギー対応クリスマスケーキ</text>
+      <text x="56" y="235" font-size="12.5" fill="#333">（卵・乳・小麦不使用）</text>
+      <text x="46" y="262" font-size="12" fill="#5d6675">受け取り日</text>
+      <rect x="44" y="268" width="128" height="36" rx="6" fill="#fff" stroke="#b8c4cc" stroke-width="2"/>
+      <text x="108" y="292" font-size="17" font-weight="bold" fill="#222" text-anchor="middle">12月24日</text>
+      <text x="190" y="262" font-size="12" fill="#5d6675">受け取り時間</text>
+      <rect x="188" y="268" width="128" height="36" rx="6" fill="#fff" stroke="#b8c4cc" stroke-width="2"/>
+      <text x="252" y="292" font-size="17" font-weight="bold" fill="#222" text-anchor="middle">19:00</text>
+      <text x="46" y="322" font-size="12" fill="#5d6675">予約残数</text>
+      <rect x="44" y="328" width="272" height="44" rx="6" fill="#fff0ee" stroke="#d0392b" stroke-width="2.5"/>
+      <text x="180" y="359" font-size="25" font-weight="bold" fill="#d0392b" text-anchor="middle">残り 2</text>
+      <rect x="110" y="380" width="140" height="32" rx="16" fill="#3d6f8c"/>
+      <text x="180" y="402" font-size="15" font-weight="bold" fill="#fff" text-anchor="middle">送信</text>`),
     posDone: () => posFrame(`
       <circle cx="180" cy="200" r="54" fill="#3d9b6a"/>
       <path d="M152,200 l20,20 38,-40" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
-      <text x="180" y="300" font-size="21" font-weight="bold" fill="#222" text-anchor="middle">予約を受け付けました</text>`)
+      <text x="180" y="302" font-size="26" font-weight="bold" fill="#222" text-anchor="middle">受付完了</text>`)
   };
   return { doll, chars: C, nameTag, view: id => VIEW[id](), bg: id => (BG[id] || BG.black)() };
 })();
@@ -751,7 +766,7 @@ const SCRIPT = [
   N('——あの日。\n「大丈夫、調べます」と言った先輩の声を、思い出す。', { r: { senpai: 'smile', parent: 'smile', min: 'smile', child: 'smile' } }),
   N('あれは、ケーキを我慢していた子どもの頃の自分に、かけてあげたかった言葉だったのかもしれない。', { r: { senpai: 'smile', parent: 'smile', min: 'smile', child: 'smile' } }),
   { bg: 'storefront', show: [] },
-  N('親子は何度も頭を下げて、雪のちらつく夜へ帰っていった。'),
+  N('親子は何度も頭を下げて、雪がちらつく夜へ帰っていった。'),
   N('星空マートの前に、子どもの笑い声が、いつまでも残っていた。'),
   { end: true }
 ];
@@ -817,6 +832,10 @@ function showText(step) {
   if (step.r) Object.assign(st.faces, step.r);
   st.lastSpeaker = id || null;
   st.speaker = id || null;
+  // ミンくんの初登場時だけ案内カード（次のタップで消える）
+  const showTip = !st.minTipDone && st.shown.includes('min');
+  if (showTip) st.minTipDone = true;
+  $('tip').style.display = showTip ? 'block' : 'none';
   drawChars();
   $('name').textContent = who;
   const t = $('text');
@@ -861,7 +880,7 @@ function run() {
 }
 
 function showCard(s) {
-  st.mode = 'card';
+  st.mode = 'card'; $('tip').style.display = 'none';
   $('textbox').style.visibility = 'hidden';
   const c = $('card');
   if (s.intro) {
@@ -881,7 +900,7 @@ function closeCard() {
 }
 
 function showChoice(s) {
-  st.mode = 'choice';
+  st.mode = 'choice'; $('tip').style.display = 'none';
   $('next').style.display = 'none';
   const box = $('choices');
   box.innerHTML = (s.q ? `<div class="choice-q">${s.q}</div>` : '') +
@@ -899,7 +918,7 @@ function showChoice(s) {
 }
 
 function showEnd() {
-  st.mode = 'end';
+  st.mode = 'end'; $('tip').style.display = 'none';
   Sound.bgm('title');
   $('textbox').style.visibility = 'hidden';
   const c = $('card');
@@ -916,7 +935,8 @@ function advance() {
 }
 
 function newGame() {
-  Object.assign(st, { i: 0, flags: {}, log: [], shown: [], faces: {}, speaker: null, lastSpeaker: null });
+  Object.assign(st, { i: 0, flags: {}, log: [], shown: [], faces: {}, speaker: null, lastSpeaker: null, minTipDone: false });
+  $('tip').style.display = 'none';
   setView(null);
   clearInterval(st.typing); st.typing = null;
   $('chars').innerHTML = ''; $('choices').style.display = 'none'; $('card').style.display = 'none';
@@ -929,7 +949,7 @@ function toTitle() {
   clearInterval(st.typing); st.typing = null;
   st.mode = 'title';
   closeOverlays();
-  $('bg').innerHTML = ART.bg('storefront'); $('chars').innerHTML = ''; setView(null);
+  $('bg').innerHTML = ART.bg('storefront'); $('chars').innerHTML = ''; setView(null); $('tip').style.display = 'none';
   $('choices').style.display = 'none'; $('card').style.display = 'none';
   $('textbox').style.visibility = 'hidden'; setClock(null);
   $('topbar').style.display = 'none'; $('title').style.display = 'flex';
