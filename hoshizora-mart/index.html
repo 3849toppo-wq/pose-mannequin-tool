@@ -1217,21 +1217,29 @@ function showPrep(s) {
     const toItem = id => { const [x, y] = center(id); hands([x - 16, y], [x + 16, y]); };
     const mark = id => { if (!item(id).querySelector('.mark')) item(id).insertAdjacentHTML('beforeend', '<div class="mark">✓</div>'); };
     const clearPick = () => u.querySelectorAll('.item.pick, .item.front').forEach(e => e.classList.remove('pick', 'front'));
-    const ask = (text) => uiSay('ミン', text, true, guide);
+    const ask = (text, hint) => uiSay('ミン', text, true, hint || guide);
+    // 間違えたときに出す「次にやること」
+    const HINTS = ['↑ まずは、ローソクがそろっているか確認しよう', '↑ 次は、付属のいちごを選ぼう',
+      '↑ 次は、ケーキの箱をギフト用パッケージに入れよう', '↑ 最後は、ギフトドリンクを選ぼう'];
+    const SUB_HINTS = { ichigo: '↑ 2個パックか3個パックをタップしよう', drink: '↑ 麦茶・コーラ・ココアのどれかをタップしよう' };
+    const KOE = '↑ 予約の控えを見てみよう';
     const later = (ms, fn) => { P.busy = true; setTimeout(() => { if (st.prep === P) { P.busy = false; fn(); } }, ms); };
-    const wrong = id => { Sound.se('click'); toItem(id); ask('これは、どうしますか？'); later(500, rest); };
+    const wrong = id => {
+      Sound.se('click'); ask('これは、どうしますか？', P.sub ? SUB_HINTS[P.sub] : HINTS[P.step]);
+      if (!P.sub) { toItem(id); later(500, rest); }   // 両手で持っている間は手を離さない
+    };
     P.tap = id => {
       if (P.busy) return;
       if (P.sub === 'ichigo') {
         if (id === 'ichigo2') { Sound.se('beep'); clearPick(); toItem('ichigo2'); P.sub = null; later(550, () => { mark('ichigo2'); rest(); P.step = 2; uiSay('', '', false, guide); }); }
-        else if (id === 'ichigo3') { Sound.se('click'); ask('控えと、ちがいます'); }
+        else if (id === 'ichigo3') { Sound.se('click'); ask('控えと、ちがいます', KOE); }
         else wrong(id);
         return;
       }
       if (P.sub === 'drink') {
         if (id === 'mugicha') { Sound.se('beep'); clearPick(); toItem('mugicha'); P.sub = null;
           later(550, () => { mark('mugicha'); rest(); P.step = 4; st.mode = 'text'; run(); }); }
-        else if (id === 'cola' || id === 'cocoa') { Sound.se('click'); ask('控えと、ちがいます'); }
+        else if (id === 'cola' || id === 'cocoa') { Sound.se('click'); ask('控えと、ちがいます', KOE); }
         else wrong(id);
         return;
       }
