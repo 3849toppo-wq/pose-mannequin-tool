@@ -149,7 +149,7 @@
     margin-top: calc(var(--u) * 2); font-variant-numeric: tabular-nums;
   }
   .ptag.done { border-color: #3d9b6a; background: #fffbe6; color: #333; }
-  .breath { position: absolute; right: calc(var(--u) * 4); bottom: calc(var(--u) * 4); width: calc(var(--u) * 70); height: calc(var(--u) * 90); pointer-events: none; }
+  .breath { position: absolute; left: calc(var(--u) * 0); top: calc(var(--u) * 38); width: calc(var(--u) * 42); height: calc(var(--u) * 72); pointer-events: none; }
   .slot .mark {
     position: absolute; top: calc(var(--u) * -3); right: calc(var(--u) * 0); width: calc(var(--u) * 18); height: calc(var(--u) * 18);
     border-radius: 50%; background: #3d9b6a; color: #fff; font-size: calc(var(--fu) * 11); font-weight: bold;
@@ -158,7 +158,7 @@
   .slot .mark.miss { background: #d0392b; }
   .ui-prep { background: linear-gradient(#b98a5a, #a37446); }
   .prep-h {
-    position: absolute; left: calc(var(--u) * 8); right: calc(var(--u) * 8); top: calc(var(--u) * 46);
+    position: absolute; left: calc(var(--u) * 8); right: calc(var(--u) * 8); top: calc(var(--u) * 42);
     background: #1f3b6e; color: #fff; text-align: center; font-weight: bold; font-size: calc(var(--fu) * 15);
     padding: calc(var(--u) * 6) 0; border-radius: calc(var(--u) * 10); border: calc(var(--u) * 2) solid #fff;
   }
@@ -179,7 +179,7 @@
     text-shadow: none; border: calc(var(--u) * 2) solid #fff;
   }
   .hikae {
-    position: absolute; left: calc(var(--u) * 14); top: calc(var(--u) * 320); width: calc(var(--u) * 196);
+    position: absolute; left: calc(var(--u) * 14); top: calc(var(--u) * 318); width: calc(var(--u) * 196);
     background: #fffef7; color: #333; border-radius: calc(var(--u) * 4); transform: rotate(-1.5deg);
     box-shadow: 0 calc(var(--u) * 3) calc(var(--u) * 6) rgba(0,0,0,.35); padding: calc(var(--u) * 6) calc(var(--u) * 10);
     font-size: calc(var(--fu) * 12); line-height: 1.5; white-space: nowrap;
@@ -1177,24 +1177,24 @@ function showShelf() {
 
 // 第五幕：ケーキの準備（プレイヤーがミンくんに指示する）
 const PREP_ITEMS = {
-  cake:   { x: 14,  y: 104, w: 108, h: 88, label: 'ケーキの箱',
+  cake:   { x: 14,  y: 116, w: 108, h: 84, label: 'ケーキの箱',
     svg: `<svg viewBox="0 0 100 70"><rect x="14" y="8" width="72" height="56" rx="4" fill="#fff" stroke="#c9d6df" stroke-width="2"/><rect x="47" y="8" width="7" height="56" fill="#e74c3c"/><rect x="14" y="30" width="72" height="7" fill="#e74c3c"/><rect x="20" y="46" width="42" height="13" rx="2" fill="#ffd84d"/><text x="41" y="56" font-size="9" font-weight="bold" text-anchor="middle" fill="#333">XM-0024</text></svg>` },
-  pkg:    { x: 128, y: 104, w: 108, h: 88, label: 'ギフト用パッケージ',
+  pkg:    { x: 128, y: 116, w: 108, h: 84, label: 'ギフト用パッケージ',
     svg: `<svg viewBox="0 0 100 70"><path d="M38,18 Q50,2 62,18" fill="none" stroke="#2f8a4e" stroke-width="4"/><rect x="18" y="18" width="64" height="48" rx="4" fill="#c0392b"/><rect x="46" y="18" width="8" height="48" fill="#2f8a4e"/><path d="M50,32 l-10,-8 0,16 Z M50,32 l10,-8 0,16 Z" fill="#ffd84d"/><circle cx="30" cy="54" r="3" fill="#fff"/><circle cx="70" cy="44" r="2.5" fill="#fff"/></svg>` },
-  candle: { x: 242, y: 104, w: 104, h: 88, label: 'ローソク',
+  candle: { x: 242, y: 116, w: 104, h: 84, label: 'ローソク',
     svg: `<svg viewBox="0 0 100 70"><rect x="22" y="40" width="56" height="24" rx="3" fill="#f2e6d0" stroke="#c9b48f" stroke-width="2"/>${[34, 50, 66].map((x, i) => `<rect x="${x - 3}" y="14" width="6" height="28" rx="2" fill="${['#e86a5a', '#5aa9e6', '#7cc47c'][i]}"/><path d="M${x},6 q4,5 0,9 q-4,-4 0,-9 Z" fill="#ffb400"/>`).join('')}</svg>` },
-  ichigo2:{ x: 14,  y: 206, w: 92,  h: 90, label: 'いちご 2個パック',
+  ichigo2:{ x: 14,  y: 210, w: 92,  h: 88, label: 'いちご 2個パック',
     svg: `<svg viewBox="0 0 100 70"><rect x="16" y="22" width="68" height="40" rx="6" fill="#eaf6ff" stroke="#9fc3dc" stroke-width="2"/>${[38, 62].map(x => `<path d="M${x},32 q-11,2 -9,14 q3,10 9,12 q6,-2 9,-12 q2,-12 -9,-14 Z" fill="#e23b3b"/><path d="M${x - 6},31 l6,-5 6,5 Z" fill="#2f8a4e"/>`).join('')}</svg>` },
-  ichigo3:{ x: 112, y: 206, w: 92,  h: 90, label: 'いちご 3個パック',
+  ichigo3:{ x: 112, y: 210, w: 92,  h: 88, label: 'いちご 3個パック',
     svg: `<svg viewBox="0 0 100 70"><rect x="10" y="22" width="80" height="40" rx="6" fill="#eaf6ff" stroke="#9fc3dc" stroke-width="2"/>${[28, 50, 72].map(x => `<path d="M${x},32 q-10,2 -8,13 q3,9 8,11 q5,-2 8,-11 q2,-11 -8,-13 Z" fill="#e23b3b"/><path d="M${x - 5},31 l5,-5 5,5 Z" fill="#2f8a4e"/>`).join('')}</svg>` },
-  mugicha:{ x: 212, y: 206, w: 44,  h: 100, label: '麦茶',
+  mugicha:{ x: 212, y: 210, w: 44,  h: 98, label: '麦茶',
     svg: `<svg viewBox="0 0 40 80"><rect x="14" y="4" width="12" height="8" rx="2" fill="#e8e8e8"/><path d="M12,12 h16 l4,10 v52 q0,4 -4,4 h-16 q-4,0 -4,-4 v-52 Z" fill="#d9a441" opacity=".9"/><rect x="8" y="38" width="24" height="16" fill="#fff"/><text x="20" y="49" font-size="7.5" font-weight="bold" text-anchor="middle" fill="#7a5410">麦茶</text></svg>` },
-  cola:   { x: 258, y: 206, w: 44,  h: 100, label: 'コーラ',
+  cola:   { x: 258, y: 210, w: 44,  h: 98, label: 'コーラ',
     svg: `<svg viewBox="0 0 40 80"><rect x="14" y="4" width="12" height="8" rx="2" fill="#c0392b"/><path d="M12,12 h16 l4,10 v52 q0,4 -4,4 h-16 q-4,0 -4,-4 v-52 Z" fill="#3a1d12"/><rect x="8" y="38" width="24" height="16" fill="#c0392b"/></svg>` },
-  cocoa:  { x: 304, y: 206, w: 44,  h: 100, label: 'ココア',
+  cocoa:  { x: 304, y: 210, w: 44,  h: 98, label: 'ココア',
     svg: `<svg viewBox="0 0 40 80"><rect x="9" y="20" width="22" height="56" rx="4" fill="#8a5a2b"/><rect x="9" y="20" width="22" height="6" rx="2" fill="#c9c9c9"/><rect x="9" y="70" width="22" height="6" rx="2" fill="#c9c9c9"/><path d="M14,46 q6,-8 12,0 q-6,8 -12,0 Z" fill="#f2e6d0"/></svg>` }
 };
-const HAND_REST = [[150, 90], [210, 90]];
+const HAND_REST = [[150, 98], [210, 98]];
 function showPrep(s) {
   st.mode = 'interact'; $('tip').style.display = 'none';
   const u = $('ui');
