@@ -43,15 +43,15 @@
 
   /* 受け取りまでの時計 */
   #clock {
-    position: absolute; top: calc(var(--u) * 64); left: calc(var(--u) * 8); z-index: 19;
+    position: absolute; top: calc(var(--u) * 64); right: calc(var(--u) * 8); z-index: 19;
     background: rgba(255,255,255,.94); border: calc(var(--u) * 3) solid #c0392b; border-radius: calc(var(--u) * 10);
     padding: calc(var(--u) * 4) calc(var(--u) * 10); text-align: center; display: none;
     box-shadow: 0 calc(var(--u) * 3) calc(var(--u) * 8) rgba(0,0,0,.35);
   }
   #tip {
-    position: absolute; left: calc(var(--u) * 105); top: calc(var(--u) * 166); width: calc(var(--u) * 150); z-index: 9;
+    position: absolute; left: 50%; transform: translateX(-50%); top: calc(var(--u) * 166); z-index: 9;
     background: #fff; color: #1f3b6e; border: calc(var(--u) * 2.5) solid #1f3b6e; border-radius: calc(var(--u) * 10);
-    font-size: calc(var(--u) * 13); font-weight: bold; text-align: center; padding: calc(var(--u) * 6) 0;
+    font-size: calc(var(--u) * 13); font-weight: bold; text-align: center; padding: calc(var(--u) * 6) calc(var(--u) * 12);
     box-shadow: 0 calc(var(--u) * 3) calc(var(--u) * 6) rgba(0,0,0,.3); display: none; white-space: nowrap;
   }
   #tip::after {
@@ -66,10 +66,86 @@
   #clock.urgent { animation: urgent 1s infinite; }
   @keyframes urgent { 50% { background: #ffe1dc; } }
 
+  /* 操作画面（レジ入力・予約棚） */
+  #ui { position: absolute; left: 0; right: 0; top: 0; height: calc(var(--u) * 456); z-index: 11; display: none; }
+  #ui button { font-family: inherit; cursor: pointer; }
+  .ui-pos { background: #2a3040; }
+  .memo {
+    position: absolute; left: calc(var(--u) * 8); top: calc(var(--u) * 6); width: calc(var(--u) * 138);
+    background: #fff8c4; color: #333; border-radius: calc(var(--u) * 4); transform: rotate(-2deg);
+    font-size: calc(var(--u) * 10.5); line-height: 1.35; padding: calc(var(--u) * 4) calc(var(--u) * 8);
+    box-shadow: 0 calc(var(--u) * 2) calc(var(--u) * 4) rgba(0,0,0,.4); white-space: nowrap;
+  }
+  .memo b { color: #8a5a00; }
+  .pos {
+    position: absolute; left: calc(var(--u) * 12); right: calc(var(--u) * 12); top: calc(var(--u) * 66); bottom: calc(var(--u) * 4);
+    background: #f4f8f7; border: calc(var(--u) * 7) solid #4a5163; border-radius: calc(var(--u) * 16);
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .pos-h { background: #3d6f8c; color: #fff; font-weight: bold; text-align: center; font-size: calc(var(--u) * 15); padding: calc(var(--u) * 3) 0; }
+  .pos-sum { padding: calc(var(--u) * 6) calc(var(--u) * 10) 0; font-size: calc(var(--u) * 11.5); }
+  .pos-sum .row { display: flex; gap: calc(var(--u) * 6); align-items: center; margin-bottom: calc(var(--u) * 4); }
+  .pos-sum .lb { color: #5d6675; white-space: nowrap; }
+  .pos-sum .val {
+    flex: 1; background: #fff; border: calc(var(--u) * 1.5) solid #b8c4cc; border-radius: calc(var(--u) * 5);
+    padding: calc(var(--u) * 3) calc(var(--u) * 6); font-weight: bold; color: #222; min-height: calc(var(--u) * 22); line-height: 1.35;
+  }
+  .pos-sum .val.empty { color: #b0b8bf; font-weight: normal; }
+  .pos-step { flex: 1; padding: calc(var(--u) * 4) calc(var(--u) * 10); display: flex; flex-direction: column; gap: calc(var(--u) * 5); }
+  .pos-step .q { font-size: calc(var(--u) * 12.5); font-weight: bold; color: #3d6f8c; }
+  .pos-step .opts { display: flex; flex-direction: column; gap: calc(var(--u) * 4); }
+  .pos-step .opts.row { flex-direction: row; }
+  .opt {
+    background: #fff; color: #222; border: calc(var(--u) * 2) solid #3d6f8c; border-radius: calc(var(--u) * 7);
+    font-size: calc(var(--u) * 12); font-weight: bold; padding: calc(var(--u) * 3) calc(var(--u) * 8); text-align: left; line-height: 1.3;
+  }
+  .opts.row .opt { flex: 1; text-align: center; padding: calc(var(--u) * 7) 0; font-size: calc(var(--u) * 14); }
+  .opt .no { color: #3d6f8c; margin-right: calc(var(--u) * 4); }
+  .opt.ng { animation: ng .35s; border-color: #d0392b; }
+  @keyframes ng { 25% { transform: translateX(calc(var(--u) * -5)); } 75% { transform: translateX(calc(var(--u) * 5)); } }
+  .pos-step .ok { font-size: calc(var(--u) * 14); font-weight: bold; color: #3d9b6a; text-align: center; margin-top: calc(var(--u) * 10); }
+  .pos-left {
+    margin: 0 calc(var(--u) * 10) calc(var(--u) * 6); border: calc(var(--u) * 2) solid #d0392b; background: #fff0ee; border-radius: calc(var(--u) * 6);
+    text-align: center; color: #d0392b; font-size: calc(var(--u) * 12); padding: calc(var(--u) * 2) 0;
+  }
+  .pos-left b { font-size: calc(var(--u) * 18); margin-left: calc(var(--u) * 6); }
+  .pos-send {
+    margin: 0 auto calc(var(--u) * 8); width: calc(var(--u) * 150); border: none; border-radius: calc(var(--u) * 18);
+    background: #3d6f8c; color: #fff; font-size: calc(var(--u) * 15) !important; font-weight: bold; padding: calc(var(--u) * 6) 0;
+  }
+  .pos-send:disabled { background: #b8c4cc; color: #eef2f4; cursor: default; }
+  .ui-shelf { background: #efe7d8; }
+  .shelf-sign {
+    position: absolute; left: calc(var(--u) * 40); right: calc(var(--u) * 40); top: calc(var(--u) * 52);
+    background: #c0392b; color: #fff; font-weight: bold; text-align: center; font-size: calc(var(--u) * 17);
+    padding: calc(var(--u) * 6) 0; border-radius: calc(var(--u) * 8);
+  }
+  .shelf-hint { position: absolute; left: 0; right: 0; top: calc(var(--u) * 96); text-align: center; font-size: calc(var(--u) * 12.5); color: #6b4a2a; font-weight: bold; }
+  .shelf {
+    position: absolute; left: calc(var(--u) * 14); right: calc(var(--u) * 14); top: calc(var(--u) * 120); bottom: calc(var(--u) * 6);
+    background: #f7f1e6; border: calc(var(--u) * 8) solid #b48c62; border-radius: calc(var(--u) * 6);
+    display: flex; flex-direction: column; justify-content: space-around;
+  }
+  .shelf-row { display: flex; justify-content: center; gap: calc(var(--u) * 10); border-bottom: calc(var(--u) * 8) solid #b48c62; padding-bottom: calc(var(--u) * 4); }
+  .shelf-row:last-child { border-bottom: none; }
+  .slot { width: calc(var(--u) * 94); display: flex; flex-direction: column; align-items: center; position: relative; }
+  .slot svg { width: calc(var(--u) * 80); height: calc(var(--u) * 70); display: block; }
+  .ptag {
+    width: calc(var(--u) * 86); background: #fffbe6; border: calc(var(--u) * 2) solid #b48c62; border-radius: calc(var(--u) * 6);
+    font-size: calc(var(--u) * 13); font-weight: bold; line-height: 1.3; color: #333; padding: calc(var(--u) * 3) 0;
+  }
+  .ptag.done { border-color: #3d9b6a; background: #eaf7ef; }
+  .slot .mark {
+    position: absolute; top: calc(var(--u) * 4); right: calc(var(--u) * 4); width: calc(var(--u) * 26); height: calc(var(--u) * 26);
+    border-radius: 50%; background: #3d9b6a; color: #fff; font-size: calc(var(--u) * 16); font-weight: bold;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .slot .mark.miss { background: #d0392b; }
+
   /* テキストボックス */
   #textbox {
     position: absolute; left: calc(var(--u) * 10); right: calc(var(--u) * 10); bottom: calc(var(--u) * 12);
-    height: calc(var(--u) * 168); z-index: 10;
+    height: calc(var(--u) * 168); z-index: 12;
     background: rgba(255,253,247,.96); border: calc(var(--u) * 3) solid #1f3b6e; border-radius: calc(var(--u) * 14);
     padding: calc(var(--u) * 22) calc(var(--u) * 16) calc(var(--u) * 12);
     box-shadow: 0 calc(var(--u) * 4) calc(var(--u) * 12) rgba(0,0,0,.35);
@@ -174,6 +250,7 @@
   <svg id="chars" class="layer" viewBox="0 0 360 640" preserveAspectRatio="xMidYMid slice"></svg>
   <svg id="view" class="layer" viewBox="0 0 360 640" preserveAspectRatio="xMidYMid slice" style="display:none"></svg>
 
+  <div id="ui"></div>
   <div id="tip">新人バイトのミンくん</div>
   <div id="clock"><div class="now">--:--</div><div class="left">受け取り 19:00 まで</div></div>
 
@@ -519,27 +596,6 @@ const ART = (() => {
             <text x="92" y="${y + 27}" font-size="12.5" font-weight="bold" fill="#444" text-anchor="middle">${t}</text>`;
         }).join('')}
       </g>`,
-    pos: () => posFrame(`
-      <rect x="30" y="72" width="300" height="40" rx="8" fill="#3d6f8c"/><rect x="30" y="100" width="300" height="12" fill="#3d6f8c"/>
-      <text x="180" y="98" font-size="16" font-weight="bold" fill="#fff" text-anchor="middle">ケーキ予約 入力</text>
-      <text x="46" y="132" font-size="12" fill="#5d6675">商品番号</text>
-      <rect x="44" y="138" width="272" height="30" rx="6" fill="#fff" stroke="#b8c4cc" stroke-width="2"/>
-      <text x="56" y="159" font-size="15" font-weight="bold" fill="#222" letter-spacing="1">XM-0024</text>
-      <text x="46" y="186" font-size="12" fill="#5d6675">商品名</text>
-      <rect x="44" y="192" width="272" height="52" rx="6" fill="#fff" stroke="#b8c4cc" stroke-width="2"/>
-      <text x="56" y="214" font-size="14" font-weight="bold" fill="#222">アレルギー対応クリスマスケーキ</text>
-      <text x="56" y="235" font-size="12.5" fill="#333">（卵・乳・小麦不使用）</text>
-      <text x="46" y="262" font-size="12" fill="#5d6675">受け取り日</text>
-      <rect x="44" y="268" width="128" height="36" rx="6" fill="#fff" stroke="#b8c4cc" stroke-width="2"/>
-      <text x="108" y="292" font-size="17" font-weight="bold" fill="#222" text-anchor="middle">12月24日</text>
-      <text x="190" y="262" font-size="12" fill="#5d6675">受け取り時間</text>
-      <rect x="188" y="268" width="128" height="36" rx="6" fill="#fff" stroke="#b8c4cc" stroke-width="2"/>
-      <text x="252" y="292" font-size="17" font-weight="bold" fill="#222" text-anchor="middle">19:00</text>
-      <text x="46" y="322" font-size="12" fill="#5d6675">予約残数</text>
-      <rect x="44" y="328" width="272" height="44" rx="6" fill="#fff0ee" stroke="#d0392b" stroke-width="2.5"/>
-      <text x="180" y="359" font-size="25" font-weight="bold" fill="#d0392b" text-anchor="middle">残り 2</text>
-      <rect x="110" y="380" width="140" height="32" rx="16" fill="#3d6f8c"/>
-      <text x="180" y="402" font-size="15" font-weight="bold" fill="#fff" text-anchor="middle">送信</text>`),
     posDone: () => posFrame(`
       <circle cx="180" cy="200" r="54" fill="#3d9b6a"/>
       <path d="M152,200 l20,20 38,-40" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
@@ -612,9 +668,8 @@ const SCRIPT = [
   T('先輩', '作れる数が決まってるんだ。急ごう。', 'aseri'),
   { bg: 'register', show: ['senpai'] },
   N('レジの発注画面に、申込書の内容を打ちこんでいく。'),
-  { se: 'beep', view: 'pos' },
-  N('商品番号。受け取り日。受け取り時間。\n指先が少し震える。'),
-  T('先輩', '受け取りは十二月二十四日の十九時。……よし、送信。', 'normal'),
+  { se: 'beep', interact: 'pos', lead: '商品番号。受け取り日。受け取り時間。\n指先が少し震える。',
+    done: '受け取りは十二月二十四日の十九時。……よし、送信。' },
   { se: 'ok', view: 'posDone' },
   N('画面に「受付完了」の文字が出た。'),
   { view: null },
@@ -642,9 +697,7 @@ const SCRIPT = [
   N('入ったばかりのミンくんと、今日はまともに話す時間もない。'),
   { bg: 'black', show: [], bgm: null },
   N('——夕方、十六時。'),
-  { bg: 'shelf', se: 'shock' },
-  N('予約棚を確かめていて、手が止まった。'),
-  N('アレルギー対応ケーキの箱が、ない。'),
+  { bg: 'shelf', interact: 'shelf' },
   T('あなた', '……え？'),
   N('棚の端から端まで見る。バックヤードの冷蔵庫も開ける。\nどこにもない。'),
   { show: ['min'] },
@@ -874,6 +927,7 @@ function run() {
     if (s.act || s.intro) { st.i++; showCard(s); return; }
     if (s.choice) { st.i++; showChoice(s); return; }
     if (s.end) { st.i++; showEnd(); return; }
+    if (s.interact) { st.i++; (s.interact === 'pos' ? showPos : showShelf)(s); return; }
     if (s.text) { st.i++; st.mode = 'text'; showText(s); return; }
     st.i++;
   }
@@ -917,6 +971,104 @@ function showChoice(s) {
   }));
 }
 
+/* ---------- 操作画面 ---------- */
+function hideUi() { const u = $('ui'); u.style.display = 'none'; u.innerHTML = ''; u.className = ''; }
+// 操作中にテキストボックスへ出す一言（タイプ表示なし）
+function uiSay(who, text, log) {
+  clearInterval(st.typing); st.typing = null;
+  $('textbox').style.visibility = 'visible';
+  $('name').textContent = who; $('text').classList.toggle('narr', !who);
+  st.full = text; $('text').textContent = text; $('next').style.display = 'none';
+  if (log) addLog({ who, text });
+}
+
+// 第二幕：レジの予約入力（プレイヤーが操作）
+const POS_STEPS = [
+  { key: 'item', q: '① 商品を選んでください', ng: 'それは、卵が入ってるよ。', ans: 'XM-0024',
+    opts: [['XM-0021', 'いちごのショートケーキ'], ['XM-0022', 'チョコレートケーキ'], ['XM-0023', 'ブッシュ・ド・ノエル'],
+           ['XM-0024', 'アレルギー対応クリスマスケーキ（卵・乳・小麦不使用）']] },
+  { key: 'date', q: '② 受け取り日を選んでください', ng: '申込書、もう一回見てみて。', ans: '12月24日',
+    opts: [['12月23日'], ['12月24日'], ['12月25日']] },
+  { key: 'time', q: '③ 受け取り時間を選んでください', ng: '申込書、もう一回見てみて。', ans: '19:00',
+    opts: [['17:00'], ['18:00'], ['19:00']] }
+];
+function showPos(s) {
+  st.mode = 'interact'; $('tip').style.display = 'none';
+  const u = $('ui'); u.className = 'ui-pos'; u.style.display = 'block';
+  u.innerHTML = `<div class="memo"><b>申込書メモ</b><br>受け取り日：12月24日<br>受け取り時間：19:00</div>
+    <div class="pos"><div class="pos-h">ケーキ予約 入力</div>
+      <div class="pos-sum">
+        <div class="row"><span class="lb">商品</span><span class="val empty" id="v-item">未選択</span></div>
+        <div class="row"><span class="lb">受け取り日</span><span class="val empty" id="v-date">未選択</span>
+          <span class="lb">時間</span><span class="val empty" id="v-time">未選択</span></div>
+      </div>
+      <div class="pos-step" id="posStep"></div>
+      <div class="pos-left">予約残数<b>残り 2</b></div>
+      <button class="pos-send" id="posSend" disabled>送信</button>
+    </div>`;
+  u.onclick = e => { e.stopPropagation(); Sound.init(); if (st.mode === 'text') advance(); };
+  uiSay('', s.lead, true);
+  let k = 0;
+  const render = () => {
+    const box = $('posStep');
+    if (k >= POS_STEPS.length) { box.innerHTML = '<div class="ok">入力が終わりました</div>'; return; }
+    const P = POS_STEPS[k];
+    box.innerHTML = `<div class="q">${P.q}</div><div class="opts${P.opts.length === 3 ? ' row' : ''}">` +
+      P.opts.map(o => `<button class="opt" data-v="${o[0]}">${o[1] ? `<span class="no">${o[0]}</span>${o[1]}` : o[0]}</button>`).join('') + '</div>';
+    box.querySelectorAll('.opt').forEach(b => b.addEventListener('click', e => {
+      e.stopPropagation();
+      if (b.dataset.v !== P.ans) {
+        Sound.se('click');
+        b.classList.remove('ng'); void b.offsetWidth; b.classList.add('ng');
+        uiSay('先輩', P.ng, true);
+        return;
+      }
+      Sound.se('beep');
+      const v = $('v-' + P.key); v.classList.remove('empty');
+      v.textContent = P.opts.find(o => o[0] === P.ans).join(' ');
+      k++; render();
+      if (k >= POS_STEPS.length) { uiSay('先輩', s.done, true); $('posSend').disabled = false; }
+      else uiSay('', s.lead, false);
+    }));
+  };
+  render();
+  $('posSend').addEventListener('click', e => {
+    e.stopPropagation();
+    if ($('posSend').disabled) return;
+    hideUi(); run();
+  });
+}
+
+// 第三幕：予約棚の確認（プレイヤーが操作）
+const SHELF_TAGS = [['XM-0021', '17:00', 1], ['XM-0022', '18:00', 1], ['XM-0023', '18:30', 1], ['XM-0021', '19:30', 1], ['XM-0024', '19:00', 0]];
+function showShelf() {
+  st.mode = 'interact'; $('tip').style.display = 'none';
+  $('textbox').style.visibility = 'hidden';
+  const box = `<svg viewBox="0 0 80 70"><rect x="4" y="6" width="72" height="62" rx="4" fill="#fff" stroke="#d7cdbd" stroke-width="2"/>
+    <rect x="36" y="6" width="8" height="62" fill="#e74c3c"/><rect x="4" y="30" width="72" height="8" fill="#e74c3c"/></svg>`;
+  const none = `<svg viewBox="0 0 80 70"><rect x="4" y="6" width="72" height="62" rx="4" fill="none" stroke="#c9bba5" stroke-width="2.5" stroke-dasharray="6 5"/></svg>`;
+  const slot = (t, i) => `<div class="slot" data-i="${i}">${t[2] ? box : none}<button class="ptag">${t[0]}<br>${t[1]}</button></div>`;
+  const u = $('ui'); u.className = 'ui-shelf'; u.style.display = 'block';
+  u.innerHTML = `<div class="shelf-sign">ご予約品 お渡し棚</div><div class="shelf-hint">予約札をタップして、ひとつずつ確認しよう</div>
+    <div class="shelf"><div class="shelf-row">${SHELF_TAGS.slice(0, 3).map((t, i) => slot(t, i)).join('')}</div>
+      <div class="shelf-row">${SHELF_TAGS.slice(3).map((t, i) => slot(t, i + 3)).join('')}</div></div>`;
+  u.onclick = e => { e.stopPropagation(); Sound.init(); if (st.mode === 'text') advance(); };
+  u.querySelectorAll('.slot').forEach(el => el.querySelector('.ptag').addEventListener('click', e => {
+    e.stopPropagation();
+    if (st.mode !== 'interact') return;
+    const t = SHELF_TAGS[+el.dataset.i], b = el.querySelector('.ptag');
+    if (!b.classList.contains('done')) {
+      b.classList.add('done');
+      el.insertAdjacentHTML('beforeend', `<div class="mark${t[2] ? '' : ' miss'}">${t[2] ? '✓' : '！'}</div>`);
+    }
+    if (t[2]) { Sound.se('click'); uiSay('', 'ある。', false); return; }
+    // XM-0024：箱がない → 次のタップで今の第三幕の流れへ
+    Sound.se('shock');
+    uiSay('', '……ない。', true);
+    st.mode = 'text'; $('next').style.display = 'block';
+  }));
+}
+
 function showEnd() {
   st.mode = 'end'; $('tip').style.display = 'none';
   Sound.bgm('title');
@@ -930,13 +1082,13 @@ function showEnd() {
 }
 
 function advance() {
-  if (st.mode === 'text') { if (st.typing) finishTyping(); else run(); }
+  if (st.mode === 'text') { if (st.typing) finishTyping(); else { hideUi(); run(); } }
   else if (st.mode === 'card') closeCard();
 }
 
 function newGame() {
   Object.assign(st, { i: 0, flags: {}, log: [], shown: [], faces: {}, speaker: null, lastSpeaker: null, minTipDone: false });
-  $('tip').style.display = 'none';
+  $('tip').style.display = 'none'; hideUi();
   setView(null);
   clearInterval(st.typing); st.typing = null;
   $('chars').innerHTML = ''; $('choices').style.display = 'none'; $('card').style.display = 'none';
@@ -949,7 +1101,7 @@ function toTitle() {
   clearInterval(st.typing); st.typing = null;
   st.mode = 'title';
   closeOverlays();
-  $('bg').innerHTML = ART.bg('storefront'); $('chars').innerHTML = ''; setView(null); $('tip').style.display = 'none';
+  $('bg').innerHTML = ART.bg('storefront'); $('chars').innerHTML = ''; setView(null); hideUi(); $('tip').style.display = 'none';
   $('choices').style.display = 'none'; $('card').style.display = 'none';
   $('textbox').style.visibility = 'hidden'; setClock(null);
   $('topbar').style.display = 'none'; $('title').style.display = 'flex';
